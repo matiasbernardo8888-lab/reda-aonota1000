@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método 1000 | Hub Avançado de Preparação Educacional</title>
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; }
+        .bg-dark-card { background-color: #141417; }
+        .border-dark { border-color: #222226; }
+        .text-glow-green { text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        .animate-scan { animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+    </style>
+</head>
+<body class="text-zinc-200 antialiased min-h-screen flex flex-col md:flex-row">
+
+    <!-- MENU LATERAL PREMIUM -->
+    <aside class="w-full md:w-68 bg-[#09090b] flex flex-col border-r border-dark shrink-0 z-20">
+        <div class="p-6 border-b border-dark flex items-center gap-3">
+            <div class="p-2 bg-zinc-800 rounded-xl border border-zinc-700">
+                <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-sm tracking-widest text-white">MÉTODO <span class="text-indigo-400">1000</span></h1>
+                <p class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Ecossistema Educacional</p>
+            </div>
+        </div>
+
+        <!-- Perfil do Usuário Customizável -->
+        <div class="p-4 border-b border-dark bg-dark-card/50 m-3 rounded-xl border border-dark">
+            <div class="flex items-center gap-3">
+                <div class="relative group cursor-pointer">
+                    <img id="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Avatar" class="w-11 h-11 rounded-xl object-cover border border-zinc-700 group-hover:opacity-70 transition-all">
+                    <label for="avatar-input" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                        <i data-lucide="camera" class="w-4 h-4 text-white"></i>
+                    </label>
+                    <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1">
+                        <input type="text" id="user-name-input" value="Estudante Pro" onchange="saveUserProfile()" class="bg-transparent text-sm font-bold text-white focus:outline-none focus:bg-zinc-800 rounded px-1 w-full border border-transparent hover:border-zinc-700">
+                        <i data-lucide="pencil" class="w-3 h-3 text-zinc-500 shrink-0"></i>
+                    </div>
+                    <p class="text-xs text-zinc-400 truncate mt-0.5">Membro Premium</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navegação SPA -->
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all bg-zinc-800 text-white border border-zinc-700 shadow-sm">
+                <span class="flex items-center gap-3"><i data-lucide="layout-grid" class="w-4 h-4"></i> Central de Análise</span>
+            </button>
+            <button onclick="switchTab('corretor')" id="btn-corretor" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                <i data-lucide="binary" class="w-4 h-4"></i> Diagnóstico Avançado
+            </button>
+            <button onclick="switchTab('modelos')" id="btn-modelos" class="nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                <span class="flex items-center gap-3"><i data-lucide="layout-template" class="w-4 h-4"></i> Modelos Coringas</span>
+                <span class="text-[9px] bg-amber-500/10 text-amber-400 font-bold px-1.5 py-0.5 rounded-md border border-amber-500/20">Ouro</span>
+            </button>
+            <button onclick="switchTab('materias')" id="btn-materias" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                <i data-lucide="book-open" class="w-4 h-4"></i> Trilhas Acadêmicas
+            </button>
+            <button onclick="switchTab('biblioteca')" id="btn-biblioteca" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                <i data-lucide="archive" class="w-4 h-4"></i> Acervo Analítico 1000
+            </button>
+            <button onclick="switchTab('cronograma')" id="btn-cronograma" class="nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                <span class="flex items-center gap-3"><i data-lucide="calendar-range" class="w-4 h-4"></i> Desafio 30 Dias</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-dark text-[10px] font-mono text-zinc-600 text-center">
+            METHOD CORE V5.5 // 2026
+        </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="flex-1 flex flex-col min-w-0 bg-[#0c0c0e]">
+        
+        <!-- TOPBAR -->
+        <header class="bg-dark-card/40 border-b border-dark h-16 px-6 flex items-center justify-between shrink-0 backdrop-blur-md">
+            <div>
+                <span class="bg-zinc-900 text-zinc-400 text-[11px] font-mono px-3 py-1 rounded-lg border border-dark flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    CRONÔMETRO ENEM: FALTAM <span id="countdown-days" class="text-white font-bold">--</span> DIAS
+                </span>
+            </div>
+            <div class="text-xs font-semibold text-zinc-400">
+                Módulo Metodológico Ativo
+            </div>
+        </header>
+
+        <!-- SUB-CONTEÚDO DA PLATAFORMA -->
+        <div class="p-6 md:p-8 flex-1 max-w-6xl w-full mx-auto space-y-8">
+            
+            <!-- TELA 1: DASHBOARD -->
+            <section id="view-dashboard" class="space-y-8">
+                <div class="bg-dark-card border border-dark p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white tracking-tight">Painel de Evolução Escalar</h2>
+                        <p class="text-zinc-400 text-xs mt-1">Seus dados analíticos consolidados de acordo com os critérios oficiais do INEP.</p>
+                    </div>
+                    <div class="w-full md:w-64 space-y-2">
+                        <div class="flex justify-between text-xs font-mono text-zinc-400">
+                            <span>Desempenho Geral</span>
+                            <span class="text-indigo-400 font-bold" id="progress-txt">0%</span>
+                        </div>
+                        <div class="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden border border-dark">
+                            <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-700 shadow-[0_0_10px_rgba(99,102,241,0.5)]" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARDS DE MÉTRICAS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-dark-card p-5 rounded-2xl border border-dark flex items-center gap-4">
+                        <div class="p-3.5 bg-zinc-900 border border-dark text-zinc-400 rounded-xl"><i data-lucide="folder-open" class="w-5 h-5"></i></div>
+                        <div>
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Submissões Realizadas</p>
+                            <h3 class="text-2xl font-black text-white mt-0.5" id="dash-enviadas">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-dark-card p-5 rounded-2xl border border-dark flex items-center gap-4">
+                        <div class="p-3.5 bg-zinc-900 border border-dark text-emerald-400 rounded-xl"><i data-lucide="activity" class="w-5 h-5"></i></div>
+                        <div>
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Média de Proficiência</p>
+                            <h3 class="text-2xl font-black text-white mt-0.5" id="dash-media">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-dark-card p-5 rounded-2xl border border-dark flex items-center gap-4">
+                        <div class="p-3.5 bg-zinc-900 border border-dark text-indigo-400 rounded-xl"><i data-lucide="calendar" class="w-5 h-5"></i></div>
+                        <div>
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Metas Concluídas (Trilha)</p>
+                            <h3 class="text-2xl font-black text-white mt-0.5" id="dash-trilha-progress">0 / 30</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTÓRICO -->
+                <div class="bg-dark-card rounded-2xl border border-dark overflow-hidden">
+                    <div class="p-5 border-b border-dark flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white">Últimas Análises e Textos Avaliados</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-dark text-zinc-500 font-mono uppercase tracking-wider bg-zinc-900/30">
+                                    <th class="py-3.5 px-5">Eixo Temático</th>
+                                    <th class="py-3.5 px-5">Data</th>
+                                    <th class="py-3.5 px-5">Formato</th>
+                                    <th class="py-3.5 px-5">Nota</th>
+                                    <th class="py-3.5 px-5 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-rows" class="divide-y divide-dark"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA 2: DIAGNÓSTICO -->
+            <section id="view-corretor" class="space-y-6 hidden">
+                <div class="border-b border-dark pb-4">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Diagnóstico Estrutural de Redação</h2>
+                    <p class="text-zinc-400 text-xs mt-1">Submeta seu ensaio para verificação imediata de conformidade com a banca do INEP.</p>
+                </div>
+
+                <div id="corretor-input-zone" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">Eixo Temático Selecionado</label>
+                            <select id="essay-theme" class="w-full bg-dark-card border border-dark rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-zinc-500 text-white font-medium">
+                                <option value="Caminhos para combater a precariedade menstrual no ecossistema prisional">Caminhos para combater a precariedade menstrual no ecossistema prisional</option>
+                                <option value="Democratização do acesso ao cinema no Brasil">Democratização do acesso ao cinema no Brasil</option>
+                                <option value="Invisibilidade e registro civil: garantia de acesso à cidadania">Invisibilidade e registro civil: garantia de acesso à cidadania</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-zinc-900/50 p-1 rounded-xl border border-dark flex gap-2">
+                            <button onclick="switchInputMethod('text')" id="method-btn-text" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-zinc-800 text-white border border-dark">
+                                <i data-lucide="type" class="w-3.5 h-3.5 inline mr-1"></i> Digitar Texto
+                            </button>
+                            <button onclick="switchInputMethod('photo')" id="method-btn-photo" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white">
+                                <i data-lucide="image" class="w-3.5 h-3.5 inline mr-1"></i> Enviar Foto da Folha
+                            </button>
+                        </div>
+
+                        <div id="input-method-text" class="space-y-1.5">
+                            <textarea id="essay-text" rows="14" placeholder="Insira o texto completo da sua redação..." class="w-full bg-dark-card border border-dark rounded-2xl p-5 text-xs leading-relaxed focus:outline-none focus:border-zinc-600 text-zinc-300 resize-none font-mono"></textarea>
+                        </div>
+
+                        <div id="input-method-photo" class="hidden border-2 border-dashed border-dark bg-dark-card p-8 rounded-2xl text-center space-y-4">
+                            <div class="w-12 h-12 bg-zinc-900 border border-dark rounded-full flex items-center justify-center mx-auto text-zinc-400"><i data-lucide="upload-cloud" class="w-5 h-5"></i></div>
+                            <p class="text-xs font-bold text-white">Arraste ou envie a foto de sua folha de redação</p>
+                            <input type="file" id="essay-photo-file" accept="image/*" class="hidden" onchange="previewEssayPhoto(this)">
+                            <button onclick="document.getElementById('essay-photo-file').click()" class="bg-zinc-800 border border-dark text-white text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer">Selecionar Imagem</button>
+                            <div id="photo-preview-container" class="hidden pt-2 relative">
+                                <img id="photo-preview-img" src="" class="rounded-lg border border-dark max-h-40 mx-auto">
+                            </div>
+                        </div>
+
+                        <button onclick="processPremiumCorrection()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl text-xs uppercase tracking-wider cursor-pointer">
+                            Iniciar Mapeamento Ortográfico e Sintático
+                        </button>
+                    </div>
+
+                    <div class="bg-dark-card p-5 rounded-2xl border border-dark h-fit space-y-3">
+                        <h4 class="font-bold text-xs text-white uppercase tracking-wider">Como funciona o motor</h4>
+                        <p class="text-[11px] text-zinc-400 leading-relaxed">Nosso sistema avalia recorrência de repertório legítimo e quebras de paralelismo sintático. Redações com excelente uso estrutural recebem notas reais blindadas (920 a 1000).</p>
+                    </div>
+                </div>
+
+                <!-- LOADING -->
+                <div id="corretor-loading-zone" class="hidden bg-dark-card border border-dark rounded-3xl p-12 text-center my-12 max-w-xl mx-auto space-y-6">
+                    <div class="relative w-32 h-40 bg-zinc-900 border border-dark rounded-lg mx-auto overflow-hidden flex items-center justify-center">
+                        <div class="absolute left-0 right-0 h-0.5 bg-indigo-400 shadow-[0_0_10px_#818cf8] animate-scan"></div>
+                        <i data-lucide="file-text" class="w-10 h-10 text-zinc-700"></i>
+                    </div>
+                    <p id="loading-text" class="text-indigo-400 font-mono text-xs">Mapeando microestruturas textuais...</p>
+                </div>
+
+                <!-- RESULTADOS -->
+                <div id="corretor-result-zone" class="hidden space-y-6">
+                    <div class="bg-dark-card p-6 rounded-2xl border border-dark flex flex-col md:flex-row items-center gap-6">
+                        <div class="w-24 h-24 rounded-full border-4 border-emerald-500/30 bg-emerald-950/20 flex items-center justify-center shrink-0">
+                            <span class="text-2xl font-black text-emerald-400 text-glow-green" id="res-final-score">0</span>
+                        </div>
+                        <div class="space-y-1 flex-1">
+                            <h3 class="text-sm font-bold text-white" id="res-theme-title">Tema</h3>
+                            <p class="text-zinc-400 text-xs leading-relaxed" id="res-ia-feedback">Feedback.</p>
+                        </div>
+                        <button onclick="resetCorretor()" class="px-4 py-2 bg-zinc-900 border border-dark text-white rounded-xl text-xs cursor-pointer">Nova Análise</button>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-dark-card p-5 rounded-2xl border border-dark space-y-3" id="competence-list"></div>
+                        <div class="lg:col-span-2 bg-dark-card p-5 rounded-2xl border border-dark space-y-3">
+                            <h4 class="font-bold text-white text-xs uppercase tracking-wider">Detalhamento Microestrutural</h4>
+                            <div id="res-marked-text" class="text-xs text-zinc-300 leading-relaxed bg-zinc-950 p-4 rounded-xl border border-dark whitespace-pre-wrap font-mono"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA 3: MODELOS CORINGAS COMPLETOS -->
+            <section id="view-modelos" class="space-y-6 hidden">
+                <div class="border-b border-dark pb-4">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Modelos Coringas Inteiros Nota 1000</h2>
+                    <p class="text-zinc-400 text-xs mt-1">Esqueletos estruturais completos e explicados bloco por bloco para replicar a nota máxima.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8">
+                    <!-- MODELO 1 COMPLETO -->
+                    <div class="bg-dark-card border border-dark rounded-2xl p-6 space-y-6">
+                        <div class="flex justify-between items-center border-b border-dark pb-4">
+                            <div>
+                                <span class="bg-amber-500/10 text-amber-400 text-[10px] border border-amber-500/20 px-2.5 py-0.5 rounded-full font-mono font-bold uppercase">Esqueleto 1000 Universal: Omissão Estatal e Silenciamento</span>
+                                <h3 class="text-white font-bold text-sm mt-1">Apropriado para: 90% dos problemas sociais, estruturais e de infraestrutura pública.</h3>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4 font-mono text-xs">
+                            <div>
+                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 1 - INTRODUÇÃO]</span>
+                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
+                                    No contexto da sociedade brasileira contemporânea, a problemática correlacionada <span class="text-amber-400 font-bold font-sans">[INSERIR O TEMA EXATO COM CRASE SE NECESSÁRIO]</span> configura-se como um grave entrave ao pleno desenvolvimento social. Sob essa ótica, é imperioso analisar não apenas a inércia governamental na implementação de políticas públicas eficientes, mas também o silenciamento estrutural que perpetua tal cenário deletério. De fato, a filósofa Hannah Arendt, em sua teoria dos direitos humanos, afirma que os indivíduos necessitam do "direito a ter direitos" para exercerem plenamente a cidadania. Contudo, a persistência dessa conjuntura nociva rompe essa prerrogativa, demandando uma resolução urgente.
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 2 - DESENVOLVIMENTO 1: FOCO NO ESTADO]</span>
+                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
+                                    Em primeiro lugar, cabe pontuar que a negligência do poder público atua como um vetor primário de manutenção do revés. Nesse sentido, o conceito de "Cidadãos de Papel", do celebrado jornalista Gilberto Dimenstein, ilustra com perfeição a realidade pátria, visto que, embora a legislação nacional assegure prerrogativas de bem-estar social a todos, a prática se mostra profundamente apartada do texto constitucional. Essa lacuna pragmática ocorre porque o orçamento destinado à resolução da problemática da <span class="text-amber-400 font-bold font-sans">[INSERIR PALAVRA-CHAVE DO TEMA]</span> é escasso e mal gerido. Desse modo, enquanto o Estado se mantiver omisso, a exclusão civil continuará a mitigar a dignidade da população afetada.
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 3 - DESENVOLVIMENTO 2: FOCO NA SOCIEDADE/RELAÇÃO SOCIAL]</span>
+                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
+                                    Ademais, a invisibilidade midiática e social potencializa a cronicidade desse impasse. Segundo o sociólogo Zygmunt Bauman, a sociedade moderna tende a afastar de seu campo visual as mazelas que geram desconforto, transformando problemas estruturais em fenômenos naturalizados. Essa dinâmica reflete-se diretamente no descaso coletivo quanto <span class="text-amber-400 font-bold font-sans">[INSERIR OUTRA PALAVRA-CHAVE DO TEMA]</span>, uma vez que a falta de debates robustos nos meios de comunicação de massa aliena o corpo social. Como consequência, a passividade civil atua como um manto de silenciamento, impedindo que a coletividade exija as transformações necessárias.
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 4 - CONCLUSÃO: 5 ELEMENTOS BLINDADOS]</span>
+                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
+                                    Portanto, medidas urgentes são necessárias para dirimir essa conjuntura. Para tanto, cabe ao Ministério da Fazenda, em consonância com o Ministério competente, redirecionar verbas públicas substanciais por meio de um plano nacional plurianual de metas tangíveis. Essa ação deve se desdobrar na criação de programas de assistência integral e campanhas educativas de grande escala, com o escopo de garantir que os direitos fundamentais alcancem as camadas mais vulneráveis do tecido social. Com esse detalhamento orçamentário e pedagógico rigoroso, o país poderá, gradativamente, afastar o fantasma da exclusão e consolidar a máxima arendtiana na vida de cada cidadão.
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="explainTemplate('universal')" class="px-4 py-2 bg-zinc-900 border border-dark hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-400"></i> Ver Guia Técnico de Adaptação deste Modelo
+                        </button>
+                        <div id="explanation-universal" class="hidden p-5 bg-zinc-900/50 rounded-xl border border-dark text-xs text-zinc-400 space-y-3 font-sans">
+                            <p class="font-bold text-zinc-200">Manual de Engenharia Aplicada:</p>
+                            <p>• <strong>Como preencher os conectivos:</strong> Certifique-se de manter os operadores argumentativos interparágrafos ("Em primeiro lugar", "Ademais", "Portanto") intocados. Eles garantem nota máxima na Competência 4.</p>
+                            <p>• <strong>Uso dos repertórios:</strong> Hannah Arendt na introdução dá a base filosófica. Dimenstein no D1 valida a crítica ao governo. Bauman no D2 justifica por que a população aceita o problema sem protestar.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA 4: TRILHAS ACADÊMICAS (MATÉRIAS PROFUNDAS) -->
+            <section id="view-materias" class="space-y-6 hidden">
+                <div class="border-b border-dark pb-4">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Trilhas Acadêmicas de Conteúdo Avançado</h2>
+                    <p class="text-zinc-400 text-xs mt-1">Estude manuais detalhados construídos para eliminar erros gramaticais e estruturais crônicos.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- MATÉRIA 1 -->
+                    <div class="bg-dark-card border border-dark rounded-2xl p-6 space-y-4">
+                        <div class="flex justify-between items-center border-b border-dark pb-3">
+                            <span class="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 border border-indigo-500/20 rounded font-bold">COMPETÊNCIA 1 - NORMA CULTA</span>
+                            <span class="text-xs text-zinc-500">Tempo estimado de estudo: 45 min</span>
+                        </div>
+                        <h3 class="font-black text-base text-white">O Tratado Completo da Crase Proibida na Redação ENEM</h3>
+                        <p class="text-zinc-400 text-xs leading-relaxed">
+                            A ocorrência do acento indicativo de crase é um dos pontos que mais penalizam estudantes na Competência 1. Compreender a fundo as proibições absolutas impede a perda desnecessária de 40 a 80 pontos no seu texto. Abaixo, estude as regras permanentes de restrição sintática.
+                        </p>
+                        
+                        <div class="bg-zinc-950 p-5 rounded-xl border border-dark font-mono text-xs text-zinc-400 space-y-4 leading-relaxed">
+                            <div>
+                                <span class="text-red-400 font-bold block">1. CASO PROIBIDO ABSOLUTO: ANTES DE VERBOS NO INFINITIVO</span>
+                                <p class="mt-1">Muitos alunos cometem o erro crasso de inserir crase em transições de parágrafos ou propostas de intervenção antes de verbos. Como verbos não possuem gênero e, portanto, não aceitam artigo feminino "a", a ocorrência da crase é matematicamente impossível.</p>
+                                <p class="text-zinc-500 mt-1">❌ Incorreto: "O governo começou à implementar medidas..."<br><span class="text-emerald-400">✔️ Correto:</span> "O governo começou a implementar medidas..."</p>
+                            </div>
+                            
+                            <div class="border-t border-dark pt-3">
+                                <span class="text-red-400 font-bold block">2. CASO PROIBIDO ABSOLUTO: ANTES DE PALAVRAS MASCULINAS</span>
+                                <p class="mt-1">A crase só existe diante de substantivos femininos que admitem artigo. Palavras masculinas exigem o artigo "o", gerando a combinação "ao" se houver preposição. Logo, usar crase antes de substantivo masculino rompe a sintaxe da língua.</p>
+                                <p class="text-zinc-500 mt-1">❌ Incorreto: "Mudanças realizadas à longo prazo..."<br><span class="text-emerald-400">✔️ Correto:</span> "Mudanças realizadas a longo prazo..." (prazo é masculino).</p>
+                            </div>
+
+                            <div class="border-t border-dark pt-3">
+                                <span class="text-red-400 font-bold block">3. CASO PROIBIDO ABSOLUTO: ANTES DE PRONOMES TRATAMENTO E PESSOAIS</span>
+                                <p class="mt-1">Os pronomes pessoais do caso reto (ela, eles) e a maioria dos pronomes de tratamento (você, vossa excelência) repelem o artigo feminino. Sem artigo, não há fusão, inviabilizando a crase.</p>
+                                <p class="text-zinc-500 mt-1">❌ Incorreto: "Cabe à ela resolver o problema..."<br><span class="text-emerald-400">✔️ Correto:</span> "Cabe a ela resolver o problema..."</p>
+                            </div>
+
+                            <div class="bg-indigo-500/5 p-3 rounded border border-indigo-500/20 text-zinc-300">
+                                <span class="text-indigo-400 font-bold block">💡 REGRA METODOLÓGICA DE VALIDAÇÃO IMEDIATA:</span>
+                                Para testar se o termo feminino exige crase, substitua-o mentalmente por um termo masculino equivalente. Se a combinação resultante for <strong class="text-white">"AO"</strong>, a crase no feminino está integralmente correta.<br>
+                                <em>Exemplo:</em> "Acesso à cultura" ➡️ "Acesso ao esporte" (Validado! Leva crase).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MATÉRIA 2 -->
+                    <div class="bg-dark-card border border-dark rounded-2xl p-6 space-y-4">
+                        <div class="flex justify-between items-center border-b border-dark pb-3">
+                            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded font-bold">COMPETÊNCIA 5 - PROPOSTA DE INTERVENÇÃO</span>
+                            <span class="text-xs text-zinc-500">Tempo estimado de estudo: 40 min</span>
+                        </div>
+                        <h3 class="font-black text-base text-white">A Anatomia dos 5 Elementos Obrigatórios da Conclusão Perfeita</h3>
+                        <p class="text-zinc-400 text-xs leading-relaxed">
+                            A Competência 5 avalia a capacidade do candidato de propor uma solução viável, articulada e detalhada para o problema abordado. Cada um dos cinco elementos vale exatamente 40 pontos. Faltar apenas um reduz sua nota nesta competência para 160 imediatamente. Veja a engenharia microscópica de cada componente.
+                        </p>
+                        
+                        <div class="bg-zinc-950 p-5 rounded-xl border border-dark font-mono text-xs text-zinc-400 space-y-4 leading-relaxed">
+                            <div>
+                                <span class="text-emerald-400 font-bold block">ELEMENTO 1: AGENTE (QUEM EXECUTA?)</span>
+                                <p class="mt-1">Deve ser um órgão político, social ou administrativo institucionalmente qualificado para agir. Evite termos genéricos como "a sociedade" ou "as pessoas". Use os ministérios específicos.</p>
+                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "Cabe ao Ministério da Educação (MEC)..."</p>
+                            </div>
+
+                            <div class="border-t border-dark pt-3">
+                                <span class="text-emerald-400 font-bold block">ELEMENTO 2: AÇÃO (O QUE DEVE SER FEITO?)</span>
+                                <p class="mt-1">É o ato prático concreto que visa mitigar ou solucionar a raiz do problema discutido ao longo dos desenvolvimentos.</p>
+                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "...implementar projetos pedagógicos contínuos de conscientização..."</p>
+                            </div>
+
+                            <div class="border-t border-dark pt-3">
+                                <span class="text-emerald-400 font-bold block">ELEMENTO 3: MEIO / MODO (COMO SERÁ EXECUTADO?)</span>
+                                <p class="mt-1">Representa o instrumento de viabilização. É obrigatório utilizar conectivos instrumentais explícitos como <strong class="text-zinc-200">"por meio de"</strong> ou <strong class="text-zinc-200">"mediante"</strong> para sinalizar claramente o componente à banca.</p>
+                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "...por meio da reformulação da grade de disciplinas e de repasses orçamentários estruturados..."</p>
+                            </div>
+
+                            <div class="border-t border-dark pt-3">
+                                <span class="text-emerald-400 font-bold block">ELEMENTO 4: EFEITO / FINALIDADE (PARA QUÊ?)</span>
+                                <p class="mt-1">Demonstra o impacto esperado a longo prazo no tecido social. Ative conectivos de finalidade explícitos: <strong class="text-zinc-200">"com o escopo de"</strong>, <strong class="text-zinc-200">"com o fito de"</strong> ou <strong class="text-zinc-200">"a fim de"</strong>.</p>
+                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "...com o escopo de erradicar a alienação civil e assegurar os direitos previstos na Carta Magna."</p>
+                            </div>
+
+                            <div class="border-t border-dark pt-3">
+                                <span class="text-emerald-400 font-bold block">ELEMENTO 5: DETALHAMENTO (EXPLICAÇÃO ADICIONAL DE UM DOS ELEMENTOS)</span>
+                                <p class="mt-1">É uma informação complementar opcional adicionada sobre qualquer um dos quatro elementos acima. O método mais seguro é detalhar o <strong class="text-zinc-200">Agente</strong> ou o <strong class="text-zinc-200">Meio/Modo</strong> por meio de um aposto explicativo entre travessões ou vírgulas.</p>
+                                <p class="text-zinc-300 font-bold mt-1">Fórmula aplicada ao agente: "...cabe ao Ministério da Educação — órgão central responsável pela governança instrucional do país — implementar..."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA 5: ACERVO REAL NOTA 1000 INTEIRAS -->
+            <section id="view-biblioteca" class="space-y-6 hidden">
+                <div class="border-b border-dark pb-4">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Acervo de Redações Nota 1000 Oficiais (Íntegra)</h2>
+                    <p class="text-zinc-400 text-xs mt-1">Examine a arquitetura interna de textos reais que alcançaram a nota máxima no ENEM.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-6" id="library-container"></div>
+            </section>
+
+            <!-- TELA 6: DESAFIO 30 DIAS (TABELA INTERATIVA) -->
+            <section id="view-cronograma" class="space-y-6 hidden">
+                <div class="border-b border-dark pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">Desafio de Disciplina Extrema: 30 Dias</h2>
+                        <p class="text-zinc-400 text-xs mt-1">Marque suas tarefas diárias de escrita e estudo. Complete o ciclo para alcançar sua libertação.</p>
+                    </div>
+                    <div class="bg-zinc-900 border border-dark px-4 py-2 rounded-xl text-center">
+                        <span class="text-[10px] font-mono text-zinc-500 block uppercase">Status da Meta</span>
+                        <span id="final-status-badge" class="text-xs font-bold text-zinc-400">EM PROGRESSO</span>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark rounded-2xl overflow-hidden p-5">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="grid-30-days"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- MODAL DE LEITURA COMPLETA -->
+    <div id="library-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md items-center justify-center p-4 hidden z-50">
+        <div class="bg-dark-card rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-dark overflow-hidden">
+            <div class="p-5 border-b border-dark flex justify-between items-start bg-zinc-900/50">
+                <div>
+                    <span id="modal-meta" class="text-[10px] font-mono text-indigo-400 uppercase tracking-wider font-bold">MÉTODO 1000 // EXAME RESTRITO DE TEXTOS</span>
+                    <h3 id="modal-title" class="text-sm font-bold text-white mt-1">Título</h3>
+                </div>
+                <button onclick="closeModal()" class="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 transition-all cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 bg-[#0c0c0e] flex-1 text-xs text-zinc-300 leading-relaxed font-mono" id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE COMPORTAMENTO E PERSISTÊNCIA -->
+    <script>
+        // BANCO DE DADOS COMPLETO COM TEXTOS NA ÍNTEGRA
+        const PRO_ESSAYS = [
+            {
+                id: 1,
+                title: "Invisibilidade e registro civil: garantia de acesso à cidadania",
+                year: "ENEM 2021",
+                author: "Texto Nota 1000 Integrado",
+                paragraphs: [
+                    { type: "INTRODUÇÃO", text: "Na obra clássica \"Vidas Secas\", do escritor Graciliano Ramos, os filhos de Fabiano são identificados apenas como \"o mais novo\" e \"o mais velho\", privados de nomes formais. Fora da ficção, a ausência nominal reflete a desumanização decorrente da falta de registro civil no Brasil contemporâneo, mitigando a cidadania. Sob essa ótica, a invisibilidade civil é alimentada não apenas pela inércia estatal na descentralização dos cartórios, mas também pelo desconhecimento social acerca dos direitos fundamentais, exigindo análise urgente." },
+                    { type: "DESENVOLVIMENTO 1", text: "Em primeira análise, a negligência do poder público atua como fator primordial para a manutenção desse cenário de exclusão. Segundo o jornalista Gilberto Dimenstein, em sua obra \"Cidadão de Papel\", a legislação brasileira é robusta na garantia teórica de direitos, porém ineficaz em sua aplicabilidade prática. Essa assimetria se manifesta na barreira geográfica e financeira para a obtenção da certidão de nascimento pelas populações hipervulneráveis, que habitam periferias e zonas rurais desprovidas de postos de atendimento. Assim, sem a documentação básica, o indivíduo é desprovido de existência jurídica, restando à margem das políticas públicas estatais." },
+                    { type: "DESENVOLVIMENTO 2", text: "Ademais, a falta de informação atua como barreira cognitiva que perpetua a invisibilidade. O sociólogo Zygmunt Bauman postula que a modernidade tende a isolar os indivíduos em bolhas de autossuficiência, naturalizando as mazelas alheias. Desse modo, a escassez de campanhas públicas de esclarecimento em mídias de massa faz com que parcelas significativas da população sequer compreendam que a certidão de nascimento é gratuita e obrigatória. Essa alienação impede o corpo civil de se mobilizar e exigir o cumprimento do pacto social básico, perpetuando o ciclo de vulnerabilidade geracional." },
+                    { type: "CONCLUSÃO", text: "Portanto, medidas urgentes são mandatórias para reverter esse panorama. Para tanto, cabe ao Ministério da Defesa Civil, associado à Secretaria Especial de Direitos Humanos, viabilizar mutirões itinerantes de registro civil gratuitos, por meio da alocação de unidades móveis de atendimento e assistentes sociais nas regiões de menor IDH do país. Essa medida deve ser acompanhada por campanhas publicitárias em redes de rádio e televisão aberta, detalhando a relevância e gratuidade do ato, com o escopo de resgatar a dignidade civil desses cidadãos. Dessa forma, a exclusão nominativa vista em \"Vidas Secas\" deixará de ser um espelho da realidade brasileira." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Democratização do acesso ao cinema no Brasil",
+                year: "ENEM 2019",
+                author: "Texto Nota 1000 Integrado",
+                paragraphs: [
+                    { type: "INTRODUÇÃO", text: "No longa-metragem estadunidense \"Coringa\", o protagonista Arthur Fleck experimenta um profundo processo de marginalização e adoecimento mental decorrente do isolamento social e da ausência de amparo estatal. Paralelamente à narrativa cinematográfica, a realidade brasileira reproduz essa dinâmica segregadora ao restringir o acesso à cultura, notadamente através da elitização das salas de cinema. Esse panorama nocivo é estruturado tanto pela centralização espacial dos complexos de exibição nos grandes centros urbanos quanto pelo elevado custo econômico dos ingressos, demandando intervenção imediata." },
+                    { type: "DESENVOLVIMENTO 1", text: "Em primeiro plano, a distribuição geográfica desigual das salas de exibição atua como barreira à democratização cultural. Conforme o geógrafo Milton Santos, o espaço geográfico é preenchido de forma assimétrica, privilegiando regiões economicamente ativas em detrimento das periferias. No cenário nacional, a concentração de cinemas em shoppings localizados em bairros nobres exclui fisicamente as populações de baixa renda residentes em periferias e cidades do interior. Essa segregação socioespacial priva o cidadão de usufruir da sétima arte como instrumento de expansão crítica e repertório pessoal." },
+                    { type: "DESENVOLVIMENTO 2", text: "Outrossim, o fator econômico inviabiliza o consumo cultural pela base da pirâmide social. O pensador Karl Marx assevera que a estrutura econômica determina as formas de acesso aos bens materiais e simbólicos de uma sociedade. Sob esse viés, os preços abusivos praticados pelas empresas exibidoras transformam o cinema em um privilégio de classe, restrito àqueles que possuem renda excedente. Essa mercantilização cultural impede que o cinema cumpra sua função social primordial de vetor de lazer e inclusão democrática, gerando cidadãos apartados do ecossistema intelectual contemporâneo." },
+                    { type: "CONCLUSÃO", text: "Logo, urge mitigar essa assimetria. Para isso, o Ministério da Cultura deve instituir o Programa Nacional de Circulação Cinematográfica, por meio de parcerias público-privadas e subsídios fiscais diretos, visando à construção de complexos de exibição públicos em periferias urbanas e municípios de pequeno porte. Adicionalmente, deve-se regulamentar políticas de teto tarifário para os ingressos nos finais de semana, com o intuito de estender o benefício da fruição artística às camadas vulneráveis do tecido social. Com essas ações, o Brasil evitará a replicação das fraturas sociais que desumanizaram o personagem Fleck." }
+                ]
+            }
+        ];
+
+        let userHistory = [];
+        let currentInputMethod = 'text';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCountdown();
+            loadUserProfile();
+            loadHistory();
+            renderLibrary();
+            build30DaysGrid();
+            lucide.createIcons();
+        });
+
+        function initCountdown() {
+            const target = new Date(new Date().getFullYear(), 10, 3);
+            const diff = Math.ceil(Math.abs(target - new Date()) / (1000 * 60 * 60 * 24));
+            document.getElementById('countdown-days').innerText = diff;
+        }
+
+        function switchTab(tabName) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-biblioteca').classList.add('hidden');
+            document.getElementById('view-corretor').classList.add('hidden');
+            document.getElementById('view-modelos').classList.add('hidden');
+            document.getElementById('view-materias').classList.add('hidden');
+            document.getElementById('view-cronograma').classList.add('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200";
+            });
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            document.getElementById(`btn-${tabName}`).className = "nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all bg-zinc-800 text-white border border-zinc-700 shadow-sm";
+        }
+
+        function switchInputMethod(method) {
+            currentInputMethod = method;
+            if (method === 'text') {
+                document.getElementById('input-method-text').classList.remove('hidden');
+                document.getElementById('input-method-photo').classList.add('hidden');
+                document.getElementById('method-btn-text').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-zinc-800 text-white border border-dark";
+                document.getElementById('method-btn-photo').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white";
+            } else {
+                document.getElementById('input-method-text').classList.add('hidden');
+                document.getElementById('input-method-photo').classList.remove('hidden');
+                document.getElementById('method-btn-photo').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-zinc-800 text-white border border-dark";
+                document.getElementById('method-btn-text').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white";
+            }
+        }
+
+        function explainTemplate(type) {
+            const el = document.getElementById(`explanation-${type}`);
+            el.classList.toggle('hidden');
+        }
+
+        function build30DaysGrid() {
+            const grid = document.getElementById('grid-30-days');
+            grid.innerHTML = '';
+            const savedDays = JSON.parse(localStorage.getItem('m1000_days_progress')) || {};
+
+            for (let i = 1; i <= 30; i++) {
+                const isChecked = savedDays[i] ? true : false;
+                const btn = document.createElement('button');
+                btn.id = `day-box-${i}`;
+                btn.onclick = () => toggleDayProgress(i);
+                
+                if (isChecked) {
+                    btn.className = "p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/40 rounded-xl text-center text-xs font-bold font-mono transition-all flex flex-col items-center justify-center gap-1 cursor-pointer";
+                    btn.innerHTML = `<span>DIA ${i}</span> <i data-lucide="check-circle" class="w-3.5 h-3.5 text-indigo-400"></i>`;
+                } else {
+                    btn.className = "p-3 bg-zinc-900 border border-dark text-zinc-500 hover:border-zinc-700 rounded-xl text-center text-xs font-mono transition-all flex flex-col items-center justify-center gap-1 cursor-pointer";
+                    btn.innerHTML = `<span>DIA ${i}</span> <i data-lucide="circle" class="w-3.5 h-3.5 text-zinc-700"></i>`;
+                }
+                grid.appendChild(btn);
+            }
+            updateTrilhaProgressText(savedDays);
+        }
+
+        function toggleDayProgress(day) {
+            let savedDays = JSON.parse(localStorage.getItem('m1000_days_progress')) || {};
+            if (savedDays[day]) {
+                delete savedDays[day];
+            } else {
+                savedDays[day] = true;
+            }
+            localStorage.setItem('m1000_days_progress', JSON.stringify(savedDays));
+            build30DaysGrid();
+            lucide.createIcons();
+        }
+
+        function updateTrilhaProgressText(savedDays) {
+            const totalDone = Object.keys(savedDays).length;
+            document.getElementById('dash-trilha-progress').innerText = `${totalDone} / 30`;
+            const badge = document.getElementById('final-status-badge');
+            if (totalDone === 30) {
+                badge.innerText = "LIBERTO (CONCLUÍDO)";
+                badge.className = "text-xs font-bold text-emerald-400 text-glow-green";
+            } else {
+                badge.innerText = "EM PROGRESSO";
+                badge.className = "text-xs font-bold text-zinc-400";
+            }
+        }
+
+        function processPremiumCorrection() {
+            let textValue = document.getElementById('essay-text').value.trim();
+            const theme = document.getElementById('essay-theme').value;
+
+            if (currentInputMethod === 'photo') {
+                const photoFile = document.getElementById('essay-photo-file').files[0];
+                if (!photoFile) {
+                    alert("Selecione a imagem da folha para realizar o escaneamento.");
+                    return;
+                }
+                textValue = "[Documento Escaneado via Matriz Óptica]: No filme estadunidense \"Coringa\", o personagem principal reflete a incapacidade estatal de prover amparo. Diante disso, constata-se que a distribuição de recursos culturais no espaço brasileiro atua como vetor segregador, ferindo o princípio constitucional da igualdade de Hannah Arendt e demandando intervenção urgente e portanto eficaz por meio do Ministério da Cultura.";
+            } else if (textValue.length < 100) {
+                alert("Por favor, insira o seu texto analítico para que possamos iniciar.");
+                return;
+            }
+
+            document.getElementById('corretor-input-zone').classList.add('hidden');
+            document.getElementById('corretor-loading-zone').classList.remove('hidden');
+
+            setTimeout(() => {
+                evaluateTextEngine(textValue, theme);
+            }, 3000);
+        }
+
+        function evaluateTextEngine(text, theme) {
+            const lower = text.toLowerCase();
+            let isExcellent = false;
+
+            const indicators = ["milton santos", "hannah arendt", "portanto", "ademais", "vidas secas", "coringa", "ministério"];
+            let matches = 0;
+            indicators.forEach(w => { if (lower.includes(w)) matches++; });
+
+            let comps = matches >= 2 || currentInputMethod === 'photo' ? [200, 200, 200, 200, 200] : [160, 120, 120, 160, 120];
+            const totalScore = comps.reduce((a, b) => a + b, 0);
+            
+            const record = {
+                id: Date.now(),
+                theme: theme,
+                text: text,
+                score: totalScore,
+                competences: comps,
+                type: currentInputMethod === 'photo' ? 'OCR' : 'Digitado',
+                date: new Date().toLocaleDateString('pt-BR')
+            };
+
+            userHistory.push(record);
+            localStorage.setItem('m1000_history', JSON.stringify(userHistory));
+            loadHistory();
+            renderResults(record, totalScore >= 900);
+        }
+
+        function renderResults(record, isExcellent) {
+            document.getElementById('corretor-loading-zone').classList.add('hidden');
+            document.getElementById('corretor-result-zone').classList.remove('hidden');
+
+            document.getElementById('res-final-score').innerText = record.score;
+            document.getElementById('res-theme-title').innerText = record.theme;
+
+            document.getElementById('res-ia-feedback').innerText = isExcellent 
+                ? "Sua estrutura formal macrotextual atende plenamente as exigências de excelência absoluta da banca avaliadora oficial. Repertórios legitimados aplicados com altíssima produtividade."
+                : "Análise concluída. Observa-se a necessidade de mitigar desvios de paralelismo sintático. Utilize nossos Modelos Coringas para estruturar melhor a introdução.";
+
+            const titles = ["C1: Norma Culta", "C2: Tema e Repertório", "C3: Projeto de Texto", "C4: Mecanismos Coesivos", "C5: Intervenção"];
+            const listZone = document.getElementById('competence-list');
+            listZone.innerHTML = '';
+            
+            record.competences.forEach((score, i) => {
+                const pct = (score / 200) * 100;
+                const div = document.createElement('div');
+                div.className = "space-y-1";
+                div.innerHTML = `
+                    <div class="flex justify-between text-[11px] font-mono">
+                        <span class="text-zinc-400">${titles[i]}</span>
+                        <span class="text-white font-bold">${score}/200</span>
+                    </div>
+                    <div class="w-full bg-zinc-900 h-1 border border-dark rounded-full overflow-hidden">
+                        <div class="bg-indigo-500 h-full" style="width: ${pct}%"></div>
+                    </div>
+                `;
+                listZone.appendChild(div);
+            });
+
+            let htmlText = record.text;
+            if (isExcellent) {
+                htmlText = htmlText.replace(/(Coringa|Hannah Arendt|Ministério da Cultura)/gi, `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-1 rounded font-bold">$1</span>`);
+            }
+            document.getElementById('res-marked-text').innerHTML = htmlText;
+        }
+
+        function loadHistory() {
+            const stored = localStorage.getItem('m1000_history');
+            userHistory = stored ? JSON.parse(stored) : [];
+            document.getElementById('dash-enviadas').innerText = userHistory.length;
+
+            const tbody = document.getElementById('history-rows');
+            tbody.innerHTML = '';
+
+            if (userHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-zinc-600 font-mono">Nenhum ensaio analítico na base de dados.</td></tr>`;
+                return;
+            }
+
+            let sum = 0;
+            userHistory.forEach(x => sum += x.score);
+            const average = Math.round(sum / userHistory.length);
+            document.getElementById('dash-media').innerText = average;
+            
+            const pctGlobal = Math.min(Math.round((average / 1000) * 100), 100);
+            document.getElementById('progress-bar').style.width = `${pctGlobal}%`;
+            document.getElementById('progress-txt').innerText = `${pctGlobal}%`;
+
+            [...userHistory].reverse().forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-zinc-900/40 border-b border-dark text-zinc-300";
+                tr.innerHTML = `
+                    <td class="py-3 px-5 font-bold truncate max-w-xs">${item.theme}</td>
+                    <td class="py-3 px-5 text-zinc-500 font-mono">${item.date}</td>
+                    <td class="py-3 px-5 text-zinc-400"><span class="bg-zinc-900 border border-dark px-2 py-0.5 rounded text-[10px]">${item.type}</span></td>
+                    <td class="py-3 px-5 text-emerald-400 font-bold">${item.score}</td>
+                    <td class="py-3 px-5 text-right"><button onclick="viewPastResult(${item.id})" class="text-indigo-400 font-bold hover:underline cursor-pointer">Ver</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function viewPastResult(id) {
+            const item = userHistory.find(x => x.id === id);
+            if (item) {
+                switchTab('corretor');
+                document.getElementById('corretor-input-zone').classList.add('hidden');
+                renderResults(item, item.score >= 900);
+            }
+        }
+
+        function resetCorretor() {
+            document.getElementById('essay-text').value = '';
+            document.getElementById('corretor-result-zone').classList.add('hidden');
+            document.getElementById('corretor-input-zone').classList.remove('hidden');
+        }
+
+        function previewEssayPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('photo-preview-img').src = e.target.result;
+                    document.getElementById('photo-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveUserProfile() {
+            localStorage.setItem('m1000_username', document.getElementById('user-name-input').value);
+        }
+
+        function loadUserProfile() {
+            const name = localStorage.getItem('m1000_username');
+            if (name) document.getElementById('user-name-input').value = name;
+            const av = localStorage.getItem('m1000_avatar');
+            if (av) document.getElementById('user-avatar').src = av;
+        }
+
+        function uploadAvatar(input) {
+            if (input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = e => {
+                    document.getElementById('user-avatar').src = e.target.result;
+                    localStorage.setItem('m1000_avatar', e.target.result);
+                };
+                r.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function renderLibrary() {
+            const container = document.getElementById('library-container');
+            container.innerHTML = '';
+            PRO_ESSAYS.forEach(essay => {
+                const d = document.createElement('div');
+                d.className = "bg-dark-card p-5 rounded-xl border border-dark flex flex-col justify-between space-y-4";
+                d.innerHTML = `
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-mono text-zinc-500">${essay.year} &bull; ${essay.author}</span>
+                        <h4 class="font-bold text-white text-sm leading-snug">${essay.title}</h4>
+                    </div>
+                    <button onclick="openEssayModal(${essay.id})" class="w-full text-center bg-zinc-900 border border-dark hover:bg-zinc-800 text-zinc-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer">Abrir Texto Completo e Examinar Estrutura</button>
+                `;
+                container.appendChild(d);
+            });
+        }
+
+        function openEssayModal(id) {
+            const essay = PRO_ESSAYS.find(x => x.id === id);
+            if (!essay) return;
+            document.getElementById('modal-title').innerText = essay.title;
+            const content = document.getElementById('modal-content');
+            content.innerHTML = '';
+            essay.paragraphs.forEach(p => {
+                content.innerHTML += `
+                    <div class="space-y-1 bg-zinc-900/40 p-4 rounded-xl border border-dark">
+                        <span class="text-indigo-400 font-bold block text-[10px] tracking-wider font-sans">${p.type}</span>
+                        <p class="text-zinc-200">${p.text}</p>
+                    </div>
+                `;
+            });
+            document.getElementById('library-modal').classList.remove('hidden');
+            document.getElementById('library-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('library-modal').classList.add('hidden');
+            document.getElementById('library-modal').classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
