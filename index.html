@@ -32,181 +32,9 @@
             70% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
             100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
         }
-
-        /* ───────────────────────────────────────────────────────── */
-        /* SCANNER BIOMÉTRICO DE ENTRADA */
-        /* ───────────────────────────────────────────────────────── */
-        #biometric-scanner {
-            transition: opacity 0.9s ease, filter 0.9s ease, transform 0.9s ease;
-        }
-        #biometric-scanner.scanner-hide {
-            opacity: 0;
-            filter: blur(10px) brightness(2.2);
-            transform: scale(1.18);
-            pointer-events: none;
-        }
-        .scanner-grid {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(6,182,212,0.07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(6,182,212,0.07) 1px, transparent 1px);
-            background-size: 28px 28px;
-            mask-image: radial-gradient(circle at center, rgba(0,0,0,0.9) 0%, transparent 70%);
-            opacity: 0.6;
-        }
-        .scanner-ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 1px solid rgba(6,182,212,0.35);
-        }
-        .scanner-ring-outer { width: 100%; height: 100%; animation: scannerPulse 2.4s ease-in-out infinite; }
-        .scanner-ring-inner { width: 72%; height: 72%; border-color: rgba(6,182,212,0.6); animation: scannerPulse 2.4s ease-in-out infinite 0.4s; }
-        .scanner-core {
-            position: absolute;
-            width: 55%; height: 55%;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(6,182,212,0.35) 0%, rgba(6,182,212,0.05) 60%, transparent 100%);
-            box-shadow: 0 0 50px 8px rgba(6,182,212,0.35), inset 0 0 30px rgba(6,182,212,0.25);
-            animation: scannerGlow 2s ease-in-out infinite;
-        }
-        .scanner-line {
-            position: absolute;
-            top: 6%;
-            left: 8%;
-            right: 8%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #22d3ee, transparent);
-            box-shadow: 0 0 14px 3px #22d3ee;
-            animation: scannerSweep 1.7s ease-in-out infinite;
-        }
-        .scanner-corner {
-            position: absolute;
-            width: 16px; height: 16px;
-            border: 2px solid #22d3ee;
-            opacity: 0.85;
-        }
-        .scanner-corner.tl { top: -4px; left: -4px; border-right: none; border-bottom: none; }
-        .scanner-corner.tr { top: -4px; right: -4px; border-left: none; border-bottom: none; }
-        .scanner-corner.bl { bottom: -4px; left: -4px; border-right: none; border-top: none; }
-        .scanner-corner.br { bottom: -4px; right: -4px; border-left: none; border-top: none; }
-        @keyframes scannerSweep {
-            0%   { top: 6%; opacity: 0.9; }
-            50%  { top: 90%; opacity: 1; }
-            100% { top: 6%; opacity: 0.9; }
-        }
-        @keyframes scannerPulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.06); opacity: 1; }
-        }
-        @keyframes scannerGlow {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-        .scanner-dots::after {
-            content: '';
-            animation: scannerDots 1.2s steps(4, end) infinite;
-        }
-        @keyframes scannerDots {
-            0%   { content: ''; }
-            25%  { content: '.'; }
-            50%  { content: '..'; }
-            75%  { content: '...'; }
-            100% { content: ''; }
-        }
-
-        /* ───────────────────────────────────────────────────────── */
-        /* HOLOGRAMA 3D DA CARTEIRA */
-        /* ───────────────────────────────────────────────────────── */
-        .cube-scene {
-            position: relative;
-            width: 96px;
-            height: 96px;
-            perspective: 650px;
-            margin: 0 auto;
-        }
-        .cube-3d {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            cursor: grab;
-            touch-action: none;
-        }
-        .cube-3d.dragging { cursor: grabbing; }
-        .cube-face {
-            position: absolute;
-            width: 96px;
-            height: 96px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 9px;
-            line-height: 1.2;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.18);
-            backface-visibility: hidden;
-            padding: 6px;
-            color: #fff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.7);
-            border-radius: 6px;
-            word-break: break-word;
-        }
-        .cube-face-front  { transform: translateZ(48px); }
-        .cube-face-back   { transform: translateZ(-48px) rotateY(180deg); }
-        .cube-face-right  { transform: rotateY(90deg) translateZ(48px); }
-        .cube-face-left   { transform: rotateY(-90deg) translateZ(48px); }
-        .cube-face-top    { transform: rotateX(90deg) translateZ(48px); }
-        .cube-face-bottom { transform: rotateX(-90deg) translateZ(48px); }
-        .cube-info {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            background: rgba(0,0,0,0.82);
-            border: 1px solid rgba(6,182,212,0.4);
-            border-radius: 10px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-            z-index: 5;
-            padding: 6px;
-        }
-        .cube-scene.hovered .cube-info { opacity: 1; }
-        .cube-scene.hovered .cube-3d { filter: drop-shadow(0 0 14px var(--cube-glow, rgba(6,182,212,0.6))); }
     </style>
 </head>
 <body style="background:#000 !important;" class="bg-black text-slate-100 min-h-screen pb-28">
-
-    <!-- ───────────────────────────────────────────────────────────── -->
-    <!-- SCANNER BIOMÉTRICO DE ENTRADA -->
-    <!-- ───────────────────────────────────────────────────────────── -->
-    <div id="biometric-scanner" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden">
-        <div class="scanner-grid"></div>
-        <div class="relative w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center">
-            <div class="scanner-ring scanner-ring-outer"></div>
-            <div class="scanner-ring scanner-ring-inner"></div>
-            <div class="scanner-core"></div>
-            <div class="scanner-line"></div>
-            <div class="scanner-corner tl"></div>
-            <div class="scanner-corner tr"></div>
-            <div class="scanner-corner bl"></div>
-            <div class="scanner-corner br"></div>
-            <i data-lucide="fingerprint" class="w-12 h-12 sm:w-14 sm:h-14 text-cyan-300 relative z-10"></i>
-        </div>
-        <div class="mt-8 text-center px-6">
-            <p id="scanner-status" class="font-logo text-cyan-400 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">DIGITALIZANDO<span class="scanner-dots"></span></p>
-            <div class="w-44 h-0.5 bg-slate-900 mt-4 mx-auto overflow-hidden rounded-full">
-                <div id="scanner-progress" class="h-full bg-cyan-400"></div>
-            </div>
-        </div>
-    </div>
-
     <div class="max-w-2xl mx-auto">
         <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-slate-900 p-4">
             <div class="flex justify-between items-center">
@@ -316,23 +144,9 @@
                 </div>
             </section>
 
-            <div class="px-4 flex items-center gap-2">
-                <button id="btn-view-lista" onclick="alternarVisualizacao('lista')" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition">
-                    <i data-lucide="list" class="w-3.5 h-3.5"></i> Lista
-                </button>
-                <button id="btn-view-holograma" onclick="alternarVisualizacao('holograma')" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition">
-                    <i data-lucide="box" class="w-3.5 h-3.5"></i> Holograma 3D
-                </button>
-            </div>
-
             <main id="lista-ativos" class="p-4 space-y-3">
                 <p class="text-xs text-slate-500 text-center py-8">Defina um perfil de tolerância simulado para visualizar a distribuição dos meus ativos pessoais.</p>
             </main>
-
-            <section id="secao-holograma" class="p-4 hidden">
-                <p class="text-[10px] text-slate-500 text-center mb-3 uppercase tracking-wider">🖱️ Arraste os cubos para girar · passe o mouse para ver os detalhes</p>
-                <div id="holograma-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-5 py-2"></div>
-            </section>
 
             <section class="p-4">
                 <div class="flex items-center justify-between mb-3">
@@ -697,21 +511,6 @@
         let liquidezSelecionada = 'porquinho';
         let chartInstancia = null;
         let abaAtualAtiva = 'carteira';
-
-        // ─────────────────────────────────────────────────────────────
-        // HOLOGRAMA 3D — estado e mapa de cores por categoria
-        // ─────────────────────────────────────────────────────────────
-        let modoVisualizacao = 'lista';
-        let cubosHolograma = [];
-        let loopHologramaAtivo = false;
-
-        const coresHolograma = {
-            'Renda Fixa':   { bg: '#3b82f6', glow: 'rgba(59,130,246,0.65)' },
-            'Ações':        { bg: '#10b981', glow: 'rgba(16,185,129,0.65)' },
-            'Multimercado': { bg: '#a855f7', glow: 'rgba(168,85,247,0.65)' },
-            'Liquidez':     { bg: '#f59e0b', glow: 'rgba(245,158,11,0.65)' },
-            'Global':       { bg: '#ec4899', glow: 'rgba(236,72,153,0.65)' }
-        };
 
         const dadosGraficoPeriodos = {
             '1A':  [5, 12, 19, 26, 38, 48.3],
@@ -1344,7 +1143,6 @@
                 avisoLiq.classList.add('hidden');
                 document.getElementById('secao-grafico').classList.add('hidden');
                 document.getElementById('lista-ativos').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Insira um valor numérico válido no campo acima para processar as proporções matemáticas.</p>';
-                if (modoVisualizacao === 'holograma') renderizarHolograma();
                 return;
             }
 
@@ -1361,7 +1159,6 @@
                         <h3 class="text-xs font-bold text-white uppercase">${liquidezSelecionada === 'porquinho' ? 'Porquinho Inter' : 'Caixinha Nubank'}</h3>
                         <p class="text-xs text-slate-400 mt-2">Reserva de oportunidade imediata com liquidez diária instantânea.</p>
                     </div>`;
-                if (modoVisualizacao === 'holograma') renderizarHolograma();
                 return;
             }
 
@@ -1384,7 +1181,6 @@
             if (ativosFiltrados.length === 0) {
                 document.getElementById('lista-ativos').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Nenhum ativo da minha carteira atende ao filtro e aporte mínimo simultâneo.</p>';
                 atualizarBarraComposicao();
-                if (modoVisualizacao === 'holograma') renderizarHolograma();
                 return;
             }
 
@@ -1438,161 +1234,6 @@
 
             document.getElementById('lista-ativos').innerHTML = htmlAtivos;
             atualizarBarraComposicao();
-            if (modoVisualizacao === 'holograma') renderizarHolograma();
-        }
-
-        // ─────────────────────────────────────────────────────────────
-        // HOLOGRAMA 3D DA CARTEIRA
-        // ─────────────────────────────────────────────────────────────
-        function alternarVisualizacao(modo) {
-            modoVisualizacao = modo;
-            const btnLista     = document.getElementById('btn-view-lista');
-            const btnHolograma = document.getElementById('btn-view-holograma');
-            const secLista      = document.getElementById('lista-ativos');
-            const secHolograma  = document.getElementById('secao-holograma');
-
-            const ativoCls   = "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition";
-            const inativoCls = "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition";
-
-            if (modo === 'holograma') {
-                btnHolograma.className = ativoCls;
-                btnLista.className     = inativoCls;
-                secLista.classList.add('hidden');
-                secHolograma.classList.remove('hidden');
-                renderizarHolograma();
-            } else {
-                btnLista.className     = ativoCls;
-                btnHolograma.className = inativoCls;
-                secHolograma.classList.add('hidden');
-                secLista.classList.remove('hidden');
-            }
-            lucide.createIcons();
-        }
-
-        function renderizarHolograma() {
-            const grid = document.getElementById('holograma-grid');
-            if (!grid) return;
-
-            const valorTotal = obterValorNumerico();
-
-            if (valorTotal <= 0 || !perfilInvestidor) {
-                grid.innerHTML = '<p class="text-xs text-slate-500 text-center py-8 col-span-full">Defina o perfil e insira um valor para gerar o holograma da carteira.</p>';
-                return;
-            }
-
-            if (filtroAtual === 'Liquidez') {
-                const cor = coresHolograma['Liquidez'];
-                grid.innerHTML = `
-                    <div class="col-span-full bg-slate-950 rounded-xl border border-slate-900 p-6 text-center">
-                        <div class="w-14 h-14 rounded-full mx-auto mb-3" style="background:${cor.bg}; box-shadow:0 0 30px 6px ${cor.glow};"></div>
-                        <h3 class="text-xs font-bold text-white uppercase">${liquidezSelecionada === 'porquinho' ? 'Porquinho Inter' : 'Caixinha Nubank'}</h3>
-                        <p class="text-[11px] text-slate-400 mt-1">Reserva de liquidez não é representada em cubo individual — é o "chão" do holograma.</p>
-                    </div>`;
-                return;
-            }
-
-            let ativosFiltrados = carteiraCompleta.filter(a =>
-                a.pesosPerfil[perfilInvestidor] > 0 && valorTotal >= a.aplicacaoMinima
-            );
-            if (filtroAtual !== 'todos') {
-                ativosFiltrados = ativosFiltrados.filter(a => a.categoria === filtroAtual);
-            }
-            const maxAtivos = filtroAtual === 'todos' ? calcularQuantidadeAtivos(valorTotal) : ativosFiltrados.length;
-            ativosFiltrados = selecionarComDiversificacao(ativosFiltrados, maxAtivos,
-                Object.fromEntries(ativosFiltrados.map(a => [a.categoria, a.pesosPerfil[perfilInvestidor]]))
-            );
-
-            if (ativosFiltrados.length === 0) {
-                grid.innerHTML = '<p class="text-xs text-slate-500 text-center py-8 col-span-full">Nenhum ativo disponível para gerar cubos com este filtro e aporte.</p>';
-                return;
-            }
-
-            const somaPesos = ativosFiltrados.reduce((s, a) => s + a.pesosPerfil[perfilInvestidor], 0) || 1;
-            let acumulado = 0;
-            let html = '';
-
-            ativosFiltrados.forEach((ativo, idx) => {
-                const pct = ativo.pesosPerfil[perfilInvestidor] / somaPesos;
-                const valorAlocado = idx === ativosFiltrados.length - 1 && filtroAtual === 'todos'
-                    ? valorTotal - acumulado
-                    : valorTotal * pct;
-                acumulado += valorAlocado;
-
-                const cor = coresHolograma[ativo.categoria] || coresHolograma['Renda Fixa'];
-                const rotuloCurto = ativo.ticker || (ativo.nome.length > 22 ? ativo.nome.split(' ').slice(0, 2).join(' ') : ativo.nome);
-                const faceStyle = `background:linear-gradient(145deg, ${cor.bg}cc, ${cor.bg}55);`;
-
-                html += `
-                    <div class="cube-scene" style="--cube-glow:${cor.glow};" data-idx="${idx}">
-                        <div class="cube-3d">
-                            <div class="cube-face cube-face-front"  style="${faceStyle}">${rotuloCurto}</div>
-                            <div class="cube-face cube-face-back"   style="${faceStyle}">${ativo.categoria}</div>
-                            <div class="cube-face cube-face-right"  style="${faceStyle}">${(pct * 100).toFixed(0)}%</div>
-                            <div class="cube-face cube-face-left"   style="${faceStyle}">${ativo.categoria}</div>
-                            <div class="cube-face cube-face-top"    style="${faceStyle}">${rotuloCurto}</div>
-                            <div class="cube-face cube-face-bottom" style="${faceStyle}">${(pct * 100).toFixed(0)}%</div>
-                            <div class="cube-info">
-                                <span class="text-[9px] font-black text-white uppercase tracking-wide">${rotuloCurto}</span>
-                                <span class="text-[13px] font-black font-logo mt-1" style="color:${cor.bg}">${(pct * 100).toFixed(0)}%</span>
-                                <span class="text-[10px] text-slate-300 font-bold mt-0.5">${valorAlocado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-
-            grid.innerHTML = html;
-            inicializarCubos();
-        }
-
-        function inicializarCubos() {
-            cubosHolograma = [];
-            document.querySelectorAll('#holograma-grid .cube-scene').forEach(cena => {
-                const cubo = cena.querySelector('.cube-3d');
-                const estado = { cena, cubo, rotX: -18, rotY: Math.random() * 360, hovered: false, dragging: false, lastX: 0, lastY: 0 };
-                cubosHolograma.push(estado);
-
-                cena.addEventListener('mouseenter', () => { estado.hovered = true; cena.classList.add('hovered'); });
-                cena.addEventListener('mouseleave', () => { estado.hovered = false; cena.classList.remove('hovered'); });
-
-                cubo.addEventListener('pointerdown', (e) => {
-                    estado.dragging = true;
-                    estado.lastX = e.clientX;
-                    estado.lastY = e.clientY;
-                    cubo.classList.add('dragging');
-                    cubo.setPointerCapture(e.pointerId);
-                });
-                cubo.addEventListener('pointermove', (e) => {
-                    if (!estado.dragging) return;
-                    const dx = e.clientX - estado.lastX;
-                    const dy = e.clientY - estado.lastY;
-                    estado.rotY += dx * 0.5;
-                    estado.rotX -= dy * 0.5;
-                    estado.rotX = Math.max(-85, Math.min(85, estado.rotX));
-                    estado.lastX = e.clientX;
-                    estado.lastY = e.clientY;
-                });
-                const soltar = (e) => {
-                    estado.dragging = false;
-                    cubo.classList.remove('dragging');
-                };
-                cubo.addEventListener('pointerup', soltar);
-                cubo.addEventListener('pointercancel', soltar);
-            });
-
-            if (!loopHologramaAtivo) {
-                loopHologramaAtivo = true;
-                requestAnimationFrame(loopCubos);
-            }
-        }
-
-        function loopCubos() {
-            cubosHolograma.forEach(estado => {
-                if (!estado.hovered && !estado.dragging) {
-                    estado.rotY += 0.18;
-                }
-                estado.cubo.style.transform = `rotateX(${estado.rotX}deg) rotateY(${estado.rotY}deg)`;
-            });
-            requestAnimationFrame(loopCubos);
         }
 
         function atualizarBarraComposicao() {
@@ -1719,4 +1360,4 @@
         });
     </script>
 </body>
-</html
+</html>
