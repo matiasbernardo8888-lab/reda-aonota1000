@@ -34,7 +34,7 @@
         }
     </style>
 </head>
-<body style="background:#000 !important;" class="bg-black text-slate-100 min-h-screen pb-28">
+<body style="background:#000 important;" class="bg-black text-slate-100 min-h-screen pb-28">
     <div class="max-w-2xl mx-auto">
         <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-slate-900 p-4">
             <div class="flex justify-between items-center">
@@ -424,10 +424,11 @@
 
     <script>
         // ─────────────────────────────────────────────────────────────
-        // CARTEIRA COMPLETA — ticker separado para exibição clara
+        // CARTEIRA COMPLETA
+        // aplicacaoMinima = valor mínimo REAL para entrar no ativo
         // ─────────────────────────────────────────────────────────────
         const carteiraCompleta = [
-            { ticker: null,      nome: 'VALORA VANGUARD',                         categoria: 'Renda Fixa',   descricao: 'Ativo de crédito privado focado em prêmios estruturais de mercado corporativo.',              aplicacaoMinima: 100,  pesosPerfil: { conservador: 25, moderado: 15, arrojado: 5  }, ondeEncontrar: 'BTG Pactual, Itaú e XP Investimentos' },
+            { ticker: null,      nome: 'VALORA VANGUARD',                         categoria: 'Renda Fixa',   descricao: 'Ativo de crédito privado focado em prêmios estruturais de mercado corporativo.',              aplicacaoMinima: 500,  pesosPerfil: { conservador: 25, moderado: 15, arrojado: 5  }, ondeEncontrar: 'BTG Pactual, Itaú e XP Investimentos' },
             { ticker: null,      nome: 'SOLIS CAPITAL ANTARES PIONEIRO',           categoria: 'Renda Fixa',   descricao: 'Direitos creditórios com modelo estruturado focado em previsibilidade de prêmio.',             aplicacaoMinima: 500,  pesosPerfil: { conservador: 20, moderado: 10, arrojado: 5  }, ondeEncontrar: 'BTG Pactual e XP Investimentos' },
             { ticker: 'IFRA11',  nome: 'IFRA11 — Itaú FICFIDC de Infraestrutura', categoria: 'Renda Fixa',   descricao: 'Ativo de infraestrutura focado em crédito e liquidez corporativa controlada.',                  aplicacaoMinima: 80,   pesosPerfil: { conservador: 15, moderado: 10, arrojado: 5  }, ondeEncontrar: 'Itaú e corretoras parceiras' },
             { ticker: null,      nome: 'FUNDOS PASSIVOS AO IMA-B',                 categoria: 'Renda Fixa',   descricao: 'Estratégia indexada à variação da inflação real de longo prazo.',                             aplicacaoMinima: 100,  pesosPerfil: { conservador: 25, moderado: 10, arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter, NuInvest e Ágora' },
@@ -442,34 +443,33 @@
             { ticker: 'GMAT3',   nome: 'GMAT3 — Grupo Mateus',                     categoria: 'Ações',        descricao: 'Varejo alimentar de grande escala em expansão regional no Norte/Nordeste.',                  aplicacaoMinima: 8,    pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
             { ticker: 'BTHF11',  nome: 'BTHF11 — BTG Pactual HF',                  categoria: 'Ações',        descricao: 'Portfólio híbrido estruturado sob coordenação do banco BTG Pactual.',                       aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
             { ticker: 'WRLD11',  nome: 'WRLD11 — Mundo Todo (Vanguard VT)',         categoria: 'Global',       descricao: 'Ativo indexado que reflete mais de 9.000 ações ao redor do planeta via B3.',                 aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 15 }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
-            { ticker: null,      nome: 'MS GLOBAL OPPORTUNITIES',                  categoria: 'Global',       descricao: 'Exposição de estudo a ativos de alto crescimento geridos pela Morgan Stanley.',              aplicacaoMinima: 100,  pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 10 }, ondeEncontrar: 'Plataformas integradas e XP' },
+            { ticker: null,      nome: 'MS GLOBAL OPPORTUNITIES',                  categoria: 'Global',       descricao: 'Exposição de estudo a ativos de alto crescimento geridos pela Morgan Stanley.',              aplicacaoMinima: 500,  pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 10 }, ondeEncontrar: 'Plataformas integradas e XP' },
             { ticker: 'ALUG11',  nome: 'ALUG11 — Mercado Imobiliário Global (VNQ)', categoria: 'Global',       descricao: 'Ativo de tracking do mercado imobiliário internacional de alta renda (Real Estate).',       aplicacaoMinima: 110,  pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
             { ticker: 'USDB11',  nome: 'USDB11 — Renda Fixa Americana (BND)',       categoria: 'Global',       descricao: 'Rastreamento de títulos públicos de renda fixa emitidos pelo tesouro americano.',            aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
             { ticker: 'BNDX11',  nome: 'BNDX11 — Renda Fixa Global ex-EUA',        categoria: 'Global',       descricao: 'Indexador focado em renda fixa internacional fora do eixo geográfico dos EUA.',             aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' }
         ];
 
         // ─────────────────────────────────────────────────────────────
-        // LIMITES DE QUANTIDADE DE ATIVOS POR FAIXA DE VALOR
-        // Regra: quantidade sobe gradualmente, nunca passa de 8
+        // REGRA DE QUANTIDADE DE ATIVOS POR FAIXA DE VALOR
+        // Apenas ativos com aplicacaoMinima <= valorTotal aparecem.
+        // A quantidade máxima cresce com o valor.
         // ─────────────────────────────────────────────────────────────
         function calcularQuantidadeAtivos(valor) {
-            if (valor < 200)   return 2;  // R$0–199    → 2 ativos
-            if (valor < 500)   return 3;  // R$200–499  → 3 ativos
-            if (valor < 1000)  return 4;  // R$500–999  → 4 ativos
-            if (valor < 2000)  return 5;  // R$1k–1999  → 5 ativos
-            if (valor < 5000)  return 6;  // R$2k–4999  → 6 ativos
-            if (valor < 15000) return 7;  // R$5k–14999 → 7 ativos
-            return 8;                     // R$15k+     → 8 ativos (máximo)
+            if (valor < 50)    return 1;
+            if (valor < 150)   return 2;
+            if (valor < 300)   return 3;
+            if (valor < 600)   return 4;
+            if (valor < 1200)  return 5;
+            if (valor < 3000)  return 6;
+            if (valor < 8000)  return 7;
+            return 8;
         }
 
         // ─────────────────────────────────────────────────────────────
-        // BADGE DE TICKER — exibe o código do ativo quando existe
+        // FILTRO PRINCIPAL: só ativos cujo mínimo cabe no valor digitado
         // ─────────────────────────────────────────────────────────────
-        function badgeTicker(ativo, corClasse) {
-            if (!ativo.ticker) return '';
-            return `<span class="inline-block text-[9px] font-black tracking-widest px-2 py-0.5 rounded ${corClasse} font-logo ml-1">
-                        ${ativo.ticker}
-                    </span>`;
+        function filtrarPorMinimo(lista, valorTotal) {
+            return lista.filter(a => a.aplicacaoMinima <= valorTotal);
         }
 
         const pesosKidsEstrategia = {
@@ -850,19 +850,21 @@
             const distribuicaoAlvo = pesosKidsEstrategia[objetivoKidsSelecionado];
             const maxAtivos = calcularQuantidadeAtivos(valorTotal);
 
-            // Filtra ativos elegíveis (valor mínimo atingível e com peso > 0)
+            // FILTRO CORRETO: apenas ativos cujo mínimo é <= valor digitado
             let ativosElegiveis = carteiraCompleta.filter(a =>
-                distribuicaoAlvo[a.categoria] > 0 && valorTotal >= a.aplicacaoMinima
+                distribuicaoAlvo[a.categoria] > 0 &&
+                a.aplicacaoMinima <= valorTotal
             );
 
-            // Ordena pelo menor mínimo primeiro (mais acessíveis primeiro)
             ativosElegiveis.sort((a, b) => a.aplicacaoMinima - b.aplicacaoMinima);
-
-            // Garante diversificação de categorias disponíveis antes de cortar
             const ativosSelecionados = selecionarComDiversificacao(ativosElegiveis, maxAtivos, distribuicaoAlvo);
 
             if (ativosSelecionados.length === 0) {
-                document.getElementById('lista-ativos-kids').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Valor inferior ao mínimo histórico dos ativos simulados. Tente valores a partir de R$ 50,00.</p>';
+                document.getElementById('lista-ativos-kids').innerHTML = `
+                    <div class="bg-slate-950 rounded-xl border border-amber-500/20 p-4 text-center space-y-2">
+                        <p class="text-xs text-amber-400 font-bold">⚠️ Valor abaixo do mínimo disponível</p>
+                        <p class="text-[11px] text-slate-400">Com R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits:2})}, nenhum ativo desta estratégia está acessível.<br>Tente valores a partir de <strong class="text-white">R$ 8,00</strong> para ações fracionárias.</p>
+                    </div>`;
                 return;
             }
 
@@ -871,7 +873,7 @@
             let acumulado = 0;
 
             ativosSelecionados.forEach((ativo, idx) => {
-                let pct = ativo.pesosPerfil ? distribuicaoAlvo[ativo.categoria] / somaPesos : 1 / ativosSelecionados.length;
+                let pct = distribuicaoAlvo[ativo.categoria] / somaPesos;
                 let valorAlocado = idx === ativosSelecionados.length - 1
                     ? valorTotal - acumulado
                     : valorTotal * pct;
@@ -897,6 +899,7 @@
                             <div class="text-right shrink-0">
                                 <div class="text-sm font-black text-purple-400 font-logo">${(pct * 100).toFixed(0)}%</div>
                                 <div class="text-xs text-slate-300 font-bold mt-0.5">${valorAlocado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                                <div class="text-[9px] text-slate-500 mt-0.5">Mín: R$ ${ativo.aplicacaoMinima}</div>
                             </div>
                         </div>
                         <p class="text-[11px] text-slate-400 leading-relaxed border-t border-slate-900 pt-2">${ativo.descricao}</p>
@@ -907,15 +910,19 @@
             document.getElementById('lista-ativos-kids').innerHTML = htmlHTML;
         }
 
-        // Seleciona ativos garantindo representação de categorias diferentes
+        // ─────────────────────────────────────────────────────────────
+        // Seleciona ativos garantindo diversificação de categorias.
+        // Pré-condição: todos os ativos em `lista` já passaram pelo
+        // filtro de aporte mínimo antes de entrar aqui.
+        // ─────────────────────────────────────────────────────────────
         function selecionarComDiversificacao(lista, maxAtivos, pesosCat) {
             if (lista.length <= maxAtivos) return lista;
 
-            const categorias = [...new Set(lista.map(a => a.categoria).filter(c => pesosCat[c] > 0))];
+            const categorias = [...new Set(lista.map(a => a.categoria).filter(c => (pesosCat[c] || 0) > 0))];
             const selecionados = [];
             const usados = new Set();
 
-            // 1ª passagem: pega 1 ativo de cada categoria disponível
+            // 1ª passagem: 1 ativo de cada categoria (prioridade por menor mínimo)
             for (const cat of categorias) {
                 if (selecionados.length >= maxAtivos) break;
                 const candidato = lista.find(a => a.categoria === cat && !usados.has(a.nome));
@@ -925,7 +932,7 @@
                 }
             }
 
-            // 2ª passagem: completa até maxAtivos com os restantes (maior peso primeiro)
+            // 2ª passagem: completa até maxAtivos, priorizando maior peso
             const restantes = lista
                 .filter(a => !usados.has(a.nome))
                 .sort((a, b) => (pesosCat[b.categoria] || 0) - (pesosCat[a.categoria] || 0));
@@ -1162,24 +1169,45 @@
                 return;
             }
 
-            // Filtra por categoria e mínimo de aporte
+            // ── FILTRO CORRIGIDO ──────────────────────────────────────
+            // Passo 1: mantém apenas ativos com peso > 0 no perfil atual
+            //          E cujo aporte mínimo seja <= valor digitado
             let ativosFiltrados = carteiraCompleta.filter(a =>
-                a.pesosPerfil[perfilInvestidor] > 0 && valorTotal >= a.aplicacaoMinima
+                a.pesosPerfil[perfilInvestidor] > 0 &&
+                a.aplicacaoMinima <= valorTotal          // ← regra central corrigida
             );
+
+            // Passo 2: aplica filtro de categoria (se não for "todos")
             if (filtroAtual !== 'todos') {
                 ativosFiltrados = ativosFiltrados.filter(a => a.categoria === filtroAtual);
             }
 
-            // Aplica limite de quantidade proporcional ao valor
-            const maxAtivos = filtroAtual === 'todos' ? calcularQuantidadeAtivos(valorTotal) : ativosFiltrados.length;
-            const pesos     = Object.fromEntries(Object.entries({ 'Renda Fixa': 1, 'Multimercado': 1, 'Ações': 1, 'Global': 1 }));
-            ativosFiltrados = selecionarComDiversificacao(ativosFiltrados, maxAtivos, 
-                // usa pesosPerfil do ativo como proxy de importância para ordenação
-                Object.fromEntries(ativosFiltrados.map(a => [a.categoria, a.pesosPerfil[perfilInvestidor]]))
+            // Passo 3: limite de quantidade cresce com o valor
+            const maxAtivos = filtroAtual === 'todos'
+                ? calcularQuantidadeAtivos(valorTotal)
+                : ativosFiltrados.length;
+
+            // Passo 4: diversificação de categorias dentro do limite
+            const pesosProxy = Object.fromEntries(
+                ativosFiltrados.map(a => [a.categoria, a.pesosPerfil[perfilInvestidor]])
             );
+            ativosFiltrados = selecionarComDiversificacao(ativosFiltrados, maxAtivos, pesosProxy);
 
             if (ativosFiltrados.length === 0) {
-                document.getElementById('lista-ativos').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Nenhum ativo da minha carteira atende ao filtro e aporte mínimo simultâneo.</p>';
+                // Encontra o mínimo mais baixo disponível para o perfil
+                const minimoDisponivel = Math.min(
+                    ...carteiraCompleta
+                        .filter(a => a.pesosPerfil[perfilInvestidor] > 0)
+                        .map(a => a.aplicacaoMinima)
+                );
+                document.getElementById('lista-ativos').innerHTML = `
+                    <div class="bg-slate-950 rounded-xl border border-amber-500/20 p-4 text-center space-y-2">
+                        <p class="text-xs text-amber-400 font-bold">⚠️ Valor abaixo do mínimo disponível</p>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            Com <strong class="text-white">R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>, nenhum ativo do perfil <strong class="text-white uppercase">${perfilInvestidor}</strong> está acessível neste filtro.<br><br>
+                            O menor aporte mínimo disponível é <strong class="text-cyan-400">R$ ${minimoDisponivel}</strong>. Tente aumentar o valor ou mudar o filtro de categoria.
+                        </p>
+                    </div>`;
                 atualizarBarraComposicao();
                 return;
             }
@@ -1195,7 +1223,6 @@
                     : valorTotal * pct;
                 acumulado += valorAlocado;
 
-                // Badge do ticker com link de busca
                 const tickerBadge = ativo.ticker
                     ? `<a href="https://www.google.com/search?q=${ativo.ticker}+acao+B3" target="_blank"
                           title="Pesquisar ${ativo.ticker} na B3"
@@ -1204,7 +1231,6 @@
                        </a>`
                     : '';
 
-                // Nome curto para exibição principal
                 const nomeExibicao = ativo.ticker
                     ? (ativo.nome.includes('—') ? ativo.nome.split('—')[1].trim() : ativo.nome)
                     : ativo.nome;
@@ -1225,6 +1251,7 @@
                             <div class="text-right shrink-0">
                                 <div class="text-sm font-black text-cyan-400 font-logo">${(pct * 100).toFixed(0)}%</div>
                                 <div class="text-xs text-slate-300 font-bold mt-0.5">${valorAlocado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                                <div class="text-[9px] text-slate-500 mt-0.5">Mín: R$ ${ativo.aplicacaoMinima}</div>
                             </div>
                         </div>
                         <p class="text-[11px] text-slate-400 leading-normal mt-2 pt-2 border-t border-slate-900/60">${ativo.descricao}</p>
@@ -1359,4 +1386,5 @@
             atualizarGamificacao();
         });
     </script>
-
+</body>
+</html>
