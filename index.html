@@ -1,797 +1,1722 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" style="background:#000;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Método 1000 | Hub Avançado de Preparação Educacional</title>
-    <!-- Tailwind CSS v4 CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Google Fonts - Inter -->
+    <title>Matias Invest | Diário Gráfico de Carteira Pessoal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #09090b; }
-        .bg-dark-card { background-color: #141417; }
-        .border-dark { border-color: #222226; }
-        .text-glow-green { text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #09090b; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-        .animate-scan { animation: scan 2s linear infinite; }
-        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+        html { background: #000 !important; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; }
+        .font-logo { font-family: 'Orbitron', sans-serif; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .card-expand { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+        .card-expand.active { max-height: 600px; }
+        .nav-active { color: #06b6d4; }
+        .nav-active svg { stroke: #06b6d4; }
+        .nav-active span { color: #06b6d4; font-weight: 700; }
+        .btn-agressivo-anim { animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+
+        /* ───────────────────────────────────────────────────────── */
+        /* SCANNER BIOMÉTRICO DE ENTRADA */
+        /* ───────────────────────────────────────────────────────── */
+        #biometric-scanner {
+            transition: opacity 0.9s ease, filter 0.9s ease, transform 0.9s ease;
+        }
+        #biometric-scanner.scanner-hide {
+            opacity: 0;
+            filter: blur(10px) brightness(2.2);
+            transform: scale(1.18);
+            pointer-events: none;
+        }
+        .scanner-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(6,182,212,0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6,182,212,0.07) 1px, transparent 1px);
+            background-size: 28px 28px;
+            mask-image: radial-gradient(circle at center, rgba(0,0,0,0.9) 0%, transparent 70%);
+            opacity: 0.6;
+        }
+        .scanner-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(6,182,212,0.35);
+        }
+        .scanner-ring-outer { width: 100%; height: 100%; animation: scannerPulse 2.4s ease-in-out infinite; }
+        .scanner-ring-inner { width: 72%; height: 72%; border-color: rgba(6,182,212,0.6); animation: scannerPulse 2.4s ease-in-out infinite 0.4s; }
+        .scanner-core {
+            position: absolute;
+            width: 55%; height: 55%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(6,182,212,0.35) 0%, rgba(6,182,212,0.05) 60%, transparent 100%);
+            box-shadow: 0 0 50px 8px rgba(6,182,212,0.35), inset 0 0 30px rgba(6,182,212,0.25);
+            animation: scannerGlow 2s ease-in-out infinite;
+        }
+        .scanner-line {
+            position: absolute;
+            top: 6%;
+            left: 8%;
+            right: 8%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+            box-shadow: 0 0 14px 3px #22d3ee;
+            animation: scannerSweep 1.7s ease-in-out infinite;
+        }
+        .scanner-corner {
+            position: absolute;
+            width: 16px; height: 16px;
+            border: 2px solid #22d3ee;
+            opacity: 0.85;
+        }
+        .scanner-corner.tl { top: -4px; left: -4px; border-right: none; border-bottom: none; }
+        .scanner-corner.tr { top: -4px; right: -4px; border-left: none; border-bottom: none; }
+        .scanner-corner.bl { bottom: -4px; left: -4px; border-right: none; border-top: none; }
+        .scanner-corner.br { bottom: -4px; right: -4px; border-left: none; border-top: none; }
+        @keyframes scannerSweep {
+            0%   { top: 6%; opacity: 0.9; }
+            50%  { top: 90%; opacity: 1; }
+            100% { top: 6%; opacity: 0.9; }
+        }
+        @keyframes scannerPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.06); opacity: 1; }
+        }
+        @keyframes scannerGlow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        .scanner-dots::after {
+            content: '';
+            animation: scannerDots 1.2s steps(4, end) infinite;
+        }
+        @keyframes scannerDots {
+            0%   { content: ''; }
+            25%  { content: '.'; }
+            50%  { content: '..'; }
+            75%  { content: '...'; }
+            100% { content: ''; }
+        }
+
+        /* ───────────────────────────────────────────────────────── */
+        /* HOLOGRAMA 3D DA CARTEIRA */
+        /* ───────────────────────────────────────────────────────── */
+        .cube-scene {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            perspective: 650px;
+            margin: 0 auto;
+        }
+        .cube-3d {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            cursor: grab;
+            touch-action: none;
+        }
+        .cube-3d.dragging { cursor: grabbing; }
+        .cube-face {
+            position: absolute;
+            width: 96px;
+            height: 96px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 9px;
+            line-height: 1.2;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.18);
+            backface-visibility: hidden;
+            padding: 6px;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+            border-radius: 6px;
+            word-break: break-word;
+        }
+        .cube-face-front  { transform: translateZ(48px); }
+        .cube-face-back   { transform: translateZ(-48px) rotateY(180deg); }
+        .cube-face-right  { transform: rotateY(90deg) translateZ(48px); }
+        .cube-face-left   { transform: rotateY(-90deg) translateZ(48px); }
+        .cube-face-top    { transform: rotateX(90deg) translateZ(48px); }
+        .cube-face-bottom { transform: rotateX(-90deg) translateZ(48px); }
+        .cube-info {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(0,0,0,0.82);
+            border: 1px solid rgba(6,182,212,0.4);
+            border-radius: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 5;
+            padding: 6px;
+        }
+        .cube-scene.hovered .cube-info { opacity: 1; }
+        .cube-scene.hovered .cube-3d { filter: drop-shadow(0 0 14px var(--cube-glow, rgba(6,182,212,0.6))); }
     </style>
 </head>
-<body class="text-zinc-200 antialiased min-h-screen flex flex-col md:flex-row">
+<body style="background:#000 !important;" class="bg-black text-slate-100 min-h-screen pb-28">
 
-    <!-- MENU LATERAL PREMIUM -->
-    <aside class="w-full md:w-68 bg-[#09090b] flex flex-col border-r border-dark shrink-0 z-20">
-        <div class="p-6 border-b border-dark flex items-center gap-3">
-            <div class="p-2 bg-zinc-800 rounded-xl border border-zinc-700">
-                <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i>
-            </div>
-            <div>
-                <h1 class="font-black text-sm tracking-widest text-white">MÉTODO <span class="text-indigo-400">1000</span></h1>
-                <p class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Ecossistema Educacional</p>
-            </div>
+    <!-- ───────────────────────────────────────────────────────────── -->
+    <!-- SCANNER BIOMÉTRICO DE ENTRADA -->
+    <!-- ───────────────────────────────────────────────────────────── -->
+    <div id="biometric-scanner" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden">
+        <div class="scanner-grid"></div>
+        <div class="relative w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center">
+            <div class="scanner-ring scanner-ring-outer"></div>
+            <div class="scanner-ring scanner-ring-inner"></div>
+            <div class="scanner-core"></div>
+            <div class="scanner-line"></div>
+            <div class="scanner-corner tl"></div>
+            <div class="scanner-corner tr"></div>
+            <div class="scanner-corner bl"></div>
+            <div class="scanner-corner br"></div>
+            <i data-lucide="fingerprint" class="w-12 h-12 sm:w-14 sm:h-14 text-cyan-300 relative z-10"></i>
         </div>
-
-        <!-- Perfil do Usuário Customizável -->
-        <div class="p-4 border-b border-dark bg-dark-card/50 m-3 rounded-xl border border-dark">
-            <div class="flex items-center gap-3">
-                <div class="relative group cursor-pointer">
-                    <img id="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Avatar" class="w-11 h-11 rounded-xl object-cover border border-zinc-700 group-hover:opacity-70 transition-all">
-                    <label for="avatar-input" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
-                        <i data-lucide="camera" class="w-4 h-4 text-white"></i>
-                    </label>
-                    <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-1">
-                        <input type="text" id="user-name-input" value="Estudante Pro" onchange="saveUserProfile()" class="bg-transparent text-sm font-bold text-white focus:outline-none focus:bg-zinc-800 rounded px-1 w-full border border-transparent hover:border-zinc-700">
-                        <i data-lucide="pencil" class="w-3 h-3 text-zinc-500 shrink-0"></i>
-                    </div>
-                    <p class="text-xs text-zinc-400 truncate mt-0.5">Membro Premium</p>
-                </div>
+        <div class="mt-8 text-center px-6">
+            <p id="scanner-status" class="font-logo text-cyan-400 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">DIGITALIZANDO<span class="scanner-dots"></span></p>
+            <div class="w-44 h-0.5 bg-slate-900 mt-4 mx-auto overflow-hidden rounded-full">
+                <div id="scanner-progress" class="h-full bg-cyan-400"></div>
             </div>
-        </div>
-        
-        <!-- Navegação SPA -->
-        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
-            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all bg-zinc-800 text-white border border-zinc-700 shadow-sm">
-                <span class="flex items-center gap-3"><i data-lucide="layout-grid" class="w-4 h-4"></i> Central de Análise</span>
-            </button>
-            <button onclick="switchTab('corretor')" id="btn-corretor" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
-                <i data-lucide="binary" class="w-4 h-4"></i> Diagnóstico Avançado
-            </button>
-            <button onclick="switchTab('modelos')" id="btn-modelos" class="nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
-                <span class="flex items-center gap-3"><i data-lucide="layout-template" class="w-4 h-4"></i> Modelos Coringas</span>
-                <span class="text-[9px] bg-amber-500/10 text-amber-400 font-bold px-1.5 py-0.5 rounded-md border border-amber-500/20">Ouro</span>
-            </button>
-            <button onclick="switchTab('materias')" id="btn-materias" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
-                <i data-lucide="book-open" class="w-4 h-4"></i> Trilhas Acadêmicas
-            </button>
-            <button onclick="switchTab('biblioteca')" id="btn-biblioteca" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
-                <i data-lucide="archive" class="w-4 h-4"></i> Acervo Analítico 1000
-            </button>
-            <button onclick="switchTab('cronograma')" id="btn-cronograma" class="nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
-                <span class="flex items-center gap-3"><i data-lucide="calendar-range" class="w-4 h-4"></i> Desafio 30 Dias</span>
-            </button>
-        </nav>
-
-        <div class="p-4 border-t border-dark text-[10px] font-mono text-zinc-600 text-center">
-            METHOD CORE V5.5 // 2026
-        </div>
-    </aside>
-
-    <!-- ÁREA PRINCIPAL -->
-    <main class="flex-1 flex flex-col min-w-0 bg-[#0c0c0e]">
-        
-        <!-- TOPBAR -->
-        <header class="bg-dark-card/40 border-b border-dark h-16 px-6 flex items-center justify-between shrink-0 backdrop-blur-md">
-            <div>
-                <span class="bg-zinc-900 text-zinc-400 text-[11px] font-mono px-3 py-1 rounded-lg border border-dark flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    CRONÔMETRO ENEM: FALTAM <span id="countdown-days" class="text-white font-bold">--</span> DIAS
-                </span>
-            </div>
-            <div class="text-xs font-semibold text-zinc-400">
-                Módulo Metodológico Ativo
-            </div>
-        </header>
-
-        <!-- SUB-CONTEÚDO DA PLATAFORMA -->
-        <div class="p-6 md:p-8 flex-1 max-w-6xl w-full mx-auto space-y-8">
-            
-            <!-- TELA 1: DASHBOARD -->
-            <section id="view-dashboard" class="space-y-8">
-                <div class="bg-dark-card border border-dark p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
-                    <div>
-                        <h2 class="text-xl font-bold text-white tracking-tight">Painel de Evolução Escalar</h2>
-                        <p class="text-zinc-400 text-xs mt-1">Seus dados analíticos consolidados de acordo com os critérios oficiais do INEP.</p>
-                    </div>
-                    <div class="w-full md:w-64 space-y-2">
-                        <div class="flex justify-between text-xs font-mono text-zinc-400">
-                            <span>Desempenho Geral</span>
-                            <span class="text-indigo-400 font-bold" id="progress-txt">0%</span>
-                        </div>
-                        <div class="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden border border-dark">
-                            <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-700 shadow-[0_0_10px_rgba(99,102,241,0.5)]" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARDS DE MÉTRICAS -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-dark-card p-5 rounded-2xl border border-dark flex items-center gap-4">
-                        <div class="p-3.5 bg-zinc-900 border border-dark text-zinc-400 rounded-xl"><i data-lucide="folder-open" class="w-5 h-5"></i></div>
-                        <div>
-                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Submissões Realizadas</p>
-                            <h3 class="text-2xl font-black text-white mt-0.5" id="dash-enviadas">0</h3>
-                        </div>
-                    </div>
-                    <div class="bg-dark-card p-5 rounded-2xl border border-dark flex items-center gap-4">
-                        <div class="p-3.5 bg-zinc-900 border border-dark text-emerald-400 rounded-xl"><i data-lucide="activity" class="w-5 h-5"></i></div>
-                        <div>
-                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Média de Proficiência</p>
-                            <h3 class="text-2xl font-black text-white mt-0.5" id="dash-media">0</h3>
-                        </div>
-                    </div>
-                    <div class="bg-dark-card p-5 rounded-2xl border border-dark flex items-center gap-4">
-                        <div class="p-3.5 bg-zinc-900 border border-dark text-indigo-400 rounded-xl"><i data-lucide="calendar" class="w-5 h-5"></i></div>
-                        <div>
-                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Metas Concluídas (Trilha)</p>
-                            <h3 class="text-2xl font-black text-white mt-0.5" id="dash-trilha-progress">0 / 30</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- HISTÓRICO -->
-                <div class="bg-dark-card rounded-2xl border border-dark overflow-hidden">
-                    <div class="p-5 border-b border-dark flex justify-between items-center">
-                        <h3 class="text-sm font-bold text-white">Últimas Análises e Textos Avaliados</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="border-b border-dark text-zinc-500 font-mono uppercase tracking-wider bg-zinc-900/30">
-                                    <th class="py-3.5 px-5">Eixo Temático</th>
-                                    <th class="py-3.5 px-5">Data</th>
-                                    <th class="py-3.5 px-5">Formato</th>
-                                    <th class="py-3.5 px-5">Nota</th>
-                                    <th class="py-3.5 px-5 text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-rows" class="divide-y divide-dark"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TELA 2: DIAGNÓSTICO -->
-            <section id="view-corretor" class="space-y-6 hidden">
-                <div class="border-b border-dark pb-4">
-                    <h2 class="text-lg font-bold text-white tracking-tight">Diagnóstico Estrutural de Redação</h2>
-                    <p class="text-zinc-400 text-xs mt-1">Submeta seu ensaio para verificação imediata de conformidade com a banca do INEP.</p>
-                </div>
-
-                <div id="corretor-input-zone" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 space-y-4">
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">Eixo Temático Selecionado</label>
-                            <select id="essay-theme" class="w-full bg-dark-card border border-dark rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-zinc-500 text-white font-medium">
-                                <option value="Caminhos para combater a precariedade menstrual no ecossistema prisional">Caminhos para combater a precariedade menstrual no ecossistema prisional</option>
-                                <option value="Democratização do acesso ao cinema no Brasil">Democratização do acesso ao cinema no Brasil</option>
-                                <option value="Invisibilidade e registro civil: garantia de acesso à cidadania">Invisibilidade e registro civil: garantia de acesso à cidadania</option>
-                            </select>
-                        </div>
-
-                        <div class="bg-zinc-900/50 p-1 rounded-xl border border-dark flex gap-2">
-                            <button onclick="switchInputMethod('text')" id="method-btn-text" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-zinc-800 text-white border border-dark">
-                                <i data-lucide="type" class="w-3.5 h-3.5 inline mr-1"></i> Digitar Texto
-                            </button>
-                            <button onclick="switchInputMethod('photo')" id="method-btn-photo" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white">
-                                <i data-lucide="image" class="w-3.5 h-3.5 inline mr-1"></i> Enviar Foto da Folha
-                            </button>
-                        </div>
-
-                        <div id="input-method-text" class="space-y-1.5">
-                            <textarea id="essay-text" rows="14" placeholder="Insira o texto completo da sua redação..." class="w-full bg-dark-card border border-dark rounded-2xl p-5 text-xs leading-relaxed focus:outline-none focus:border-zinc-600 text-zinc-300 resize-none font-mono"></textarea>
-                        </div>
-
-                        <div id="input-method-photo" class="hidden border-2 border-dashed border-dark bg-dark-card p-8 rounded-2xl text-center space-y-4">
-                            <div class="w-12 h-12 bg-zinc-900 border border-dark rounded-full flex items-center justify-center mx-auto text-zinc-400"><i data-lucide="upload-cloud" class="w-5 h-5"></i></div>
-                            <p class="text-xs font-bold text-white">Arraste ou envie a foto de sua folha de redação</p>
-                            <input type="file" id="essay-photo-file" accept="image/*" class="hidden" onchange="previewEssayPhoto(this)">
-                            <button onclick="document.getElementById('essay-photo-file').click()" class="bg-zinc-800 border border-dark text-white text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer">Selecionar Imagem</button>
-                            <div id="photo-preview-container" class="hidden pt-2 relative">
-                                <img id="photo-preview-img" src="" class="rounded-lg border border-dark max-h-40 mx-auto">
-                            </div>
-                        </div>
-
-                        <button onclick="processPremiumCorrection()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl text-xs uppercase tracking-wider cursor-pointer">
-                            Iniciar Mapeamento Ortográfico e Sintático
-                        </button>
-                    </div>
-
-                    <div class="bg-dark-card p-5 rounded-2xl border border-dark h-fit space-y-3">
-                        <h4 class="font-bold text-xs text-white uppercase tracking-wider">Como funciona o motor</h4>
-                        <p class="text-[11px] text-zinc-400 leading-relaxed">Nosso sistema avalia recorrência de repertório legítimo e quebras de paralelismo sintático. Redações com excelente uso estrutural recebem notas reais blindadas (920 a 1000).</p>
-                    </div>
-                </div>
-
-                <!-- LOADING -->
-                <div id="corretor-loading-zone" class="hidden bg-dark-card border border-dark rounded-3xl p-12 text-center my-12 max-w-xl mx-auto space-y-6">
-                    <div class="relative w-32 h-40 bg-zinc-900 border border-dark rounded-lg mx-auto overflow-hidden flex items-center justify-center">
-                        <div class="absolute left-0 right-0 h-0.5 bg-indigo-400 shadow-[0_0_10px_#818cf8] animate-scan"></div>
-                        <i data-lucide="file-text" class="w-10 h-10 text-zinc-700"></i>
-                    </div>
-                    <p id="loading-text" class="text-indigo-400 font-mono text-xs">Mapeando microestruturas textuais...</p>
-                </div>
-
-                <!-- RESULTADOS -->
-                <div id="corretor-result-zone" class="hidden space-y-6">
-                    <div class="bg-dark-card p-6 rounded-2xl border border-dark flex flex-col md:flex-row items-center gap-6">
-                        <div class="w-24 h-24 rounded-full border-4 border-emerald-500/30 bg-emerald-950/20 flex items-center justify-center shrink-0">
-                            <span class="text-2xl font-black text-emerald-400 text-glow-green" id="res-final-score">0</span>
-                        </div>
-                        <div class="space-y-1 flex-1">
-                            <h3 class="text-sm font-bold text-white" id="res-theme-title">Tema</h3>
-                            <p class="text-zinc-400 text-xs leading-relaxed" id="res-ia-feedback">Feedback.</p>
-                        </div>
-                        <button onclick="resetCorretor()" class="px-4 py-2 bg-zinc-900 border border-dark text-white rounded-xl text-xs cursor-pointer">Nova Análise</button>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="bg-dark-card p-5 rounded-2xl border border-dark space-y-3" id="competence-list"></div>
-                        <div class="lg:col-span-2 bg-dark-card p-5 rounded-2xl border border-dark space-y-3">
-                            <h4 class="font-bold text-white text-xs uppercase tracking-wider">Detalhamento Microestrutural</h4>
-                            <div id="res-marked-text" class="text-xs text-zinc-300 leading-relaxed bg-zinc-950 p-4 rounded-xl border border-dark whitespace-pre-wrap font-mono"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TELA 3: MODELOS CORINGAS COMPLETOS -->
-            <section id="view-modelos" class="space-y-6 hidden">
-                <div class="border-b border-dark pb-4">
-                    <h2 class="text-lg font-bold text-white tracking-tight">Modelos Coringas Inteiros Nota 1000</h2>
-                    <p class="text-zinc-400 text-xs mt-1">Esqueletos estruturais completos e explicados bloco por bloco para replicar a nota máxima.</p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-8">
-                    <!-- MODELO 1 COMPLETO -->
-                    <div class="bg-dark-card border border-dark rounded-2xl p-6 space-y-6">
-                        <div class="flex justify-between items-center border-b border-dark pb-4">
-                            <div>
-                                <span class="bg-amber-500/10 text-amber-400 text-[10px] border border-amber-500/20 px-2.5 py-0.5 rounded-full font-mono font-bold uppercase">Esqueleto 1000 Universal: Omissão Estatal e Silenciamento</span>
-                                <h3 class="text-white font-bold text-sm mt-1">Apropriado para: 90% dos problemas sociais, estruturais e de infraestrutura pública.</h3>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-4 font-mono text-xs">
-                            <div>
-                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 1 - INTRODUÇÃO]</span>
-                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
-                                    No contexto da sociedade brasileira contemporânea, a problemática correlacionada <span class="text-amber-400 font-bold font-sans">[INSERIR O TEMA EXATO COM CRASE SE NECESSÁRIO]</span> configura-se como um grave entrave ao pleno desenvolvimento social. Sob essa ótica, é imperioso analisar não apenas a inércia governamental na implementação de políticas públicas eficientes, mas também o silenciamento estrutural que perpetua tal cenário deletério. De fato, a filósofa Hannah Arendt, em sua teoria dos direitos humanos, afirma que os indivíduos necessitam do "direito a ter direitos" para exercerem plenamente a cidadania. Contudo, a persistência dessa conjuntura nociva rompe essa prerrogativa, demandando uma resolução urgente.
-                                </div>
-                            </div>
-
-                            <div>
-                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 2 - DESENVOLVIMENTO 1: FOCO NO ESTADO]</span>
-                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
-                                    Em primeiro lugar, cabe pontuar que a negligência do poder público atua como um vetor primário de manutenção do revés. Nesse sentido, o conceito de "Cidadãos de Papel", do celebrado jornalista Gilberto Dimenstein, ilustra com perfeição a realidade pátria, visto que, embora a legislação nacional assegure prerrogativas de bem-estar social a todos, a prática se mostra profundamente apartada do texto constitucional. Essa lacuna pragmática ocorre porque o orçamento destinado à resolução da problemática da <span class="text-amber-400 font-bold font-sans">[INSERIR PALAVRA-CHAVE DO TEMA]</span> é escasso e mal gerido. Desse modo, enquanto o Estado se mantiver omisso, a exclusão civil continuará a mitigar a dignidade da população afetada.
-                                </div>
-                            </div>
-
-                            <div>
-                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 3 - DESENVOLVIMENTO 2: FOCO NA SOCIEDADE/RELAÇÃO SOCIAL]</span>
-                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
-                                    Ademais, a invisibilidade midiática e social potencializa a cronicidade desse impasse. Segundo o sociólogo Zygmunt Bauman, a sociedade moderna tende a afastar de seu campo visual as mazelas que geram desconforto, transformando problemas estruturais em fenômenos naturalizados. Essa dinâmica reflete-se diretamente no descaso coletivo quanto <span class="text-amber-400 font-bold font-sans">[INSERIR OUTRA PALAVRA-CHAVE DO TEMA]</span>, uma vez que a falta de debates robustos nos meios de comunicação de massa aliena o corpo social. Como consequência, a passividade civil atua como um manto de silenciamento, impedindo que a coletividade exija as transformações necessárias.
-                                </div>
-                            </div>
-
-                            <div>
-                                <span class="text-indigo-400 font-bold block mb-1">[PARÁGRAFO 4 - CONCLUSÃO: 5 ELEMENTOS BLINDADOS]</span>
-                                <div class="bg-zinc-950 p-4 rounded-xl border border-dark text-zinc-400 leading-relaxed">
-                                    Portanto, medidas urgentes são necessárias para dirimir essa conjuntura. Para tanto, cabe ao Ministério da Fazenda, em consonância com o Ministério competente, redirecionar verbas públicas substanciais por meio de um plano nacional plurianual de metas tangíveis. Essa ação deve se desdobrar na criação de programas de assistência integral e campanhas educativas de grande escala, com o escopo de garantir que os direitos fundamentais alcancem as camadas mais vulneráveis do tecido social. Com esse detalhamento orçamentário e pedagógico rigoroso, o país poderá, gradativamente, afastar o fantasma da exclusão e consolidar a máxima arendtiana na vida de cada cidadão.
-                                </div>
-                            </div>
-                        </div>
-
-                        <button onclick="explainTemplate('universal')" class="px-4 py-2 bg-zinc-900 border border-dark hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-400"></i> Ver Guia Técnico de Adaptação deste Modelo
-                        </button>
-                        <div id="explanation-universal" class="hidden p-5 bg-zinc-900/50 rounded-xl border border-dark text-xs text-zinc-400 space-y-3 font-sans">
-                            <p class="font-bold text-zinc-200">Manual de Engenharia Aplicada:</p>
-                            <p>• <strong>Como preencher os conectivos:</strong> Certifique-se de manter os operadores argumentativos interparágrafos ("Em primeiro lugar", "Ademais", "Portanto") intocados. Eles garantem nota máxima na Competência 4.</p>
-                            <p>• <strong>Uso dos repertórios:</strong> Hannah Arendt na introdução dá a base filosófica. Dimenstein no D1 valida a crítica ao governo. Bauman no D2 justifica por que a população aceita o problema sem protestar.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TELA 4: TRILHAS ACADÊMICAS (MATÉRIAS PROFUNDAS) -->
-            <section id="view-materias" class="space-y-6 hidden">
-                <div class="border-b border-dark pb-4">
-                    <h2 class="text-lg font-bold text-white tracking-tight">Trilhas Acadêmicas de Conteúdo Avançado</h2>
-                    <p class="text-zinc-400 text-xs mt-1">Estude manuais detalhados construídos para eliminar erros gramaticais e estruturais crônicos.</p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-6">
-                    <!-- MATÉRIA 1 -->
-                    <div class="bg-dark-card border border-dark rounded-2xl p-6 space-y-4">
-                        <div class="flex justify-between items-center border-b border-dark pb-3">
-                            <span class="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 border border-indigo-500/20 rounded font-bold">COMPETÊNCIA 1 - NORMA CULTA</span>
-                            <span class="text-xs text-zinc-500">Tempo estimado de estudo: 45 min</span>
-                        </div>
-                        <h3 class="font-black text-base text-white">O Tratado Completo da Crase Proibida na Redação ENEM</h3>
-                        <p class="text-zinc-400 text-xs leading-relaxed">
-                            A ocorrência do acento indicativo de crase é um dos pontos que mais penalizam estudantes na Competência 1. Compreender a fundo as proibições absolutas impede a perda desnecessária de 40 a 80 pontos no seu texto. Abaixo, estude as regras permanentes de restrição sintática.
-                        </p>
-                        
-                        <div class="bg-zinc-950 p-5 rounded-xl border border-dark font-mono text-xs text-zinc-400 space-y-4 leading-relaxed">
-                            <div>
-                                <span class="text-red-400 font-bold block">1. CASO PROIBIDO ABSOLUTO: ANTES DE VERBOS NO INFINITIVO</span>
-                                <p class="mt-1">Muitos alunos cometem o erro crasso de inserir crase em transições de parágrafos ou propostas de intervenção antes de verbos. Como verbos não possuem gênero e, portanto, não aceitam artigo feminino "a", a ocorrência da crase é matematicamente impossível.</p>
-                                <p class="text-zinc-500 mt-1">❌ Incorreto: "O governo começou à implementar medidas..."<br><span class="text-emerald-400">✔️ Correto:</span> "O governo começou a implementar medidas..."</p>
-                            </div>
-                            
-                            <div class="border-t border-dark pt-3">
-                                <span class="text-red-400 font-bold block">2. CASO PROIBIDO ABSOLUTO: ANTES DE PALAVRAS MASCULINAS</span>
-                                <p class="mt-1">A crase só existe diante de substantivos femininos que admitem artigo. Palavras masculinas exigem o artigo "o", gerando a combinação "ao" se houver preposição. Logo, usar crase antes de substantivo masculino rompe a sintaxe da língua.</p>
-                                <p class="text-zinc-500 mt-1">❌ Incorreto: "Mudanças realizadas à longo prazo..."<br><span class="text-emerald-400">✔️ Correto:</span> "Mudanças realizadas a longo prazo..." (prazo é masculino).</p>
-                            </div>
-
-                            <div class="border-t border-dark pt-3">
-                                <span class="text-red-400 font-bold block">3. CASO PROIBIDO ABSOLUTO: ANTES DE PRONOMES TRATAMENTO E PESSOAIS</span>
-                                <p class="mt-1">Os pronomes pessoais do caso reto (ela, eles) e a maioria dos pronomes de tratamento (você, vossa excelência) repelem o artigo feminino. Sem artigo, não há fusão, inviabilizando a crase.</p>
-                                <p class="text-zinc-500 mt-1">❌ Incorreto: "Cabe à ela resolver o problema..."<br><span class="text-emerald-400">✔️ Correto:</span> "Cabe a ela resolver o problema..."</p>
-                            </div>
-
-                            <div class="bg-indigo-500/5 p-3 rounded border border-indigo-500/20 text-zinc-300">
-                                <span class="text-indigo-400 font-bold block">💡 REGRA METODOLÓGICA DE VALIDAÇÃO IMEDIATA:</span>
-                                Para testar se o termo feminino exige crase, substitua-o mentalmente por um termo masculino equivalente. Se a combinação resultante for <strong class="text-white">"AO"</strong>, a crase no feminino está integralmente correta.<br>
-                                <em>Exemplo:</em> "Acesso à cultura" ➡️ "Acesso ao esporte" (Validado! Leva crase).
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MATÉRIA 2 -->
-                    <div class="bg-dark-card border border-dark rounded-2xl p-6 space-y-4">
-                        <div class="flex justify-between items-center border-b border-dark pb-3">
-                            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded font-bold">COMPETÊNCIA 5 - PROPOSTA DE INTERVENÇÃO</span>
-                            <span class="text-xs text-zinc-500">Tempo estimado de estudo: 40 min</span>
-                        </div>
-                        <h3 class="font-black text-base text-white">A Anatomia dos 5 Elementos Obrigatórios da Conclusão Perfeita</h3>
-                        <p class="text-zinc-400 text-xs leading-relaxed">
-                            A Competência 5 avalia a capacidade do candidato de propor uma solução viável, articulada e detalhada para o problema abordado. Cada um dos cinco elementos vale exatamente 40 pontos. Faltar apenas um reduz sua nota nesta competência para 160 imediatamente. Veja a engenharia microscópica de cada componente.
-                        </p>
-                        
-                        <div class="bg-zinc-950 p-5 rounded-xl border border-dark font-mono text-xs text-zinc-400 space-y-4 leading-relaxed">
-                            <div>
-                                <span class="text-emerald-400 font-bold block">ELEMENTO 1: AGENTE (QUEM EXECUTA?)</span>
-                                <p class="mt-1">Deve ser um órgão político, social ou administrativo institucionalmente qualificado para agir. Evite termos genéricos como "a sociedade" ou "as pessoas". Use os ministérios específicos.</p>
-                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "Cabe ao Ministério da Educação (MEC)..."</p>
-                            </div>
-
-                            <div class="border-t border-dark pt-3">
-                                <span class="text-emerald-400 font-bold block">ELEMENTO 2: AÇÃO (O QUE DEVE SER FEITO?)</span>
-                                <p class="mt-1">É o ato prático concreto que visa mitigar ou solucionar a raiz do problema discutido ao longo dos desenvolvimentos.</p>
-                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "...implementar projetos pedagógicos contínuos de conscientização..."</p>
-                            </div>
-
-                            <div class="border-t border-dark pt-3">
-                                <span class="text-emerald-400 font-bold block">ELEMENTO 3: MEIO / MODO (COMO SERÁ EXECUTADO?)</span>
-                                <p class="mt-1">Representa o instrumento de viabilização. É obrigatório utilizar conectivos instrumentais explícitos como <strong class="text-zinc-200">"por meio de"</strong> ou <strong class="text-zinc-200">"mediante"</strong> para sinalizar claramente o componente à banca.</p>
-                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "...por meio da reformulação da grade de disciplinas e de repasses orçamentários estruturados..."</p>
-                            </div>
-
-                            <div class="border-t border-dark pt-3">
-                                <span class="text-emerald-400 font-bold block">ELEMENTO 4: EFEITO / FINALIDADE (PARA QUÊ?)</span>
-                                <p class="mt-1">Demonstra o impacto esperado a longo prazo no tecido social. Ative conectivos de finalidade explícitos: <strong class="text-zinc-200">"com o escopo de"</strong>, <strong class="text-zinc-200">"com o fito de"</strong> ou <strong class="text-zinc-200">"a fim de"</strong>.</p>
-                                <p class="text-zinc-300 font-bold mt-1">Fórmula: "...com o escopo de erradicar a alienação civil e assegurar os direitos previstos na Carta Magna."</p>
-                            </div>
-
-                            <div class="border-t border-dark pt-3">
-                                <span class="text-emerald-400 font-bold block">ELEMENTO 5: DETALHAMENTO (EXPLICAÇÃO ADICIONAL DE UM DOS ELEMENTOS)</span>
-                                <p class="mt-1">É uma informação complementar opcional adicionada sobre qualquer um dos quatro elementos acima. O método mais seguro é detalhar o <strong class="text-zinc-200">Agente</strong> ou o <strong class="text-zinc-200">Meio/Modo</strong> por meio de um aposto explicativo entre travessões ou vírgulas.</p>
-                                <p class="text-zinc-300 font-bold mt-1">Fórmula aplicada ao agente: "...cabe ao Ministério da Educação — órgão central responsável pela governança instrucional do país — implementar..."</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TELA 5: ACERVO REAL NOTA 1000 INTEIRAS -->
-            <section id="view-biblioteca" class="space-y-6 hidden">
-                <div class="border-b border-dark pb-4">
-                    <h2 class="text-lg font-bold text-white tracking-tight">Acervo de Redações Nota 1000 Oficiais (Íntegra)</h2>
-                    <p class="text-zinc-400 text-xs mt-1">Examine a arquitetura interna de textos reais que alcançaram a nota máxima no ENEM.</p>
-                </div>
-                <div class="grid grid-cols-1 gap-6" id="library-container"></div>
-            </section>
-
-            <!-- TELA 6: DESAFIO 30 DIAS (TABELA INTERATIVA) -->
-            <section id="view-cronograma" class="space-y-6 hidden">
-                <div class="border-b border-dark pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-white tracking-tight">Desafio de Disciplina Extrema: 30 Dias</h2>
-                        <p class="text-zinc-400 text-xs mt-1">Marque suas tarefas diárias de escrita e estudo. Complete o ciclo para alcançar sua libertação.</p>
-                    </div>
-                    <div class="bg-zinc-900 border border-dark px-4 py-2 rounded-xl text-center">
-                        <span class="text-[10px] font-mono text-zinc-500 block uppercase">Status da Meta</span>
-                        <span id="final-status-badge" class="text-xs font-bold text-zinc-400">EM PROGRESSO</span>
-                    </div>
-                </div>
-
-                <div class="bg-dark-card border border-dark rounded-2xl overflow-hidden p-5">
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="grid-30-days"></div>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- MODAL DE LEITURA COMPLETA -->
-    <div id="library-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md items-center justify-center p-4 hidden z-50">
-        <div class="bg-dark-card rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-dark overflow-hidden">
-            <div class="p-5 border-b border-dark flex justify-between items-start bg-zinc-900/50">
-                <div>
-                    <span id="modal-meta" class="text-[10px] font-mono text-indigo-400 uppercase tracking-wider font-bold">MÉTODO 1000 // EXAME RESTRITO DE TEXTOS</span>
-                    <h3 id="modal-title" class="text-sm font-bold text-white mt-1">Título</h3>
-                </div>
-                <button onclick="closeModal()" class="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 transition-all cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-6 bg-[#0c0c0e] flex-1 text-xs text-zinc-300 leading-relaxed font-mono" id="modal-content"></div>
         </div>
     </div>
 
-    <!-- SCRIPT DE COMPORTAMENTO E PERSISTÊNCIA -->
+    <div class="max-w-2xl mx-auto">
+        <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-slate-900 p-4">
+            <div class="flex justify-between items-center">
+                <h1 class="font-logo text-2xl font-black tracking-wider bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
+                    MATIAS INVEST
+                </h1>
+                <div class="text-right">
+                    <div class="text-xs text-slate-500">Simulação de Proporção</div>
+                    <div id="valor-aporte-display" class="text-xl font-black text-cyan-400 font-logo">R$ 0,00</div>
+                </div>
+            </div>
+        </header>
+
+        <div id="aba-conteudo-investimentos" class="block">
+            <div class="p-4 space-y-3">
+                <div id="secao-suitability" class="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-bold text-cyan-400 tracking-wider flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> SIMULAR PERFIL DE TOLERÂNCIA PESSOAL
+                        </label>
+                        <span id="badge-perfil" class="text-xs px-2 py-0.5 rounded font-bold bg-slate-900 text-slate-400 border border-slate-800">Não Definido</span>
+                    </div>
+                    
+                    <div id="quiz-container" class="space-y-3">
+                        <p class="text-xs text-slate-400">Responda para calibrar a visualização educacional da minha distribuição de ativos:</p>
+                        <div id="pergunta-fase" class="bg-slate-900 p-3 rounded-lg border border-slate-800/60">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1" id="progresso-quiz">Verificação Inicial</span>
+                            <p class="text-xs font-semibold text-white mb-3" id="texto-pergunta">Antes de iniciar, você é maior de idade?</p>
+                            <div id="opcoes-quiz" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="container-aporte" class="bg-slate-950 p-3 rounded-xl border border-slate-900 space-y-3 opacity-40 pointer-events-none transition-all duration-300">
+                    <label class="text-xs font-medium text-slate-400">SIMULAR PROPORÇÃO DA MINHA CARTEIRA ATUAL</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-bold text-sm">R$</span>
+                        <input type="text" id="input-valor-total" oninput="formatarMoeda(this, 'adulto')" placeholder="Defina o perfil simulado primeiro" class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-white font-bold font-logo focus:outline-none focus:border-cyan-500 transition">
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-800">
+                        <div class="flex flex-col mb-2">
+                            <label class="text-xs font-bold text-slate-300">MINHA RESERVA DE LIQUIDEZ INDIVIDUAL</label>
+                            <p class="text-[11px] text-slate-500 leading-tight mt-0.5">Onde eu, Matias, guardo meu colchão de segurança pessoal para oportunidades ou imprevistos de curto prazo.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-porquinho" onclick="selecionarLiquidez('porquinho')" class="toggle-liquid px-3 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center gap-1.5">
+                                <i data-lucide="piggy-bank" class="w-4 h-4"></i> Porquinho Inter
+                            </button>
+                            <button id="btn-nubank" onclick="selecionarLiquidez('nubank')" class="toggle-liquid px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center gap-1.5">
+                                <i data-lucide="wallet" class="w-4 h-4"></i> Caixinha Nubank
+                            </button>
+                        </div>
+                        <div id="aviso-liquidez" class="text-xs text-amber-400 bg-amber-500/10 p-2 rounded border border-amber-500/20 mt-2 hidden"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 overflow-x-auto pb-1 pt-1">
+                    <button id="filtro-todos" onclick="filtrarCategoria('todos', this)" class="filtro-btn active px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 whitespace-nowrap">
+                        Ver Minha Carteira Toda
+                    </button>
+                    <button id="filtro-Liquidez" onclick="filtrarCategoria('Liquidez', this)" class="filtro-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 whitespace-nowrap">
+                        Minha Liquidez
+                    </button>
+                    <button id="filtro-RendaFixa" onclick="filtrarCategoria('Renda Fixa', this)" class="filtro-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 whitespace-nowrap">
+                        Meus Ativos Renda Fixa
+                    </button>
+                    <button id="filtro-Multimercado" onclick="filtrarCategoria('Multimercado', this)" class="filtro-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 whitespace-nowrap">
+                        Meus Multimercados
+                    </button>
+                    <button id="filtro-Acoes" onclick="filtrarCategoria('Ações', this)" class="filtro-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 whitespace-nowrap">
+                        Minhas Ações BR
+                    </button>
+                    <button id="filtro-Global" onclick="filtrarCategoria('Global', this)" class="filtro-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 whitespace-nowrap">
+                        Meus Ativos Globais
+                    </button>
+                </div>
+            </div>
+
+            <section id="secao-grafico" class="p-4 hidden">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-900 pb-3">
+                        <div>
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Meu Histórico de Patrimônio</div>
+                            <div class="text-lg font-black text-cyan-400 font-logo animate-pulse" id="dashboard-rend-carteira">Evolução Pessoal</div>
+                        </div>
+                        <div class="flex gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                            <button onclick="atualizarPeriodoGrafico('1A', this)" class="px-2 py-1 text-[10px] font-bold rounded bg-cyan-500 text-black transition">1A</button>
+                            <button onclick="atualizarPeriodoGrafico('2A', this)" class="px-2 py-1 text-[10px] font-bold rounded text-slate-400 hover:text-white transition">2A</button>
+                            <button onclick="atualizarPeriodoGrafico('MAX', this)" class="px-2 py-1 text-[10px] font-bold rounded text-slate-400 hover:text-white transition">MAX</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xs font-bold text-white flex items-center gap-1.5 tracking-wider uppercase mb-3">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-cyan-400"></i> Histórico de Crescimento Real da Minha Conta
+                        </h2>
+                        <div class="w-full h-44">
+                            <canvas id="graficoEvolucao"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-slate-900">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Divisão Percentual Atual do Meu Dinheiro</p>
+                        <div id="barra-composicao" class="w-full h-3 rounded-full bg-slate-900 flex overflow-hidden"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="px-4 flex items-center gap-2">
+                <button id="btn-view-lista" onclick="alternarVisualizacao('lista')" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition">
+                    <i data-lucide="list" class="w-3.5 h-3.5"></i> Lista
+                </button>
+                <button id="btn-view-holograma" onclick="alternarVisualizacao('holograma')" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition">
+                    <i data-lucide="box" class="w-3.5 h-3.5"></i> Holograma 3D
+                </button>
+            </div>
+
+            <main id="lista-ativos" class="p-4 space-y-3">
+                <p class="text-xs text-slate-500 text-center py-8">Defina um perfil de tolerância simulado para visualizar a distribuição dos meus ativos pessoais.</p>
+            </main>
+
+            <section id="secao-holograma" class="p-4 hidden">
+                <p class="text-[10px] text-slate-500 text-center mb-3 uppercase tracking-wider">🖱️ Arraste os cubos para girar · passe o mouse para ver os detalhes</p>
+                <div id="holograma-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-5 py-2"></div>
+            </section>
+
+            <section class="p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-cyan-500"></i> Criptoativos que Monitoro no Mercado
+                    </h2>
+                    <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block mr-1"></span>LIVE FEED
+                    </span>
+                </div>
+                <div id="crypto-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <p class="text-xs text-slate-500 col-span-full text-center py-4">Carregando cotações públicas...</p>
+                </div>
+            </section>
+        </div>
+
+        <div id="aba-menor-idade" class="hidden p-4 space-y-4">
+            <div class="bg-gradient-to-br from-purple-950/50 via-slate-950 to-black p-5 rounded-2xl border-2 border-purple-500/40 space-y-3 shadow-xl shadow-purple-950/20">
+                <div class="flex items-center gap-2 text-purple-400">
+                    <span class="bg-purple-500 text-black text-xs font-black px-2 py-0.5 rounded-md font-logo">HISTÓRICO</span>
+                    <h2 class="text-lg font-black uppercase tracking-wider font-logo text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Minha Jornada Desde Cedo</h2>
+                </div>
+                <h3 class="text-sm font-extrabold text-white leading-snug">COMO EU FAZIA MINHAS ALOCAÇÕES QUANDO ERA MENOR DE IDADE</h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Este espaço reconstrói de forma puramente educacional e pessoal como foi a minha experiência e a lógica matemática de divisão de aportes que adotei na minha própria juventude, utilizando os mecanismos legais vigentes por meio de responsáveis.
+                </p>
+                <div class="bg-purple-950/40 p-3 rounded-lg border border-purple-500/30 text-xs text-purple-200">
+                    💡 <strong>MINHA MEMÓRIA DE APRENDIZADO:</strong> Quando eu era menor, utilizava contas simplificadas abertas por meus tutores (como na <strong>Corretora Rico</strong>). Abaixo, você confere a simulação matemática exata da estratégia que funcionou para o meu desenvolvimento financeiro precoce.
+                </div>
+            </div>
+
+            <div id="kids-suitability" class="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3">
+                <label class="text-xs font-bold text-purple-400 tracking-wider flex items-center gap-1 uppercase">
+                    <i data-lucide="zap" class="w-4 h-4 text-purple-500"></i> Escolha uma das minhas teses juvenis de estudo:
+                </label>
+                <div class="grid grid-cols-1 gap-2" id="kids-options-container">
+                    <button onclick="definirObjetivoKids('faculdade')" id="btn-kids-faculdade" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-purple-500 p-3 rounded-lg text-xs font-medium text-slate-300 transition">
+                        🎓 <strong>Meu Foco em Acumulação de Longo Prazo:</strong> Divisão focada em ativos geradores de fluxo de caixa baseados nos meus estudos de época.
+                    </button>
+                    <button onclick="definirObjetivoKids('intercambio')" id="btn-kids-intercambio" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-purple-500 p-3 rounded-lg text-xs font-medium text-slate-300 transition">
+                        🌍 <strong>Minhas Simulações com Proteção Cambial:</strong> Alocação que utilizei visando ativos dolarizados e exposição tecnológica global.
+                    </button>
+                    <button onclick="definirObjetivoKids('independencia')" id="btn-kids-independencia" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-purple-500 p-3 rounded-lg text-xs font-medium text-slate-300 transition">
+                        🛡️ <strong>Minha Estratégia de Previsibilidade Inicial:</strong> Divisão matemática conservadora que usei para proteger o capital inicial acumulado.
+                    </button>
+                </div>
+            </div>
+
+            <div id="container-aporte-kids" class="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3 opacity-40 pointer-events-none transition-all">
+                <label class="text-xs font-medium text-slate-400 uppercase">VALOR PARA MODELAGEM MATEMÁTICA HISTÓRICA</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500 font-bold text-sm">R$</span>
+                    <input type="text" id="input-valor-kids" oninput="formatarMoeda(this, 'kids')" placeholder="Escolha um modelo acima" class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-white font-bold font-logo focus:outline-none focus:border-purple-500 transition">
+                </div>
+            </div>
+
+            <main id="lista-ativos-kids" class="space-y-3">
+            </main>
+        </div>
+
+        <div id="aba-conhecimento" class="hidden p-4 space-y-5">
+            <div class="bg-gradient-to-r from-cyan-950/40 via-slate-950 to-slate-950 p-5 rounded-xl border border-cyan-500/20 space-y-3">
+                <div class="flex items-center gap-2 text-cyan-400">
+                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    <h2 class="text-base font-black uppercase tracking-wider font-logo">Portal Educacional Independente</h2>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Minha missão principal é o compartilhamento de metodologias financeiras. Busque conhecimento contínuo, faça suas próprias análises críticas e aprenda a controlar suas finanças com independência. Abaixo listei referências públicas gratuitas que utilizo nos meus estudos:
+                </p>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Canais Educacionais de Apoio:</h3>
+                
+                <a href="https://www.youtube.com/@oprimorico" target="_blank" class="flex items-center justify-between p-3.5 bg-slate-950 rounded-xl border border-slate-900 hover:border-cyan-500/50 transition duration-300 group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 font-bold font-logo text-sm group-hover:bg-cyan-950/30 transition">PR</div>
+                        <div>
+                            <h4 class="text-xs font-bold text-white group-hover:text-cyan-400 transition">O Primo Rico</h4>
+                            <p class="text-[10px] text-slate-500">Planejamento e Conceitos de Negócios</p>
+                        </div>
+                    </div>
+                    <i data-lucide="external-link" class="w-4 h-4 text-slate-600 group-hover:text-cyan-400 transition"></i>
+                </a>
+
+                <a href="https://www.youtube.com/@gustavocerbasibr" target="_blank" class="flex items-center justify-between p-3.5 bg-slate-950 rounded-xl border border-slate-900 hover:border-cyan-500/50 transition duration-300 group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 font-bold font-logo text-sm group-hover:bg-cyan-950/30 transition">GC</div>
+                        <div>
+                            <h4 class="text-xs font-bold text-white group-hover:text-cyan-400 transition">Gustavo Cerbasi</h4>
+                            <p class="text-[10px] text-slate-500">Estruturação Orçamentária Familiar</p>
+                        </div>
+                    </div>
+                    <i data-lucide="external-link" class="w-4 h-4 text-slate-600 group-hover:text-cyan-400 transition"></i>
+                </a>
+            </div>
+
+            <div class="pt-4 border-t border-slate-900">
+                <div class="bg-gradient-to-br from-cyan-950 via-slate-950 to-purple-950/40 p-5 rounded-2xl border-2 border-cyan-500/40 space-y-4 text-center">
+                    <div class="inline-flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest font-logo">
+                        Treinamento e Mentoria Orçamentária Particular
+                    </div>
+                    <h3 class="text-lg font-black text-white uppercase tracking-tight leading-tight">
+                        Precisa de Ajuda para Aprender a Organizar Suas Planilhas e Entender o Mercado?
+                    </h3>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                        Em nossos encontros individuais, eu vou te ensinar a ler gráficos, utilizar simuladores de alocação e montar rotinas financeiras eficientes baseadas no meu próprio modelo de organização pessoal.
+                    </p>
+                    <div class="bg-black/60 py-3 px-4 rounded-xl inline-block border border-slate-800">
+                        <span class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Acesso ao Meu Tempo Particular</span>
+                        <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 font-logo">R$ 279,90</span>
+                    </div>
+                    
+                    <a href="https://wa.me/5533991925305?text=Quero%20agendar%20meu%20Treinamento%20e%20Mentoria%20Financeira%20Individual" target="_blank" class="btn-agressivo-anim block w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-black font-black text-sm py-3.5 rounded-xl uppercase font-logo tracking-wider transition-all duration-300 transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                        <i data-lucide="phone-call" class="w-4 h-4 fill-black"></i> AGENDAR MENTORIA EDUCACIONAL PRIVADA
+                    </a>
+                    <p class="text-[9px] text-slate-500 text-center mt-2">Aviso: Esta mentoria possui caráter exclusivamente educacional de organização financeira. Não realizamos análise de valores mobiliários, recomendações de compra/venda ou gestão discricionária de portfólios.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="aba-painel-perfil" class="hidden p-4 space-y-4">
+            <div class="bg-gradient-to-br from-slate-950 to-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-400">CONTA EDUCACIONAL</span>
+                        <h2 class="text-base font-black text-white tracking-wide" id="perfil-nome-titulo">Estudante Anonimizado</h2>
+                    </div>
+                    <div class="bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 text-center">
+                        <span class="text-[9px] block text-slate-500 font-bold">NÍVEL</span>
+                        <span class="text-xs font-black text-cyan-400 font-logo" id="perfil-nivel-tag">ESTUDANTE</span>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] font-medium text-slate-400">
+                        <span>Progresso de Estudos na Ferramenta</span>
+                        <span id="txt-progresso-experiencia">20%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
+                        <div id="barra-progresso-perfil" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500" style="width: 20%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3">
+                <div class="flex items-center gap-2 border-b border-slate-900 pb-2">
+                    <i data-lucide="target" class="w-4 h-4 text-cyan-500"></i>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">Simulador Pessoal de Metas Autónomas</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-normal">Configure uma meta financeira própria para analisar simulações de proporções matemáticas baseadas nos meus estudos.</p>
+                
+                <div class="space-y-3 pt-1">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Sua meta financeira pessoal:</label>
+                        <select id="meta-tipo" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                            <option value="Construção Orçamentária Inicial">Construção Orçamentária Inicial</option>
+                            <option value="Simular Alocação de Longo Prazo">Simular Alocação de Longo Prazo</option>
+                            <option value="Estudo de Caso: Primeiros R$ 10k">Estudo de Caso: Primeiros R$ 10k</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Valor Alvo da Sua Simulação (R$)</label>
+                        <input type="number" id="meta-valor" placeholder="Ex: 10000" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-logo focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <button onclick="salvarMeta()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-bold text-xs py-2 rounded-lg transition">
+                        Ativar Alvo Educacional
+                    </button>
+                </div>
+
+                <div id="meta-visualizer" class="hidden bg-slate-900/40 border border-slate-800/60 p-3 rounded-lg mt-2 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-slate-300" id="lbl-meta-ativa">Nenhuma Meta</span>
+                        <span class="font-logo font-black text-cyan-400" id="lbl-meta-porcentagem">0%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                        <div id="barra-meta-ativa" class="h-full bg-cyan-500 transition-all" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span id="lbl-meta-atual">Aporte Simulado: R$ 0,00</span>
+                        <span id="lbl-meta-alvo">Alvo: R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3">
+                <div class="flex items-center gap-2 border-b border-slate-900 pb-2">
+                    <i data-lucide="user-cog" class="w-4 h-4 text-cyan-500"></i>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">Dados Locais do Usuário</h3>
+                </div>
+                <div class="space-y-3 pt-1">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Nome de Usuário</label>
+                        <input type="text" id="user-nome" placeholder="Seu Nome" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">WhatsApp de Contato</label>
+                        <input type="text" id="user-phone" placeholder="(11) 99999-9999" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-logo focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">E-mail</label>
+                        <input type="email" id="user-email" placeholder="seuemail@provedor.com" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <button onclick="salvarDadosPerfil()" class="w-full bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-bold text-xs py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar Preferências Educacionais
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA DÚVIDAS -->
+        <div id="aba-duvidas" class="hidden p-4 space-y-4">
+            <div class="bg-gradient-to-r from-cyan-950/40 via-slate-950 to-slate-950 p-5 rounded-xl border border-cyan-500/20 space-y-2">
+                <div class="flex items-center gap-2 text-cyan-400">
+                    <i data-lucide="message-circle-question" class="w-6 h-6"></i>
+                    <h2 class="text-base font-black uppercase tracking-wider font-logo">Central de Dúvidas</h2>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">Toque em uma pergunta abaixo para ver a resposta detalhada.</p>
+            </div>
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                <input type="text" id="busca-duvida" oninput="filtrarDuvidas(this.value)" placeholder="Buscar dúvida..." class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 transition">
+            </div>
+            <div id="lista-duvidas" class="space-y-2"></div>
+            <div id="resposta-duvida" class="hidden bg-slate-950 border border-cyan-500/30 rounded-xl p-4 space-y-3">
+                <div class="flex justify-between items-start gap-2">
+                    <h3 id="resposta-titulo" class="text-xs font-black text-cyan-400 uppercase tracking-wide leading-snug"></h3>
+                    <button onclick="fecharResposta()" class="text-slate-600 hover:text-white shrink-0"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div id="resposta-texto" class="text-xs text-slate-300 leading-relaxed space-y-2"></div>
+            </div>
+            <a href="https://wa.me/5533991925305?text=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%20sobre%20o%20Matias%20Invest" target="_blank"
+               class="flex items-center justify-center gap-2 w-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 font-bold text-xs py-3 rounded-xl transition">
+                <i data-lucide="message-circle" class="w-4 h-4"></i> Não encontrei minha dúvida — falar no WhatsApp
+            </a>
+        </div>
+
+        <footer class="p-4 text-center border-t border-slate-900 bg-black text-[9px] text-slate-600 space-y-1">
+            <p><strong>AVISO DE TRANSPARÊNCIA REGULATÓRIA:</strong> O ambiente Matias Invest é um diário virtual pessoal de compartilhamento de metodologias e simulação matemática de ativos do proprietário deste site de acordo com suas próprias experiências históricas.</p>
+            <p>Este sistema não constitui, sob hipótese alguma, análise de valores mobiliários, consultoria financeira regulada pela CVM, intermediação de ativos, oferta pública ou recomendação explícita de compra/venda de ativos financeiros. Não possuímos vínculo operacional com corretoras ou registro de casa de análise (CNPI/CNPJ corporativo financeiro). Os dados aqui apresentados servem exclusivamente para simulação acadêmica e ilustrativa.</p>
+        </footer>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md border-t border-slate-900 z-50">
+            <div class="max-w-2xl mx-auto grid grid-cols-6 gap-0.5 p-2 text-center">
+                <button id="nav-btn-menor" class="flex flex-col items-center gap-0.5 py-1" onclick="alternarAbas('menor')">
+                    <span class="text-[9px] bg-slate-900 text-slate-400 font-black px-1 py-0.5 rounded border border-slate-800 font-logo transition-colors" id="icon-menor-tag">HIST</span>
+                    <span class="text-[8px] font-bold text-slate-500">Começo</span>
+                </button>
+                
+                <button id="nav-btn-carteira" class="flex flex-col items-center gap-1 py-1 nav-active" onclick="alternarAbas('carteira')">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    <span class="text-[8px] font-bold">Carteira</span>
+                </button>
+
+                <button id="nav-btn-duvidas" class="flex flex-col items-center gap-1 py-1 text-slate-600" onclick="alternarAbas('duvidas')">
+                    <i data-lucide="message-circle-question" class="w-4 h-4"></i>
+                    <span class="text-[8px] font-medium text-slate-500">Dúvidas</span>
+                </button>
+
+                <button id="nav-btn-conhecimento" class="flex flex-col items-center gap-1 py-1 text-slate-600" onclick="alternarAbas('conhecimento')">
+                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                    <span class="text-[8px] font-medium text-slate-500">Educação</span>
+                </button>
+                <button id="nav-btn-perfil" class="flex flex-col items-center gap-1 py-1 text-slate-600" onclick="alternarAbas('perfil')">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span class="text-[8px] font-medium text-slate-500">Config</span>
+                </button>
+                
+                <button class="flex flex-col items-center gap-1 py-1 text-slate-600 hover:text-red-400 transition" onclick="resetarPerfil()">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span class="text-[8px] font-medium text-slate-500">Limpar</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
     <script>
-        // BANCO DE DADOS COMPLETO COM TEXTOS NA ÍNTEGRA
-        const PRO_ESSAYS = [
+        // ─────────────────────────────────────────────────────────────
+        // CARTEIRA COMPLETA — ticker separado para exibição clara
+        // ─────────────────────────────────────────────────────────────
+        const carteiraCompleta = [
+            { ticker: null,      nome: 'VALORA VANGUARD',                         categoria: 'Renda Fixa',   descricao: 'Ativo de crédito privado focado em prêmios estruturais de mercado corporativo.',              aplicacaoMinima: 100,  pesosPerfil: { conservador: 25, moderado: 15, arrojado: 5  }, ondeEncontrar: 'BTG Pactual, Itaú e XP Investimentos' },
+            { ticker: null,      nome: 'SOLIS CAPITAL ANTARES PIONEIRO',           categoria: 'Renda Fixa',   descricao: 'Direitos creditórios com modelo estruturado focado em previsibilidade de prêmio.',             aplicacaoMinima: 500,  pesosPerfil: { conservador: 20, moderado: 10, arrojado: 5  }, ondeEncontrar: 'BTG Pactual e XP Investimentos' },
+            { ticker: 'IFRA11',  nome: 'IFRA11 — Itaú FICFIDC de Infraestrutura', categoria: 'Renda Fixa',   descricao: 'Ativo de infraestrutura focado em crédito e liquidez corporativa controlada.',                  aplicacaoMinima: 80,   pesosPerfil: { conservador: 15, moderado: 10, arrojado: 5  }, ondeEncontrar: 'Itaú e corretoras parceiras' },
+            { ticker: null,      nome: 'FUNDOS PASSIVOS AO IMA-B',                 categoria: 'Renda Fixa',   descricao: 'Estratégia indexada à variação da inflação real de longo prazo.',                             aplicacaoMinima: 100,  pesosPerfil: { conservador: 25, moderado: 10, arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter, NuInvest e Ágora' },
+            { ticker: null,      nome: 'DAHLIA TOTAL RETURN',                      categoria: 'Multimercado', descricao: 'Estratégia multimercado dinâmica contendo ações e ativos macro globais.',                     aplicacaoMinima: 500,  pesosPerfil: { conservador: 0,  moderado: 15, arrojado: 10 }, ondeEncontrar: 'Ágora, BTG Pactual, C6 Bank, Inter e XP' },
+            { ticker: null,      nome: 'ABSOLUTE VERTEX',                          categoria: 'Multimercado', descricao: 'Fundo focado em distorções táticas macroeconômicas de juros e moedas.',                      aplicacaoMinima: 500,  pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 10 }, ondeEncontrar: 'Ágora, C6 Bank, BTG Pactual, Rico e XP' },
+            { ticker: null,      nome: 'GENOA CAPITAL RADAR',                      categoria: 'Multimercado', descricao: 'Fundo focado em arbitragem quantitativa de juros, câmbio e índices.',                        aplicacaoMinima: 500,  pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 5  }, ondeEncontrar: 'Ágora, Inter, BTG Pactual, Genial e XP' },
+            { ticker: null,      nome: 'IBIUNA EQUITIES',                          categoria: 'Ações',        descricao: 'Seleção corporativa de ativos de alta resiliência e geração de valor operacional.',           aplicacaoMinima: 1000, pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 10 }, ondeEncontrar: 'C6 Bank, Inter, Genial, Toro e XP' },
+            { ticker: null,      nome: 'FORPUS AÇÕES FIC FIA',                     categoria: 'Ações',        descricao: 'Teses direcionais com foco em forte potencial de crescimento em bolsa.',                      aplicacaoMinima: 1000, pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 15 }, ondeEncontrar: 'BTG Pactual, C6 Bank, Inter e XP' },
+            { ticker: null,      nome: 'REAL INVESTOR FI AÇÕES BDR LEVEL I',       categoria: 'Ações',        descricao: 'Value investing puro voltado ao estudo de assimetrias de lucros corporativos.',               aplicacaoMinima: 5000, pesosPerfil: { conservador: 0,  moderado: 0,  arrojado: 15 }, ondeEncontrar: 'BTG Pactual, Genial, Itaú, Rico e XP' },
+            { ticker: 'BBSE3',   nome: 'BBSE3 — BB Seguridade',                    categoria: 'Ações',        descricao: 'Ação focada em forte geração de caixa operacional no mercado de seguros.',                   aplicacaoMinima: 34,   pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 10 }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: 'SLCE3',   nome: 'SLCE3 — SLC Agrícola',                     categoria: 'Ações',        descricao: 'Empresa produtora de commodities agrícolas com patrimônio de terras cultiváveis.',            aplicacaoMinima: 19,   pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 10 }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: 'GMAT3',   nome: 'GMAT3 — Grupo Mateus',                     categoria: 'Ações',        descricao: 'Varejo alimentar de grande escala em expansão regional no Norte/Nordeste.',                  aplicacaoMinima: 8,    pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: 'BTHF11',  nome: 'BTHF11 — BTG Pactual HF',                  categoria: 'Ações',        descricao: 'Portfólio híbrido estruturado sob coordenação do banco BTG Pactual.',                       aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: 'WRLD11',  nome: 'WRLD11 — Mundo Todo (Vanguard VT)',         categoria: 'Global',       descricao: 'Ativo indexado que reflete mais de 9.000 ações ao redor do planeta via B3.',                 aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 15 }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: null,      nome: 'MS GLOBAL OPPORTUNITIES',                  categoria: 'Global',       descricao: 'Exposição de estudo a ativos de alto crescimento geridos pela Morgan Stanley.',              aplicacaoMinima: 100,  pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 10 }, ondeEncontrar: 'Plataformas integradas e XP' },
+            { ticker: 'ALUG11',  nome: 'ALUG11 — Mercado Imobiliário Global (VNQ)', categoria: 'Global',       descricao: 'Ativo de tracking do mercado imobiliário internacional de alta renda (Real Estate).',       aplicacaoMinima: 110,  pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: 'USDB11',  nome: 'USDB11 — Renda Fixa Americana (BND)',       categoria: 'Global',       descricao: 'Rastreamento de títulos públicos de renda fixa emitidos pelo tesouro americano.',            aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 10, arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' },
+            { ticker: 'BNDX11',  nome: 'BNDX11 — Renda Fixa Global ex-EUA',        categoria: 'Global',       descricao: 'Indexador focado em renda fixa internacional fora do eixo geográfico dos EUA.',             aplicacaoMinima: 10,   pesosPerfil: { conservador: 0,  moderado: 5,  arrojado: 5  }, ondeEncontrar: 'XP, BTG Pactual, Rico, Inter e Ágora' }
+        ];
+
+        // ─────────────────────────────────────────────────────────────
+        // LIMITES DE QUANTIDADE DE ATIVOS POR FAIXA DE VALOR
+        // Regra: quantidade sobe gradualmente, nunca passa de 8
+        // ─────────────────────────────────────────────────────────────
+        function calcularQuantidadeAtivos(valor) {
+            if (valor < 200)   return 2;  // R$0–199    → 2 ativos
+            if (valor < 500)   return 3;  // R$200–499  → 3 ativos
+            if (valor < 1000)  return 4;  // R$500–999  → 4 ativos
+            if (valor < 2000)  return 5;  // R$1k–1999  → 5 ativos
+            if (valor < 5000)  return 6;  // R$2k–4999  → 6 ativos
+            if (valor < 15000) return 7;  // R$5k–14999 → 7 ativos
+            return 8;                     // R$15k+     → 8 ativos (máximo)
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // BADGE DE TICKER — exibe o código do ativo quando existe
+        // ─────────────────────────────────────────────────────────────
+        function badgeTicker(ativo, corClasse) {
+            if (!ativo.ticker) return '';
+            return `<span class="inline-block text-[9px] font-black tracking-widest px-2 py-0.5 rounded ${corClasse} font-logo ml-1">
+                        ${ativo.ticker}
+                    </span>`;
+        }
+
+        const pesosKidsEstrategia = {
+            faculdade:    { 'Renda Fixa': 20, 'Multimercado': 10, 'Ações': 50, 'Global': 20 },
+            intercambio:  { 'Renda Fixa': 10, 'Multimercado': 10, 'Ações': 20, 'Global': 60 },
+            independencia:{ 'Renda Fixa': 50, 'Multimercado': 20, 'Ações': 15, 'Global': 15 }
+        };
+
+        const topCryptos = [
+            { id: 'bitcoin',  symbol: 'BTC', name: 'Bitcoin',  color: '#f7931a' },
+            { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', color: '#627eea' },
+            { id: 'solana',   symbol: 'SOL', name: 'Solana',   color: '#9945ff' }
+        ];
+
+        const perguntasQuiz = [
             {
-                id: 1,
-                title: "Invisibilidade e registro civil: garantia de acesso à cidadania",
-                year: "ENEM 2021",
-                author: "Texto Nota 1000 Integrado",
-                paragraphs: [
-                    { type: "INTRODUÇÃO", text: "Na obra clássica \"Vidas Secas\", do escritor Graciliano Ramos, os filhos de Fabiano são identificados apenas como \"o mais novo\" e \"o mais velho\", privados de nomes formais. Fora da ficção, a ausência nominal reflete a desumanização decorrente da falta de registro civil no Brasil contemporâneo, mitigando a cidadania. Sob essa ótica, a invisibilidade civil é alimentada não apenas pela inércia estatal na descentralização dos cartórios, mas também pelo desconhecimento social acerca dos direitos fundamentais, exigindo análise urgente." },
-                    { type: "DESENVOLVIMENTO 1", text: "Em primeira análise, a negligência do poder público atua como fator primordial para a manutenção desse cenário de exclusão. Segundo o jornalista Gilberto Dimenstein, em sua obra \"Cidadão de Papel\", a legislação brasileira é robusta na garantia teórica de direitos, porém ineficaz em sua aplicabilidade prática. Essa assimetria se manifesta na barreira geográfica e financeira para a obtenção da certidão de nascimento pelas populações hipervulneráveis, que habitam periferias e zonas rurais desprovidas de postos de atendimento. Assim, sem a documentação básica, o indivíduo é desprovido de existência jurídica, restando à margem das políticas públicas estatais." },
-                    { type: "DESENVOLVIMENTO 2", text: "Ademais, a falta de informação atua como barreira cognitiva que perpetua a invisibilidade. O sociólogo Zygmunt Bauman postula que a modernidade tende a isolar os indivíduos em bolhas de autossuficiência, naturalizando as mazelas alheias. Desse modo, a escassez de campanhas públicas de esclarecimento em mídias de massa faz com que parcelas significativas da população sequer compreendam que a certidão de nascimento é gratuita e obrigatória. Essa alienação impede o corpo civil de se mobilizar e exigir o cumprimento do pacto social básico, perpetuando o ciclo de vulnerabilidade geracional." },
-                    { type: "CONCLUSÃO", text: "Portanto, medidas urgentes são mandatórias para reverter esse panorama. Para tanto, cabe ao Ministério da Defesa Civil, associado à Secretaria Especial de Direitos Humanos, viabilizar mutirões itinerantes de registro civil gratuitos, por meio da alocação de unidades móveis de atendimento e assistentes sociais nas regiões de menor IDH do país. Essa medida deve ser acompanhada por campanhas publicitárias em redes de rádio e televisão aberta, detalhando a relevância e gratuidade do ato, com o escopo de resgatar a dignidade civil desses cidadãos. Dessa forma, a exclusão nominativa vista em \"Vidas Secas\" deixará de ser um espelho da realidade brasileira." }
+                texto: "Qual perfil de tolerância pessoal à volatilidade deseja simular nos meus estudos?",
+                opcoes: [
+                    { texto: "Preservação absoluta (Foco na minha estrutura de Renda Fixa)", pontos: 1 },
+                    { texto: "Crescimento Equilibrado (Mistura equilibrada com meus Multimercados)", pontos: 3 },
+                    { texto: "Estratégia Integral Aberta (Ver minha alocação integral em Ações e Globais)", pontos: 5 }
                 ]
             },
             {
-                id: 2,
-                title: "Democratização do acesso ao cinema no Brasil",
-                year: "ENEM 2019",
-                author: "Texto Nota 1000 Integrado",
-                paragraphs: [
-                    { type: "INTRODUÇÃO", text: "No longa-metragem estadunidense \"Coringa\", o protagonista Arthur Fleck experimenta um profundo processo de marginalização e adoecimento mental decorrente do isolamento social e da ausência de amparo estatal. Paralelamente à narrativa cinematográfica, a realidade brasileira reproduz essa dinâmica segregadora ao restringir o acesso à cultura, notadamente através da elitização das salas de cinema. Esse panorama nocivo é estruturado tanto pela centralização espacial dos complexos de exibição nos grandes centros urbanos quanto pelo elevado custo econômico dos ingressos, demandando intervenção imediata." },
-                    { type: "DESENVOLVIMENTO 1", text: "Em primeiro plano, a distribuição geográfica desigual das salas de exibição atua como barreira à democratização cultural. Conforme o geógrafo Milton Santos, o espaço geográfico é preenchido de forma assimétrica, privilegiando regiões economicamente ativas em detrimento das periferias. No cenário nacional, a concentração de cinemas em shoppings localizados em bairros nobres exclui fisicamente as populações de baixa renda residentes em periferias e cidades do interior. Essa segregação socioespacial priva o cidadão de usufruir da sétima arte como instrumento de expansão crítica e repertório pessoal." },
-                    { type: "DESENVOLVIMENTO 2", text: "Outrossim, o fator econômico inviabiliza o consumo cultural pela base da pirâmide social. O pensador Karl Marx assevera que a estrutura econômica determina as formas de acesso aos bens materiais e simbólicos de uma sociedade. Sob esse viés, os preços abusivos praticados pelas empresas exibidoras transformam o cinema em um privilégio de classe, restrito àqueles que possuem renda excedente. Essa mercantilização cultural impede que o cinema cumpra sua função social primordial de vetor de lazer e inclusão democrática, gerando cidadãos apartados do ecossistema intelectual contemporâneo." },
-                    { type: "CONCLUSÃO", text: "Logo, urge mitigar essa assimetria. Para isso, o Ministério da Cultura deve instituir o Programa Nacional de Circulação Cinematográfica, por meio de parcerias público-privadas e subsídios fiscais diretos, visando à construção de complexos de exibição públicos em periferias urbanas e municípios de pequeno porte. Adicionalmente, deve-se regulamentar políticas de teto tarifário para os ingressos nos finais de semana, com o intuito de estender o benefício da fruição artística às camadas vulneráveis do tecido social. Com essas ações, o Brasil evitará a replicação das fraturas sociais que desumanizaram o personagem Fleck." }
+                texto: "Qual horizonte de tempo simulado deseja mapear matematicamente?",
+                opcoes: [
+                    { texto: "Curto prazo (Visualizar ativos de Liquidez imediata)", pontos: 1 },
+                    { texto: "Médio prazo (Visualizar ativos táticos combinados)", pontos: 3 },
+                    { texto: "Longo prazo (Exposição completa da minha estratégia estrutural)", pontos: 5 }
                 ]
             }
         ];
 
-        let userHistory = [];
-        let currentInputMethod = 'text';
+        let faseQuiz = -1;
+        let pontuacaoTotalQuiz = 0;
+        let perfilInvestidor = null;
+        let objetivoKidsSelecionado = null;
+        let filtroAtual = 'todos';
+        let liquidezSelecionada = 'porquinho';
+        let chartInstancia = null;
+        let abaAtualAtiva = 'carteira';
 
-        window.addEventListener('DOMContentLoaded', () => {
-            initCountdown();
-            loadUserProfile();
-            loadHistory();
-            renderLibrary();
-            build30DaysGrid();
+        // ─────────────────────────────────────────────────────────────
+        // HOLOGRAMA 3D — estado e mapa de cores por categoria
+        // ─────────────────────────────────────────────────────────────
+        let modoVisualizacao = 'lista';
+        let cubosHolograma = [];
+        let loopHologramaAtivo = false;
+
+        const coresHolograma = {
+            'Renda Fixa':   { bg: '#3b82f6', glow: 'rgba(59,130,246,0.65)' },
+            'Ações':        { bg: '#10b981', glow: 'rgba(16,185,129,0.65)' },
+            'Multimercado': { bg: '#a855f7', glow: 'rgba(168,85,247,0.65)' },
+            'Liquidez':     { bg: '#f59e0b', glow: 'rgba(245,158,11,0.65)' },
+            'Global':       { bg: '#ec4899', glow: 'rgba(236,72,153,0.65)' }
+        };
+
+        const dadosGraficoPeriodos = {
+            '1A':  [5, 12, 19, 26, 38, 48.3],
+            '2A':  [10, 22, 31, 45, 62, 85.5],
+            'MAX': [15, 35, 58, 82, 110, 145.2]
+        };
+
+        // ─────────────────────────────────────────────────────────────
+        // BANCO DE DÚVIDAS
+        // ─────────────────────────────────────────────────────────────
+        const bancoDePerguntas = [
+            {
+                categoria: '📍 Onde Encontrar os Investimentos',
+                perguntas: [
+                    {
+                        pergunta: 'Onde encontro o Fundos Passivos IMA-B?',
+                        resposta: `O <strong>Fundos Passivos ao IMA-B</strong> são fundos que acompanham o índice IMA-B, formado por títulos públicos atrelados à inflação (Tesouro IPCA+).<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • <strong>XP Investimentos</strong> — busque por "IMA-B" na aba Fundos<br>
+                        • <strong>BTG Pactual</strong> — aba Fundos → Renda Fixa → IMA-B<br>
+                        • <strong>Rico</strong> — Fundos → Indexados<br>
+                        • <strong>Inter Invest</strong> — aba Fundos<br>
+                        • <strong>NuInvest</strong> e <strong>Ágora</strong> também disponibilizam<br><br>
+                        💡 <strong>Dica:</strong> Na plataforma, filtre por "Renda Fixa Indexada" ou "IMA-B" e procure fundos com taxa de administração abaixo de 0,30% ao ano.`
+                    },
+                    {
+                        pergunta: 'Onde encontro o WRLD11?',
+                        resposta: `O <strong>WRLD11</strong> é um BDR (Brazilian Depositary Receipt) que replica o ETF Vanguard Total World Stock (VT), dando exposição a mais de 9.000 ações do mundo inteiro.<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • É negociado na <strong>B3</strong> (Bolsa brasileira) como uma ação normal<br>
+                        • Disponível em qualquer corretora: <strong>XP, BTG, Rico, Inter, NuInvest, Ágora, Clear</strong><br><br>
+                        💡 <strong>Como comprar:</strong> Acesse o Home Broker da sua corretora, busque o código <strong>WRLD11</strong> e compre como se fosse uma ação. O valor mínimo é de uma cota (cerca de R$ 10 a R$ 15).`
+                    },
+                    {
+                        pergunta: 'Onde encontro o BBSE3?',
+                        resposta: `<strong>BBSE3</strong> é a ação da <strong>BB Seguridade</strong>, empresa do grupo Banco do Brasil focada em seguros, previdência e capitalização.<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • Negociada na <strong>B3</strong> — disponível em qualquer corretora<br>
+                        • <strong>XP, BTG Pactual, Rico, Inter, NuInvest, Ágora, Clear</strong><br><br>
+                        💡 <strong>Como comprar:</strong> No Home Broker, busque <strong>BBSE3</strong>. É possível comprar a partir de 1 ação (em torno de R$ 30 a R$ 40).`
+                    },
+                    {
+                        pergunta: 'Onde encontro o SLCE3?',
+                        resposta: `<strong>SLCE3</strong> é a ação da <strong>SLC Agrícola</strong>, uma das maiores produtoras de grãos do Brasil (soja, milho, algodão).<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • Negociada na <strong>B3</strong> — qualquer corretora<br>
+                        • <strong>XP, BTG, Rico, Inter, NuInvest, Ágora, Clear</strong><br><br>
+                        💡 <strong>Como comprar:</strong> Busque <strong>SLCE3</strong> no Home Broker. Valor por volta de R$ 15 a R$ 25 por ação.`
+                    },
+                    {
+                        pergunta: 'Onde encontro o USDB11 e BNDX11?',
+                        resposta: `<strong>USDB11</strong> replica o ETF BND (Vanguard Total Bond Market) — renda fixa americana.<br>
+                        <strong>BNDX11</strong> replica o ETF BNDX — renda fixa global fora dos EUA.<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • Ambos são BDRs negociados na <strong>B3</strong><br>
+                        • Disponíveis em <strong>XP, BTG, Rico, Inter, NuInvest, Ágora</strong><br><br>
+                        💡 <strong>Como comprar:</strong> Busque os códigos <strong>USDB11</strong> ou <strong>BNDX11</strong> no Home Broker. Valor mínimo: 1 cota (~R$ 10).`
+                    },
+                    {
+                        pergunta: 'Onde encontro o IFRA11?',
+                        resposta: `<strong>IFRA11</strong> é um FIDC (Fundo de Investimento em Direitos Creditórios) de infraestrutura do Itaú.<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • Disponível no <strong>Itaú</strong> e em corretoras parceiras<br>
+                        • Consulte também em <strong>XP Investimentos</strong><br><br>
+                        💡 <strong>Dica:</strong> Por ser um FIDC, pode ter algumas restrições de acesso dependendo da plataforma. Verifique se é necessário ser investidor qualificado.`
+                    },
+                    {
+                        pergunta: 'Onde encontro o Dahlia Total Return?',
+                        resposta: `O <strong>Dahlia Total Return</strong> é um fundo multimercado da gestora Dahlia Capital.<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • <strong>Ágora, BTG Pactual, C6 Bank, Inter e XP Investimentos</strong><br><br>
+                        💡 <strong>Como investir:</strong> Acesse a plataforma escolhida → aba Fundos → busque "Dahlia Total Return". Aporte mínimo geralmente de R$ 500.`
+                    },
+                    {
+                        pergunta: 'Onde encontro o Absolute Vertex?',
+                        resposta: `O <strong>Absolute Vertex</strong> é um fundo multimercado da Absolute Investimentos, focado em estratégias macro.<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • <strong>Ágora, C6 Bank, BTG Pactual, Rico e XP Investimentos</strong><br><br>
+                        💡 <strong>Como investir:</strong> Plataforma → Fundos → busque "Absolute Vertex". Aporte mínimo em torno de R$ 500.`
+                    },
+                    {
+                        pergunta: 'Onde encontro o ALUG11?',
+                        resposta: `<strong>ALUG11</strong> replica o ETF VNQ da Vanguard — expõe ao mercado imobiliário americano (REITs).<br><br>
+                        📌 <strong>Onde encontrar:</strong><br>
+                        • BDR negociado na <strong>B3</strong> — disponível em qualquer corretora<br>
+                        • <strong>XP, BTG, Rico, Inter, NuInvest, Ágora</strong><br><br>
+                        💡 Busque <strong>ALUG11</strong> no Home Broker. Cota em torno de R$ 100 a R$ 130.`
+                    },
+                ]
+            },
+            {
+                categoria: '❓ Como Funciona o Site',
+                perguntas: [
+                    {
+                        pergunta: 'Como funciona a simulação de carteira?',
+                        resposta: `A simulação mostra <strong>como o Matias distribui seus próprios investimentos</strong> de forma proporcional ao valor que você digitar.<br><br>
+                        📌 <strong>Passo a passo:</strong><br>
+                        1. Responda as perguntas de perfil (conservador, moderado ou arrojado)<br>
+                        2. Digite um valor no campo "Simular Proporção"<br>
+                        3. O site calcula automaticamente quanto iria para cada ativo<br><br>
+                        ⚠️ <strong>Importante:</strong> Isso é apenas uma simulação educacional baseada na carteira pessoal do Matias — não é recomendação de investimento.`
+                    },
+                    {
+                        pergunta: 'O que significa perfil conservador, moderado e arrojado?',
+                        resposta: `<strong>Conservador:</strong> Foco em segurança. A maior parte vai para Renda Fixa (IMA-B, Valora, etc). Menor risco, retorno mais previsível.<br><br>
+                        <strong>Moderado:</strong> Equilíbrio entre segurança e crescimento. Divide entre Renda Fixa, Multimercados, algumas ações e ativos globais.<br><br>
+                        <strong>Arrojado:</strong> Aceita mais volatilidade em busca de maior retorno. Maior exposição a ações brasileiras, globais e multimercados.`
+                    },
+                    {
+                        pergunta: 'O que é a aba "Meu Começo"?',
+                        resposta: `A aba <strong>"Meu Começo"</strong> mostra como o Matias investia quando era <strong>menor de idade</strong>, usando contas abertas por responsáveis legais em corretoras como a <strong>Rico</strong>.<br><br>
+                        É uma simulação histórica educacional com 3 estratégias que ele utilizou na época:<br>
+                        • 🎓 Acumulação de Longo Prazo<br>
+                        • 🌍 Proteção Cambial e Ativos Globais<br>
+                        • 🛡️ Estratégia Conservadora Inicial`
+                    },
+                    {
+                        pergunta: 'O que é o Porquinho Inter e a Caixinha Nubank?',
+                        resposta: `São as reservas de liquidez do Matias — onde ele guarda o "colchão de segurança" para emergências ou oportunidades rápidas.<br><br>
+                        🐷 <strong>Porquinho Inter:</strong> Conta remunerada do Banco Inter. Rende 100% do CDI com liquidez diária.<br><br>
+                        💜 <strong>Caixinha Nubank:</strong> RDB (Recibo de Depósito Bancário) do Nubank. Também rende 100% do CDI com resgate imediato.<br><br>
+                        💡 Ambas são opções seguras e com liquidez total para reserva de emergência.`
+                    },
+                    {
+                        pergunta: 'O gráfico de evolução é real?',
+                        resposta: `O gráfico mostra uma <strong>simulação educacional proporcional</strong> ao valor que você digitar — não representa resultados reais do Matias nem promessa de rendimento futuro.<br><br>
+                        Ele serve para ilustrar como um portfólio diversificado pode se comportar ao longo do tempo com aportes regulares.<br><br>
+                        ⚠️ Rentabilidade passada não garante rentabilidade futura.`
+                    },
+                ]
+            },
+            {
+                categoria: '💡 Conceitos Financeiros',
+                perguntas: [
+                    {
+                        pergunta: 'O que é IMA-B?',
+                        resposta: `O <strong>IMA-B</strong> (Índice de Mercado ANBIMA - Série B) é um índice que representa uma carteira de <strong>Títulos Públicos atrelados ao IPCA</strong> (inflação).<br><br>
+                        Na prática: fundos passivos ao IMA-B compram esses títulos e entregam a variação da inflação + juros reais.<br><br>
+                        💡 É uma boa escolha para quem quer <strong>proteger o dinheiro da inflação</strong> no longo prazo.`
+                    },
+                    {
+                        pergunta: 'O que é um ETF?',
+                        resposta: `<strong>ETF</strong> (Exchange Traded Fund) é um fundo negociado em bolsa como se fosse uma ação.<br><br>
+                        Ele replica um índice — por exemplo:<br>
+                        • <strong>WRLD11</strong> replica o VT (9.000+ ações do mundo)<br>
+                        • <strong>USDB11</strong> replica o BND (títulos americanos)<br><br>
+                        💡 Vantagem: diversificação enorme com uma única compra, e taxas geralmente baixas.`
+                    },
+                    {
+                        pergunta: 'O que é um BDR?',
+                        resposta: `<strong>BDR</strong> (Brazilian Depositary Receipt) é um ativo negociado na B3 que representa ativos lá de fora.<br><br>
+                        Exemplo: <strong>WRLD11</strong> é um BDR do ETF americano VT. Você compra em reais na B3, mas o dinheiro está exposto ao ativo internacional.<br><br>
+                        💡 Ótimo para ter exposição ao exterior sem precisar abrir conta fora do Brasil.`
+                    },
+                    {
+                        pergunta: 'O que é um Fundo Multimercado?',
+                        resposta: `Um <strong>Fundo Multimercado</strong> pode investir em diferentes classes de ativos ao mesmo tempo: ações, câmbio, juros, commodities, etc.<br><br>
+                        Exemplos na carteira do Matias:<br>
+                        • <strong>Dahlia Total Return</strong> — estratégia macro global<br>
+                        • <strong>Absolute Vertex</strong> — arbitragem de juros e câmbio<br>
+                        • <strong>Genoa Capital Radar</strong> — quantitativo<br><br>
+                        💡 São geridos ativamente por gestores profissionais.`
+                    },
+                    {
+                        pergunta: 'O que é CDI?',
+                        resposta: `O <strong>CDI</strong> (Certificado de Depósito Interbancário) é a taxa de referência de investimentos de renda fixa no Brasil.<br><br>
+                        Quando um investimento rende "100% do CDI", significa que acompanha essa taxa de referência de perto.<br><br>
+                        💡 O CDI fica geralmente próximo da taxa Selic (taxa básica de juros do Brasil).`
+                    },
+                ]
+            }
+        ];
+
+        function renderizarDuvidas(filtro = '') {
+            const lista = document.getElementById('lista-duvidas');
+            let html = '';
+            const termo = filtro.toLowerCase();
+
+            bancoDePerguntas.forEach(grupo => {
+                const perguntasFiltradas = grupo.perguntas.filter(p =>
+                    !termo || p.pergunta.toLowerCase().includes(termo) || p.resposta.toLowerCase().includes(termo)
+                );
+                if (perguntasFiltradas.length === 0) return;
+
+                html += `<div class="mb-1">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 px-1">${grupo.categoria}</p>
+                    <div class="space-y-1.5">`;
+
+                perguntasFiltradas.forEach((p, i) => {
+                    const id = encodeURIComponent(p.pergunta);
+                    html += `
+                        <button onclick="mostrarResposta('${id}')"
+                            class="w-full text-left bg-slate-950 border border-slate-800 hover:border-cyan-500/50 hover:bg-cyan-950/10 p-3 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-between gap-2">
+                            <span>${p.pergunta}</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
+                        </button>`;
+                });
+
+                html += `</div></div>`;
+            });
+
+            if (!html) {
+                html = '<p class="text-xs text-slate-500 text-center py-6">Nenhuma dúvida encontrada. Tente outra palavra.</p>';
+            }
+
+            lista.innerHTML = html;
             lucide.createIcons();
+        }
+
+        function filtrarDuvidas(valor) {
+            renderizarDuvidas(valor);
+            fecharResposta();
+        }
+
+        function mostrarResposta(idEncoded) {
+            const perguntaTexto = decodeURIComponent(idEncoded);
+            let encontrado = null;
+            bancoDePerguntas.forEach(g => {
+                g.perguntas.forEach(p => {
+                    if (p.pergunta === perguntaTexto) encontrado = p;
+                });
+            });
+            if (!encontrado) return;
+
+            document.getElementById('resposta-titulo').innerText = encontrado.pergunta;
+            document.getElementById('resposta-texto').innerHTML = encontrado.resposta;
+            const el = document.getElementById('resposta-duvida');
+            el.classList.remove('hidden');
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            lucide.createIcons();
+        }
+
+        function fecharResposta() {
+            document.getElementById('resposta-duvida').classList.add('hidden');
+        }
+
+        function alternarAbas(aba) {
+            abaAtualAtiva = aba;
+            localStorage.setItem('matias_aba_ativa', aba);
+
+            const btnCarteira     = document.getElementById('nav-btn-carteira');
+            const btnPerfil       = document.getElementById('nav-btn-perfil');
+            const btnMenor        = document.getElementById('nav-btn-menor');
+            const btnConhecimento = document.getElementById('nav-btn-conhecimento');
+            const btnDuvidas      = document.getElementById('nav-btn-duvidas');
+            const tagMenor        = document.getElementById('icon-menor-tag');
+
+            const divInvestimentos = document.getElementById('aba-conteudo-investimentos');
+            const divPerfil        = document.getElementById('aba-painel-perfil');
+            const divMenor         = document.getElementById('aba-menor-idade');
+            const divConhecimento  = document.getElementById('aba-conhecimento');
+            const divDuvidas       = document.getElementById('aba-duvidas');
+
+            btnCarteira.className     = "flex flex-col items-center gap-1 py-1 text-slate-600";
+            btnPerfil.className       = "flex flex-col items-center gap-1 py-1 text-slate-600";
+            btnMenor.className        = "flex flex-col items-center gap-0.5 py-1 text-slate-600";
+            btnConhecimento.className = "flex flex-col items-center gap-1 py-1 text-slate-600";
+            btnDuvidas.className      = "flex flex-col items-center gap-1 py-1 text-slate-600";
+            tagMenor.className        = "text-[9px] bg-slate-900 text-slate-400 font-black px-1 py-0.5 rounded border border-slate-800 font-logo";
+
+            divInvestimentos.classList.add('hidden');
+            divPerfil.classList.add('hidden');
+            divMenor.classList.add('hidden');
+            divConhecimento.classList.add('hidden');
+            divDuvidas.classList.add('hidden');
+
+            if (aba === 'carteira') {
+                divInvestimentos.classList.remove('hidden');
+                btnCarteira.className = "flex flex-col items-center gap-1 py-1 nav-active";
+                recalcularExibicaoTotal();
+            } else if (aba === 'perfil') {
+                divPerfil.classList.remove('hidden');
+                btnPerfil.className = "flex flex-col items-center gap-1 py-1 nav-active";
+                atualizarGamificacao();
+            } else if (aba === 'menor') {
+                divMenor.classList.remove('hidden');
+                btnMenor.className = "flex flex-col items-center gap-0.5 py-1 text-purple-400";
+                tagMenor.className = "text-[9px] bg-purple-500/20 text-purple-400 font-black px-1 py-0.5 rounded border border-purple-500/40 font-logo";
+                recalcularExibicaoTotal();
+            } else if (aba === 'conhecimento') {
+                divConhecimento.classList.remove('hidden');
+                btnConhecimento.className = "flex flex-col items-center gap-1 py-1 nav-active";
+                recalcularExibicaoTotal();
+            } else if (aba === 'duvidas') {
+                divDuvidas.classList.remove('hidden');
+                btnDuvidas.className = "flex flex-col items-center gap-1 py-1 nav-active";
+                renderizarDuvidas();
+                document.getElementById('valor-aporte-display').innerText = "DÚVIDAS";
+            }
+        }
+
+        function recalcularExibicaoTotal() {
+            if (abaAtualAtiva === 'menor') {
+                const totalKids = obterValorKids();
+                document.getElementById('valor-aporte-display').innerText = totalKids.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            } else if (abaAtualAtiva === 'conhecimento') {
+                document.getElementById('valor-aporte-display').innerText = "ESTUDOS";
+            } else {
+                const totalAdulto = obterValorNumerico();
+                document.getElementById('valor-aporte-display').innerText = totalAdulto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+        }
+
+        function definirObjetivoKids(objetivo) {
+            objetivoKidsSelecionado = objetivo;
+            localStorage.setItem('matias_kids_objetivo', objetivo);
+
+            ['faculdade', 'intercambio', 'independencia'].forEach(obj => {
+                const btn = document.getElementById(`btn-kids-${obj}`);
+                btn.className = obj === objetivo
+                    ? "w-full text-left bg-purple-500/10 border border-purple-500 p-3 rounded-lg text-xs font-bold text-purple-300 transition"
+                    : "w-full text-left bg-slate-900 border border-slate-800 p-3 rounded-lg text-xs font-medium text-slate-300 transition";
+            });
+
+            const containerInput = document.getElementById('container-aporte-kids');
+            containerInput.classList.remove('opacity-40', 'pointer-events-none');
+            document.getElementById('input-valor-kids').placeholder = "0,00";
+            gerarCarteiraKids();
+        }
+
+        function obterValorKids() {
+            const input = document.getElementById('input-valor-kids').value;
+            if (!input) return 0;
+            return parseFloat(input.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        function gerarCarteiraKids() {
+            const valorTotal = obterValorKids();
+            localStorage.setItem('matias_kids_valor_cru', document.getElementById('input-valor-kids').value);
+            recalcularExibicaoTotal();
+
+            if (valorTotal <= 0 || !objetivoKidsSelecionado) {
+                document.getElementById('lista-ativos-kids').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Defina o modelo didático e insira o valor para simular a distribuição matemática.</p>';
+                return;
+            }
+
+            const distribuicaoAlvo = pesosKidsEstrategia[objetivoKidsSelecionado];
+            const maxAtivos = calcularQuantidadeAtivos(valorTotal);
+
+            // Filtra ativos elegíveis (valor mínimo atingível e com peso > 0)
+            let ativosElegiveis = carteiraCompleta.filter(a =>
+                distribuicaoAlvo[a.categoria] > 0 && valorTotal >= a.aplicacaoMinima
+            );
+
+            // Ordena pelo menor mínimo primeiro (mais acessíveis primeiro)
+            ativosElegiveis.sort((a, b) => a.aplicacaoMinima - b.aplicacaoMinima);
+
+            // Garante diversificação de categorias disponíveis antes de cortar
+            const ativosSelecionados = selecionarComDiversificacao(ativosElegiveis, maxAtivos, distribuicaoAlvo);
+
+            if (ativosSelecionados.length === 0) {
+                document.getElementById('lista-ativos-kids').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Valor inferior ao mínimo histórico dos ativos simulados. Tente valores a partir de R$ 50,00.</p>';
+                return;
+            }
+
+            let somaPesos = ativosSelecionados.reduce((s, a) => s + distribuicaoAlvo[a.categoria], 0);
+            let htmlHTML = '';
+            let acumulado = 0;
+
+            ativosSelecionados.forEach((ativo, idx) => {
+                let pct = ativo.pesosPerfil ? distribuicaoAlvo[ativo.categoria] / somaPesos : 1 / ativosSelecionados.length;
+                let valorAlocado = idx === ativosSelecionados.length - 1
+                    ? valorTotal - acumulado
+                    : valorTotal * pct;
+                acumulado += valorAlocado;
+
+                const tickerBadge = ativo.ticker
+                    ? `<span class="inline-block text-[9px] font-black tracking-widest px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-500/30 font-logo ml-1">${ativo.ticker}</span>`
+                    : '';
+
+                htmlHTML += `
+                    <div class="bg-slate-950 rounded-xl border border-slate-900 p-4 hover:border-purple-900/40 transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1 pr-2">
+                                <div class="flex flex-wrap items-center gap-1 mb-1">
+                                    <h3 class="text-xs font-bold text-white uppercase tracking-wide">${ativo.ticker ? ativo.ticker : ativo.nome.split('—')[0].trim()}</h3>
+                                    ${tickerBadge}
+                                </div>
+                                <p class="text-[10px] text-slate-400 leading-snug">${ativo.nome.includes('—') ? ativo.nome.split('—')[1].trim() : ativo.nome}</p>
+                                <span class="inline-block text-[9px] uppercase font-black tracking-wider px-2 py-0.5 mt-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    ${ativo.categoria}
+                                </span>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-sm font-black text-purple-400 font-logo">${(pct * 100).toFixed(0)}%</div>
+                                <div class="text-xs text-slate-300 font-bold mt-0.5">${valorAlocado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed border-t border-slate-900 pt-2">${ativo.descricao}</p>
+                        <div class="text-[10px] text-slate-500 mt-1.5">📍 <span class="text-slate-400">Abertura de Conta de Menor via Responsável na Corretora Rico</span></div>
+                    </div>`;
+            });
+
+            document.getElementById('lista-ativos-kids').innerHTML = htmlHTML;
+        }
+
+        // Seleciona ativos garantindo representação de categorias diferentes
+        function selecionarComDiversificacao(lista, maxAtivos, pesosCat) {
+            if (lista.length <= maxAtivos) return lista;
+
+            const categorias = [...new Set(lista.map(a => a.categoria).filter(c => pesosCat[c] > 0))];
+            const selecionados = [];
+            const usados = new Set();
+
+            // 1ª passagem: pega 1 ativo de cada categoria disponível
+            for (const cat of categorias) {
+                if (selecionados.length >= maxAtivos) break;
+                const candidato = lista.find(a => a.categoria === cat && !usados.has(a.nome));
+                if (candidato) {
+                    selecionados.push(candidato);
+                    usados.add(candidato.nome);
+                }
+            }
+
+            // 2ª passagem: completa até maxAtivos com os restantes (maior peso primeiro)
+            const restantes = lista
+                .filter(a => !usados.has(a.nome))
+                .sort((a, b) => (pesosCat[b.categoria] || 0) - (pesosCat[a.categoria] || 0));
+
+            for (const a of restantes) {
+                if (selecionados.length >= maxAtivos) break;
+                selecionados.push(a);
+            }
+
+            return selecionados;
+        }
+
+        function salvarDadosPerfil() {
+            const nome  = document.getElementById('user-nome').value;
+            const phone = document.getElementById('user-phone').value;
+            const email = document.getElementById('user-email').value;
+            if (nome) document.getElementById('perfil-nome-titulo').innerText = nome;
+            localStorage.setItem('matias_nome', nome);
+            localStorage.setItem('matias_phone', phone);
+            localStorage.setItem('matias_email', email);
+            atualizarGamificacao();
+            alert('Configurações Locais Guardadas com Sucesso!');
+        }
+
+        function salvarMeta() {
+            const tipo  = document.getElementById('meta-tipo').value;
+            const valor = parseFloat(document.getElementById('meta-valor').value) || 0;
+            if (valor <= 0) { alert('Insira um valor matemático válido.'); return; }
+            localStorage.setItem('matias_meta_tipo', tipo);
+            localStorage.setItem('matias_meta_valor', valor);
+            atualizarGamificacao();
+        }
+
+        function atualizarGamificacao() {
+            let progresso = 20;
+            const nome      = localStorage.getItem('matias_nome') || "";
+            const phone     = localStorage.getItem('matias_phone') || "";
+            const email     = localStorage.getItem('matias_email') || "";
+            const metaTipo  = localStorage.getItem('matias_meta_tipo');
+            const metaValor = parseFloat(localStorage.getItem('matias_meta_valor')) || 0;
+            const aporteAtual = obterValorNumerico();
+
+            if (nome)  document.getElementById('user-nome').value  = nome;
+            if (phone) document.getElementById('user-phone').value = phone;
+            if (email) document.getElementById('user-email').value = email;
+            if (nome || phone || email) progresso += 20;
+            if (perfilInvestidor) progresso += 30;
+            if (aporteAtual > 0) progresso += 30;
+
+            document.getElementById('barra-progresso-perfil').style.width = `${progresso}%`;
+            document.getElementById('txt-progresso-experiencia').innerText = `${progresso}% Concluído`;
+
+            let tagNivel = "ESTUDANTE";
+            if (progresso >= 50) tagNivel = "PRACTITIONER";
+            if (progresso >= 90) tagNivel = "ESTRATEGISTA INDEPENDENTE";
+            document.getElementById('perfil-nivel-tag').innerText = tagNivel;
+            if (nome) document.getElementById('perfil-nome-titulo').innerText = nome;
+
+            const metaContainer = document.getElementById('meta-visualizer');
+            if (metaValor > 0) {
+                metaContainer.classList.remove('hidden');
+                document.getElementById('lbl-meta-ativa').innerText  = metaTipo;
+                document.getElementById('lbl-meta-alvo').innerText   = `Alvo: ${metaValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                document.getElementById('lbl-meta-atual').innerText  = `Aporte Simulado: ${aporteAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                let pctMeta = Math.min((aporteAtual / metaValor) * 100, 100);
+                document.getElementById('lbl-meta-porcentagem').innerText = `${pctMeta.toFixed(1)}%`;
+                document.getElementById('barra-meta-ativa').style.width = `${pctMeta}%`;
+                document.getElementById('meta-tipo').value  = metaTipo;
+                document.getElementById('meta-valor').value = metaValor;
+            } else {
+                metaContainer.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('user-phone').addEventListener('input', function(e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
         });
 
-        function initCountdown() {
-            const target = new Date(new Date().getFullYear(), 10, 3);
-            const diff = Math.ceil(Math.abs(target - new Date()) / (1000 * 60 * 60 * 24));
-            document.getElementById('countdown-days').innerText = diff;
+        function renderizarQuiz() {
+            if (faseQuiz === -1) {
+                document.getElementById('progresso-quiz').innerText = "Verificação Inicial";
+                document.getElementById('texto-pergunta').innerText = "Antes de calibrar os algoritmos de visualização matemática, confirme a sua faixa etária:";
+                document.getElementById('opcoes-quiz').innerHTML = `
+                    <button onclick="verificarMaioridade(true)" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-cyan-500 hover:bg-cyan-500/5 p-2.5 rounded-lg text-xs font-bold text-slate-200 transition-all">
+                        👍 Sim, sou maior de idade (18+)
+                    </button>
+                    <button onclick="verificarMaioridade(false)" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-purple-500 hover:bg-purple-500/5 p-2.5 rounded-lg text-xs font-bold text-slate-200 transition-all">
+                        👎 Não, sou menor de idade (-18)
+                    </button>
+                `;
+                return;
+            }
+            if (faseQuiz < perguntasQuiz.length) {
+                const p = perguntasQuiz[faseQuiz];
+                document.getElementById('progresso-quiz').innerText = `Calibragem ${faseQuiz + 1} de ${perguntasQuiz.length}`;
+                document.getElementById('texto-pergunta').innerText = p.texto;
+                document.getElementById('opcoes-quiz').innerHTML = p.opcoes.map(op => `
+                    <button onclick="computarResposta(${op.pontos})" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-cyan-500 hover:bg-cyan-500/5 p-2.5 rounded-lg text-xs font-medium text-slate-300 transition-all">
+                        ${op.texto}
+                    </button>`).join('');
+            } else {
+                definirPerfilFinal();
+            }
         }
 
-        function switchTab(tabName) {
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-biblioteca').classList.add('hidden');
-            document.getElementById('view-corretor').classList.add('hidden');
-            document.getElementById('view-modelos').classList.add('hidden');
-            document.getElementById('view-materias').classList.add('hidden');
-            document.getElementById('view-cronograma').classList.add('hidden');
+        function verificarMaioridade(ehMaior) {
+            if (ehMaior) {
+                faseQuiz = 0;
+                localStorage.setItem('matias_fase_quiz', faseQuiz);
+                renderizarQuiz();
+            } else {
+                document.getElementById('quiz-container').innerHTML = `
+                    <div class="bg-gradient-to-br from-purple-950/40 via-slate-950 to-black p-4 rounded-xl border-2 border-purple-500/50 space-y-3">
+                        <div class="flex items-center gap-1.5 text-purple-400 font-bold text-xs uppercase font-logo">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-purple-400"></i> Histórico de Investimento Jovem
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Acesse a retrospectiva da minha carteira quando eu tinha menos de 18 anos e veja como foi estruturada minha base patrimonial de forma legal.
+                        </p>
+                        <button onclick="alternarAbas('menor')" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-logo font-black text-[11px] py-2 rounded-lg tracking-wider uppercase transition">
+                            Ver Painel Histórico do Matias ➔
+                        </button>
+                    </div>`;
+                lucide.createIcons();
+            }
+        }
 
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-xs transition-all text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200";
+        function computarResposta(pontos) {
+            pontuacaoTotalQuiz += pontos;
+            faseQuiz++;
+            localStorage.setItem('matias_fase_quiz', faseQuiz);
+            localStorage.setItem('matias_pontos_quiz', pontuacaoTotalQuiz);
+            renderizarQuiz();
+        }
+
+        function definirPerfilFinal() {
+            const badge          = document.getElementById('badge-perfil');
+            const containerAporte = document.getElementById('container-aporte');
+            const inputAporte    = document.getElementById('input-valor-total');
+
+            if (pontuacaoTotalQuiz <= 4) {
+                perfilInvestidor = 'conservador';
+                badge.innerText  = 'SIMULAÇÃO DEFENSIVA';
+                badge.className  = "text-xs px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            } else if (pontuacaoTotalQuiz <= 7) {
+                perfilInvestidor = 'moderado';
+                badge.innerText  = 'SIMULAÇÃO EQUILIBRADA';
+                badge.className  = "text-xs px-2 py-0.5 rounded font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30";
+            } else {
+                perfilInvestidor = 'arrojado';
+                badge.innerText  = 'SIMULAÇÃO DINÂMICA COMPLETA';
+                badge.className  = "text-xs px-2 py-0.5 rounded font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30";
+            }
+
+            localStorage.setItem('matias_perfil_definido', perfilInvestidor);
+            document.getElementById('quiz-container').innerHTML = `
+                <div class="text-xs text-slate-400 bg-slate-900/60 p-2 rounded border border-slate-800 text-center">
+                    Modelo calibrado para: <strong class="text-white uppercase">${perfilInvestidor}</strong>. Insira um valor abaixo para ver a divisão proporcional.
+                </div>`;
+            containerAporte.classList.remove('opacity-40', 'pointer-events-none');
+            inputAporte.removeAttribute('disabled');
+            inputAporte.placeholder = "0,00";
+            gerarCarteira();
+        }
+
+        function selecionarLiquidez(banco) {
+            liquidezSelecionada = banco;
+            localStorage.setItem('matias_liquidez_sel', banco);
+            document.getElementById('btn-porquinho').className = banco === 'porquinho'
+                ? "toggle-liquid px-3 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center gap-1.5"
+                : "toggle-liquid px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center gap-1.5";
+            document.getElementById('btn-nubank').className = banco === 'nubank'
+                ? "toggle-liquid px-3 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center gap-1.5"
+                : "toggle-liquid px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center gap-1.5";
+            gerarCarteira();
+        }
+
+        function filtrarCategoria(cat, btn) {
+            filtroAtual = cat;
+            document.querySelectorAll('.filtro-btn').forEach(b => {
+                b.className = "filtro-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 whitespace-nowrap";
+            });
+            btn.className = "filtro-btn active px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 whitespace-nowrap";
+            gerarCarteira();
+        }
+
+        function formatarMoeda(input, tipoContexto) {
+            let valor = input.value.replace(/\D/g, '');
+            if (valor === '') {
+                input.value = '';
+                if (tipoContexto === 'kids') gerarCarteiraKids(); else gerarCarteira();
+                return;
+            }
+            valor = (parseInt(valor) / 100).toFixed(2);
+            valor = valor.replace('.', ',');
+            valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            input.value = valor;
+            if (tipoContexto === 'kids') gerarCarteiraKids(); else gerarCarteira();
+        }
+
+        function obterValorNumerico() {
+            const input = document.getElementById('input-valor-total').value;
+            if (!input) return 0;
+            return parseFloat(input.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        function gerarCarteira() {
+            const valorTotal = obterValorNumerico();
+            localStorage.setItem('matias_valor_cru', document.getElementById('input-valor-total').value);
+            recalcularExibicaoTotal();
+
+            const avisoLiq = document.getElementById('aviso-liquidez');
+            if (valorTotal <= 0) {
+                avisoLiq.classList.add('hidden');
+                document.getElementById('secao-grafico').classList.add('hidden');
+                document.getElementById('lista-ativos').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Insira um valor numérico válido no campo acima para processar as proporções matemáticas.</p>';
+                if (modoVisualizacao === 'holograma') renderizarHolograma();
+                return;
+            }
+
+            avisoLiq.classList.remove('hidden');
+            avisoLiq.innerHTML = liquidezSelecionada === 'porquinho'
+                ? `🟢 <strong>Simulação de Liquidez:</strong> Do montante simulado, eu alocaria uma parcela protetiva no <strong>Porquinho do Banco Inter</strong> para saques imediatos.`
+                : `🟢 <strong>Simulação de Liquidez:</strong> Do montante simulado, eu manteria uma parcela de segurança na <strong>Caixinha NuConta RDB</strong>.`;
+            document.getElementById('secao-grafico').classList.remove('hidden');
+            inicializarGrafico('1A');
+
+            if (filtroAtual === 'Liquidez') {
+                document.getElementById('lista-ativos').innerHTML = `
+                    <div class="bg-slate-950 rounded-xl border border-slate-900 p-4">
+                        <h3 class="text-xs font-bold text-white uppercase">${liquidezSelecionada === 'porquinho' ? 'Porquinho Inter' : 'Caixinha Nubank'}</h3>
+                        <p class="text-xs text-slate-400 mt-2">Reserva de oportunidade imediata com liquidez diária instantânea.</p>
+                    </div>`;
+                if (modoVisualizacao === 'holograma') renderizarHolograma();
+                return;
+            }
+
+            // Filtra por categoria e mínimo de aporte
+            let ativosFiltrados = carteiraCompleta.filter(a =>
+                a.pesosPerfil[perfilInvestidor] > 0 && valorTotal >= a.aplicacaoMinima
+            );
+            if (filtroAtual !== 'todos') {
+                ativosFiltrados = ativosFiltrados.filter(a => a.categoria === filtroAtual);
+            }
+
+            // Aplica limite de quantidade proporcional ao valor
+            const maxAtivos = filtroAtual === 'todos' ? calcularQuantidadeAtivos(valorTotal) : ativosFiltrados.length;
+            const pesos     = Object.fromEntries(Object.entries({ 'Renda Fixa': 1, 'Multimercado': 1, 'Ações': 1, 'Global': 1 }));
+            ativosFiltrados = selecionarComDiversificacao(ativosFiltrados, maxAtivos, 
+                // usa pesosPerfil do ativo como proxy de importância para ordenação
+                Object.fromEntries(ativosFiltrados.map(a => [a.categoria, a.pesosPerfil[perfilInvestidor]]))
+            );
+
+            if (ativosFiltrados.length === 0) {
+                document.getElementById('lista-ativos').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Nenhum ativo da minha carteira atende ao filtro e aporte mínimo simultâneo.</p>';
+                atualizarBarraComposicao();
+                if (modoVisualizacao === 'holograma') renderizarHolograma();
+                return;
+            }
+
+            let somaPesos = ativosFiltrados.reduce((s, a) => s + a.pesosPerfil[perfilInvestidor], 0) || 1;
+            let htmlAtivos = '';
+            let acumulado  = 0;
+
+            ativosFiltrados.forEach((ativo, idx) => {
+                let pct          = ativo.pesosPerfil[perfilInvestidor] / somaPesos;
+                let valorAlocado = idx === ativosFiltrados.length - 1 && filtroAtual === 'todos'
+                    ? valorTotal - acumulado
+                    : valorTotal * pct;
+                acumulado += valorAlocado;
+
+                // Badge do ticker com link de busca
+                const tickerBadge = ativo.ticker
+                    ? `<a href="https://www.google.com/search?q=${ativo.ticker}+acao+B3" target="_blank"
+                          title="Pesquisar ${ativo.ticker} na B3"
+                          class="inline-flex items-center gap-0.5 text-[9px] font-black tracking-widest px-2 py-0.5 rounded bg-cyan-900/50 text-cyan-300 border border-cyan-500/30 font-logo hover:bg-cyan-500/20 transition ml-1">
+                          ${ativo.ticker} <svg xmlns='http://www.w3.org/2000/svg' class='w-2.5 h-2.5 inline' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'/></svg>
+                       </a>`
+                    : '';
+
+                // Nome curto para exibição principal
+                const nomeExibicao = ativo.ticker
+                    ? (ativo.nome.includes('—') ? ativo.nome.split('—')[1].trim() : ativo.nome)
+                    : ativo.nome;
+
+                htmlAtivos += `
+                    <div class="bg-slate-950 rounded-xl border border-slate-900 p-4 hover:border-cyan-900/30 transition">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 pr-2">
+                                <div class="flex flex-wrap items-center gap-1 mb-0.5">
+                                    <h3 class="text-xs font-bold text-white uppercase tracking-wide">${ativo.ticker || nomeExibicao}</h3>
+                                    ${tickerBadge}
+                                </div>
+                                <p class="text-[10px] text-slate-400 leading-snug">${nomeExibicao}</p>
+                                <span class="inline-block text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 mt-1 rounded bg-slate-900 text-slate-400 border border-slate-800">
+                                    ${ativo.categoria}
+                                </span>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-sm font-black text-cyan-400 font-logo">${(pct * 100).toFixed(0)}%</div>
+                                <div class="text-xs text-slate-300 font-bold mt-0.5">${valorAlocado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-normal mt-2 pt-2 border-t border-slate-900/60">${ativo.descricao}</p>
+                        <div class="text-[10px] text-slate-500 mt-1.5">📍 <span class="text-slate-400">${ativo.ondeEncontrar}</span></div>
+                    </div>`;
             });
 
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            document.getElementById(`btn-${tabName}`).className = "nav-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-xs transition-all bg-zinc-800 text-white border border-zinc-700 shadow-sm";
+            document.getElementById('lista-ativos').innerHTML = htmlAtivos;
+            atualizarBarraComposicao();
+            if (modoVisualizacao === 'holograma') renderizarHolograma();
         }
 
-        function switchInputMethod(method) {
-            currentInputMethod = method;
-            if (method === 'text') {
-                document.getElementById('input-method-text').classList.remove('hidden');
-                document.getElementById('input-method-photo').classList.add('hidden');
-                document.getElementById('method-btn-text').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-zinc-800 text-white border border-dark";
-                document.getElementById('method-btn-photo').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white";
+        // ─────────────────────────────────────────────────────────────
+        // HOLOGRAMA 3D DA CARTEIRA
+        // ─────────────────────────────────────────────────────────────
+        function alternarVisualizacao(modo) {
+            modoVisualizacao = modo;
+            const btnLista     = document.getElementById('btn-view-lista');
+            const btnHolograma = document.getElementById('btn-view-holograma');
+            const secLista      = document.getElementById('lista-ativos');
+            const secHolograma  = document.getElementById('secao-holograma');
+
+            const ativoCls   = "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition";
+            const inativoCls = "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition";
+
+            if (modo === 'holograma') {
+                btnHolograma.className = ativoCls;
+                btnLista.className     = inativoCls;
+                secLista.classList.add('hidden');
+                secHolograma.classList.remove('hidden');
+                renderizarHolograma();
             } else {
-                document.getElementById('input-method-text').classList.add('hidden');
-                document.getElementById('input-method-photo').classList.remove('hidden');
-                document.getElementById('method-btn-photo').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-zinc-800 text-white border border-dark";
-                document.getElementById('method-btn-text').className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white";
+                btnLista.className     = ativoCls;
+                btnHolograma.className = inativoCls;
+                secHolograma.classList.add('hidden');
+                secLista.classList.remove('hidden');
             }
-        }
-
-        function explainTemplate(type) {
-            const el = document.getElementById(`explanation-${type}`);
-            el.classList.toggle('hidden');
-        }
-
-        function build30DaysGrid() {
-            const grid = document.getElementById('grid-30-days');
-            grid.innerHTML = '';
-            const savedDays = JSON.parse(localStorage.getItem('m1000_days_progress')) || {};
-
-            for (let i = 1; i <= 30; i++) {
-                const isChecked = savedDays[i] ? true : false;
-                const btn = document.createElement('button');
-                btn.id = `day-box-${i}`;
-                btn.onclick = () => toggleDayProgress(i);
-                
-                if (isChecked) {
-                    btn.className = "p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/40 rounded-xl text-center text-xs font-bold font-mono transition-all flex flex-col items-center justify-center gap-1 cursor-pointer";
-                    btn.innerHTML = `<span>DIA ${i}</span> <i data-lucide="check-circle" class="w-3.5 h-3.5 text-indigo-400"></i>`;
-                } else {
-                    btn.className = "p-3 bg-zinc-900 border border-dark text-zinc-500 hover:border-zinc-700 rounded-xl text-center text-xs font-mono transition-all flex flex-col items-center justify-center gap-1 cursor-pointer";
-                    btn.innerHTML = `<span>DIA ${i}</span> <i data-lucide="circle" class="w-3.5 h-3.5 text-zinc-700"></i>`;
-                }
-                grid.appendChild(btn);
-            }
-            updateTrilhaProgressText(savedDays);
-        }
-
-        function toggleDayProgress(day) {
-            let savedDays = JSON.parse(localStorage.getItem('m1000_days_progress')) || {};
-            if (savedDays[day]) {
-                delete savedDays[day];
-            } else {
-                savedDays[day] = true;
-            }
-            localStorage.setItem('m1000_days_progress', JSON.stringify(savedDays));
-            build30DaysGrid();
             lucide.createIcons();
         }
 
-        function updateTrilhaProgressText(savedDays) {
-            const totalDone = Object.keys(savedDays).length;
-            document.getElementById('dash-trilha-progress').innerText = `${totalDone} / 30`;
-            const badge = document.getElementById('final-status-badge');
-            if (totalDone === 30) {
-                badge.innerText = "LIBERTO (CONCLUÍDO)";
-                badge.className = "text-xs font-bold text-emerald-400 text-glow-green";
-            } else {
-                badge.innerText = "EM PROGRESSO";
-                badge.className = "text-xs font-bold text-zinc-400";
+        function renderizarHolograma() {
+            const grid = document.getElementById('holograma-grid');
+            if (!grid) return;
+
+            const valorTotal = obterValorNumerico();
+
+            if (valorTotal <= 0 || !perfilInvestidor) {
+                grid.innerHTML = '<p class="text-xs text-slate-500 text-center py-8 col-span-full">Defina o perfil e insira um valor para gerar o holograma da carteira.</p>';
+                return;
+            }
+
+            if (filtroAtual === 'Liquidez') {
+                const cor = coresHolograma['Liquidez'];
+                grid.innerHTML = `
+                    <div class="col-span-full bg-slate-950 rounded-xl border border-slate-900 p-6 text-center">
+                        <div class="w-14 h-14 rounded-full mx-auto mb-3" style="background:${cor.bg}; box-shadow:0 0 30px 6px ${cor.glow};"></div>
+                        <h3 class="text-xs font-bold text-white uppercase">${liquidezSelecionada === 'porquinho' ? 'Porquinho Inter' : 'Caixinha Nubank'}</h3>
+                        <p class="text-[11px] text-slate-400 mt-1">Reserva de liquidez não é representada em cubo individual — é o "chão" do holograma.</p>
+                    </div>`;
+                return;
+            }
+
+            let ativosFiltrados = carteiraCompleta.filter(a =>
+                a.pesosPerfil[perfilInvestidor] > 0 && valorTotal >= a.aplicacaoMinima
+            );
+            if (filtroAtual !== 'todos') {
+                ativosFiltrados = ativosFiltrados.filter(a => a.categoria === filtroAtual);
+            }
+            const maxAtivos = filtroAtual === 'todos' ? calcularQuantidadeAtivos(valorTotal) : ativosFiltrados.length;
+            ativosFiltrados = selecionarComDiversificacao(ativosFiltrados, maxAtivos,
+                Object.fromEntries(ativosFiltrados.map(a => [a.categoria, a.pesosPerfil[perfilInvestidor]]))
+            );
+
+            if (ativosFiltrados.length === 0) {
+                grid.innerHTML = '<p class="text-xs text-slate-500 text-center py-8 col-span-full">Nenhum ativo disponível para gerar cubos com este filtro e aporte.</p>';
+                return;
+            }
+
+            const somaPesos = ativosFiltrados.reduce((s, a) => s + a.pesosPerfil[perfilInvestidor], 0) || 1;
+            let acumulado = 0;
+            let html = '';
+
+            ativosFiltrados.forEach((ativo, idx) => {
+                const pct = ativo.pesosPerfil[perfilInvestidor] / somaPesos;
+                const valorAlocado = idx === ativosFiltrados.length - 1 && filtroAtual === 'todos'
+                    ? valorTotal - acumulado
+                    : valorTotal * pct;
+                acumulado += valorAlocado;
+
+                const cor = coresHolograma[ativo.categoria] || coresHolograma['Renda Fixa'];
+                const rotuloCurto = ativo.ticker || (ativo.nome.length > 22 ? ativo.nome.split(' ').slice(0, 2).join(' ') : ativo.nome);
+                const faceStyle = `background:linear-gradient(145deg, ${cor.bg}cc, ${cor.bg}55);`;
+
+                html += `
+                    <div class="cube-scene" style="--cube-glow:${cor.glow};" data-idx="${idx}">
+                        <div class="cube-3d">
+                            <div class="cube-face cube-face-front"  style="${faceStyle}">${rotuloCurto}</div>
+                            <div class="cube-face cube-face-back"   style="${faceStyle}">${ativo.categoria}</div>
+                            <div class="cube-face cube-face-right"  style="${faceStyle}">${(pct * 100).toFixed(0)}%</div>
+                            <div class="cube-face cube-face-left"   style="${faceStyle}">${ativo.categoria}</div>
+                            <div class="cube-face cube-face-top"    style="${faceStyle}">${rotuloCurto}</div>
+                            <div class="cube-face cube-face-bottom" style="${faceStyle}">${(pct * 100).toFixed(0)}%</div>
+                            <div class="cube-info">
+                                <span class="text-[9px] font-black text-white uppercase tracking-wide">${rotuloCurto}</span>
+                                <span class="text-[13px] font-black font-logo mt-1" style="color:${cor.bg}">${(pct * 100).toFixed(0)}%</span>
+                                <span class="text-[10px] text-slate-300 font-bold mt-0.5">${valorAlocado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            grid.innerHTML = html;
+            inicializarCubos();
+        }
+
+        function inicializarCubos() {
+            cubosHolograma = [];
+            document.querySelectorAll('#holograma-grid .cube-scene').forEach(cena => {
+                const cubo = cena.querySelector('.cube-3d');
+                const estado = { cena, cubo, rotX: -18, rotY: Math.random() * 360, hovered: false, dragging: false, lastX: 0, lastY: 0 };
+                cubosHolograma.push(estado);
+
+                cena.addEventListener('mouseenter', () => { estado.hovered = true; cena.classList.add('hovered'); });
+                cena.addEventListener('mouseleave', () => { estado.hovered = false; cena.classList.remove('hovered'); });
+
+                cubo.addEventListener('pointerdown', (e) => {
+                    estado.dragging = true;
+                    estado.lastX = e.clientX;
+                    estado.lastY = e.clientY;
+                    cubo.classList.add('dragging');
+                    cubo.setPointerCapture(e.pointerId);
+                });
+                cubo.addEventListener('pointermove', (e) => {
+                    if (!estado.dragging) return;
+                    const dx = e.clientX - estado.lastX;
+                    const dy = e.clientY - estado.lastY;
+                    estado.rotY += dx * 0.5;
+                    estado.rotX -= dy * 0.5;
+                    estado.rotX = Math.max(-85, Math.min(85, estado.rotX));
+                    estado.lastX = e.clientX;
+                    estado.lastY = e.clientY;
+                });
+                const soltar = (e) => {
+                    estado.dragging = false;
+                    cubo.classList.remove('dragging');
+                };
+                cubo.addEventListener('pointerup', soltar);
+                cubo.addEventListener('pointercancel', soltar);
+            });
+
+            if (!loopHologramaAtivo) {
+                loopHologramaAtivo = true;
+                requestAnimationFrame(loopCubos);
             }
         }
 
-        function processPremiumCorrection() {
-            let textValue = document.getElementById('essay-text').value.trim();
-            const theme = document.getElementById('essay-theme').value;
-
-            if (currentInputMethod === 'photo') {
-                const photoFile = document.getElementById('essay-photo-file').files[0];
-                if (!photoFile) {
-                    alert("Selecione a imagem da folha para realizar o escaneamento.");
-                    return;
+        function loopCubos() {
+            cubosHolograma.forEach(estado => {
+                if (!estado.hovered && !estado.dragging) {
+                    estado.rotY += 0.18;
                 }
-                textValue = "[Documento Escaneado via Matriz Óptica]: No filme estadunidense \"Coringa\", o personagem principal reflete a incapacidade estatal de prover amparo. Diante disso, constata-se que a distribuição de recursos culturais no espaço brasileiro atua como vetor segregador, ferindo o princípio constitucional da igualdade de Hannah Arendt e demandando intervenção urgente e portanto eficaz por meio do Ministério da Cultura.";
-            } else if (textValue.length < 100) {
-                alert("Por favor, insira o seu texto analítico para que possamos iniciar.");
-                return;
-            }
-
-            document.getElementById('corretor-input-zone').classList.add('hidden');
-            document.getElementById('corretor-loading-zone').classList.remove('hidden');
-
-            setTimeout(() => {
-                evaluateTextEngine(textValue, theme);
-            }, 3000);
-        }
-
-        function evaluateTextEngine(text, theme) {
-            const lower = text.toLowerCase();
-            let isExcellent = false;
-
-            const indicators = ["milton santos", "hannah arendt", "portanto", "ademais", "vidas secas", "coringa", "ministério"];
-            let matches = 0;
-            indicators.forEach(w => { if (lower.includes(w)) matches++; });
-
-            let comps = matches >= 2 || currentInputMethod === 'photo' ? [200, 200, 200, 200, 200] : [160, 120, 120, 160, 120];
-            const totalScore = comps.reduce((a, b) => a + b, 0);
-            
-            const record = {
-                id: Date.now(),
-                theme: theme,
-                text: text,
-                score: totalScore,
-                competences: comps,
-                type: currentInputMethod === 'photo' ? 'OCR' : 'Digitado',
-                date: new Date().toLocaleDateString('pt-BR')
-            };
-
-            userHistory.push(record);
-            localStorage.setItem('m1000_history', JSON.stringify(userHistory));
-            loadHistory();
-            renderResults(record, totalScore >= 900);
-        }
-
-        function renderResults(record, isExcellent) {
-            document.getElementById('corretor-loading-zone').classList.add('hidden');
-            document.getElementById('corretor-result-zone').classList.remove('hidden');
-
-            document.getElementById('res-final-score').innerText = record.score;
-            document.getElementById('res-theme-title').innerText = record.theme;
-
-            document.getElementById('res-ia-feedback').innerText = isExcellent 
-                ? "Sua estrutura formal macrotextual atende plenamente as exigências de excelência absoluta da banca avaliadora oficial. Repertórios legitimados aplicados com altíssima produtividade."
-                : "Análise concluída. Observa-se a necessidade de mitigar desvios de paralelismo sintático. Utilize nossos Modelos Coringas para estruturar melhor a introdução.";
-
-            const titles = ["C1: Norma Culta", "C2: Tema e Repertório", "C3: Projeto de Texto", "C4: Mecanismos Coesivos", "C5: Intervenção"];
-            const listZone = document.getElementById('competence-list');
-            listZone.innerHTML = '';
-            
-            record.competences.forEach((score, i) => {
-                const pct = (score / 200) * 100;
-                const div = document.createElement('div');
-                div.className = "space-y-1";
-                div.innerHTML = `
-                    <div class="flex justify-between text-[11px] font-mono">
-                        <span class="text-zinc-400">${titles[i]}</span>
-                        <span class="text-white font-bold">${score}/200</span>
-                    </div>
-                    <div class="w-full bg-zinc-900 h-1 border border-dark rounded-full overflow-hidden">
-                        <div class="bg-indigo-500 h-full" style="width: ${pct}%"></div>
-                    </div>
-                `;
-                listZone.appendChild(div);
+                estado.cubo.style.transform = `rotateX(${estado.rotX}deg) rotateY(${estado.rotY}deg)`;
             });
-
-            let htmlText = record.text;
-            if (isExcellent) {
-                htmlText = htmlText.replace(/(Coringa|Hannah Arendt|Ministério da Cultura)/gi, `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-1 rounded font-bold">$1</span>`);
-            }
-            document.getElementById('res-marked-text').innerHTML = htmlText;
+            requestAnimationFrame(loopCubos);
         }
 
-        function loadHistory() {
-            const stored = localStorage.getItem('m1000_history');
-            userHistory = stored ? JSON.parse(stored) : [];
-            document.getElementById('dash-enviadas').innerText = userHistory.length;
-
-            const tbody = document.getElementById('history-rows');
-            tbody.innerHTML = '';
-
-            if (userHistory.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-zinc-600 font-mono">Nenhum ensaio analítico na base de dados.</td></tr>`;
-                return;
+        function atualizarBarraComposicao() {
+            const barra = document.getElementById('barra-composicao');
+            if (perfilInvestidor === 'conservador') {
+                barra.innerHTML = '<div class="h-full bg-emerald-500" style="width:85%"></div><div class="h-full bg-cyan-500" style="width:15%"></div>';
+            } else if (perfilInvestidor === 'moderado') {
+                barra.innerHTML = '<div class="h-full bg-emerald-500" style="width:45%"></div><div class="h-full bg-cyan-500" style="width:35%"></div><div class="h-full bg-purple-500" style="width:20%"></div>';
+            } else {
+                barra.innerHTML = '<div class="h-full bg-emerald-500" style="width:15%"></div><div class="h-full bg-cyan-500" style="width:25%"></div><div class="h-full bg-purple-500" style="width:60%"></div>';
             }
+        }
 
-            let sum = 0;
-            userHistory.forEach(x => sum += x.score);
-            const average = Math.round(sum / userHistory.length);
-            document.getElementById('dash-media').innerText = average;
-            
-            const pctGlobal = Math.min(Math.round((average / 1000) * 100), 100);
-            document.getElementById('progress-bar').style.width = `${pctGlobal}%`;
-            document.getElementById('progress-txt').innerText = `${pctGlobal}%`;
+        function atualizarPeriodoGrafico(periodo, btn) {
+            btn.parentNode.querySelectorAll('button').forEach(b => {
+                b.className = "px-2 py-1 text-[10px] font-bold rounded text-slate-400 hover:text-white transition";
+            });
+            btn.className = "px-2 py-1 text-[10px] font-bold rounded bg-cyan-500 text-black transition";
+            inicializarGrafico(periodo);
+        }
 
-            [...userHistory].reverse().forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-zinc-900/40 border-b border-dark text-zinc-300";
-                tr.innerHTML = `
-                    <td class="py-3 px-5 font-bold truncate max-w-xs">${item.theme}</td>
-                    <td class="py-3 px-5 text-zinc-500 font-mono">${item.date}</td>
-                    <td class="py-3 px-5 text-zinc-400"><span class="bg-zinc-900 border border-dark px-2 py-0.5 rounded text-[10px]">${item.type}</span></td>
-                    <td class="py-3 px-5 text-emerald-400 font-bold">${item.score}</td>
-                    <td class="py-3 px-5 text-right"><button onclick="viewPastResult(${item.id})" class="text-indigo-400 font-bold hover:underline cursor-pointer">Ver</button></td>
-                `;
-                tbody.appendChild(tr);
+        function inicializarGrafico(periodo = '1A') {
+            const ctx = document.getElementById('graficoEvolucao').getContext('2d');
+            if (chartInstancia) chartInstancia.destroy();
+
+            const baseAporte = obterValorNumerico();
+            const dadosMultiplicados = dadosGraficoPeriodos[periodo].map(m => baseAporte + (baseAporte * (m / 100)));
+
+            chartInstancia = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mês 1','Mês 2','Mês 3','Mês 4','Mês 5','Mês 6'],
+                    datasets: [{
+                        label: 'Simulação do Meu Portfólio',
+                        data: dadosMultiplicados,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6,182,212,0.03)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#06b6d4'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ' Valor: ' + ctx.raw.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { display: true, grid: { color: '#1e293b' }, ticks: { color: '#475569', font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 9 } } }
+                    }
+                }
             });
         }
 
-        function viewPastResult(id) {
-            const item = userHistory.find(x => x.id === id);
-            if (item) {
-                switchTab('corretor');
-                document.getElementById('corretor-input-zone').classList.add('hidden');
-                renderResults(item, item.score >= 900);
+        async function carregarCryptoFeeds() {
+            try {
+                const res   = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=brl&include_24hr_change=true');
+                const dados = await res.json();
+                let html = '';
+                topCryptos.forEach(c => {
+                    const info = dados[c.id];
+                    if (info) {
+                        const preco   = info.brl.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        const variacao = info.brl_24h_change;
+                        html += `
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-900">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-white">${c.name}</span>
+                                    <span class="text-[10px] px-1.5 rounded font-logo text-black" style="background:${c.color}">${c.symbol}</span>
+                                </div>
+                                <div class="text-xs font-black font-logo text-slate-200">${preco}</div>
+                                <div class="text-[10px] font-bold ${variacao >= 0 ? 'text-emerald-400' : 'text-red-400'} mt-0.5">
+                                    ${variacao >= 0 ? '▲' : '▼'} ${variacao.toFixed(2)}% (24h)
+                                </div>
+                            </div>`;
+                    }
+                });
+                document.getElementById('crypto-grid').innerHTML = html;
+            } catch {
+                document.getElementById('crypto-grid').innerHTML = '<p class="text-[10px] text-slate-600 col-span-full text-center">Falha ao sincronizar dados externos públicos.</p>';
             }
         }
 
-        function resetCorretor() {
-            document.getElementById('essay-text').value = '';
-            document.getElementById('corretor-result-zone').classList.add('hidden');
-            document.getElementById('corretor-input-zone').classList.remove('hidden');
+        function resetarPerfil() {
+            localStorage.clear();
+            window.location.reload();
         }
 
-        function previewEssayPhoto(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('photo-preview-img').src = e.target.result;
-                    document.getElementById('photo-preview-container').classList.remove('hidden');
-                };
-                reader.readAsDataURL(input.files[0]);
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            carregarCryptoFeeds();
+
+            if (localStorage.getItem('matias_perfil_definido')) {
+                perfilInvestidor   = localStorage.getItem('matias_perfil_definido');
+                pontuacaoTotalQuiz = parseInt(localStorage.getItem('matias_pontos_quiz')) || 10;
+                faseQuiz           = parseInt(localStorage.getItem('matias_fase_quiz')) || 4;
+                if (localStorage.getItem('matias_valor_cru')) {
+                    document.getElementById('input-valor-total').value = localStorage.getItem('matias_valor_cru');
+                }
+                definirPerfilFinal();
+            } else {
+                renderizarQuiz();
             }
-        }
 
-        function saveUserProfile() {
-            localStorage.setItem('m1000_username', document.getElementById('user-name-input').value);
-        }
-
-        function loadUserProfile() {
-            const name = localStorage.getItem('m1000_username');
-            if (name) document.getElementById('user-name-input').value = name;
-            const av = localStorage.getItem('m1000_avatar');
-            if (av) document.getElementById('user-avatar').src = av;
-        }
-
-        function uploadAvatar(input) {
-            if (input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = e => {
-                    document.getElementById('user-avatar').src = e.target.result;
-                    localStorage.setItem('m1000_avatar', e.target.result);
-                };
-                r.readAsDataURL(input.files[0]);
+            if (localStorage.getItem('matias_kids_objetivo')) {
+                if (localStorage.getItem('matias_kids_valor_cru')) {
+                    document.getElementById('input-valor-kids').value = localStorage.getItem('matias_kids_valor_cru');
+                }
+                definirObjetivoKids(localStorage.getItem('matias_kids_objetivo'));
             }
-        }
 
-        function renderLibrary() {
-            const container = document.getElementById('library-container');
-            container.innerHTML = '';
-            PRO_ESSAYS.forEach(essay => {
-                const d = document.createElement('div');
-                d.className = "bg-dark-card p-5 rounded-xl border border-dark flex flex-col justify-between space-y-4";
-                d.innerHTML = `
-                    <div class="space-y-1">
-                        <span class="text-[10px] font-mono text-zinc-500">${essay.year} &bull; ${essay.author}</span>
-                        <h4 class="font-bold text-white text-sm leading-snug">${essay.title}</h4>
-                    </div>
-                    <button onclick="openEssayModal(${essay.id})" class="w-full text-center bg-zinc-900 border border-dark hover:bg-zinc-800 text-zinc-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer">Abrir Texto Completo e Examinar Estrutura</button>
-                `;
-                container.appendChild(d);
-            });
-        }
-
-        function openEssayModal(id) {
-            const essay = PRO_ESSAYS.find(x => x.id === id);
-            if (!essay) return;
-            document.getElementById('modal-title').innerText = essay.title;
-            const content = document.getElementById('modal-content');
-            content.innerHTML = '';
-            essay.paragraphs.forEach(p => {
-                content.innerHTML += `
-                    <div class="space-y-1 bg-zinc-900/40 p-4 rounded-xl border border-dark">
-                        <span class="text-indigo-400 font-bold block text-[10px] tracking-wider font-sans">${p.type}</span>
-                        <p class="text-zinc-200">${p.text}</p>
-                    </div>
-                `;
-            });
-            document.getElementById('library-modal').classList.remove('hidden');
-            document.getElementById('library-modal').classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('library-modal').classList.add('hidden');
-            document.getElementById('library-modal').classList.remove('flex');
-        }
+            if (localStorage.getItem('matias_aba_ativa')) {
+                alternarAbas(localStorage.getItem('matias_aba_ativa'));
+            }
+            atualizarGamificacao();
+        });
     </script>
 </body>
-</html>
+</html
