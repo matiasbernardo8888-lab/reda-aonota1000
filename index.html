@@ -1,2021 +1,1759 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import {
-  Eye,
-  EyeOff,
-  Bell,
-  Wallet,
-  ArrowDownToLine,
-  BarChart3,
-  ShoppingBag,
-  Settings as SettingsIcon,
-  LayoutGrid,
-  Receipt,
-  LifeBuoy,
-  ShieldCheck,
-  ChevronRight,
-  X,
-  Check,
-  Pencil,
-  Plus,
-  Trash2,
-  Play,
-  Pause,
-  Sparkles,
-  TrendingUp,
-  Clock,
-  Zap,
-  CircleDollarSign,
-  QrCode,
-  Info,
-  ArrowUpRight,
-  ArrowDownRight,
-  Menu,
-} from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Luar — Cuidado noturno para você e seu bebê</title>
+<meta name="description" content="Guia calmo e prático para mães de recém-nascidos: como segurar, acalmar e colocar o bebê para dormir." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
 
-/* ============================================================================
-   ÍRIS — PAINEL DE VENDAS (SIMULADO)
-   ----------------------------------------------------------------------------
-   Ferramenta de estudo de front-end / dashboards de vendas.
-   Todos os dados (vendas, saldos, clientes) são 100% fictícios e gerados no
-   navegador. Nenhuma transação real ocorre. As "notificações" de venda são
-   renderizadas dentro da própria página (toasts + central de notificações),
-   e não usam a API de notificações do sistema operacional — este painel não
-   deve ser confundido com uma plataforma de pagamentos real.
-   ============================================================================ */
+/* ==========================================================================
+   0. TOKENS
+   ========================================================================== */
+:root{
+  --void: #06040c;
+  --panel: #0f0a1e;
+  --panel-2: #150f28;
+  --panel-border: #241a3f;
+  --violet-900: #23103f;
+  --violet-700: #5b21b6;
+  --violet-600: #7c3aed;
+  --violet-500: #a855f7;
+  --violet-300: #d8b4fe;
+  --violet-100: #ede9fe;
+  --glow-pink: #f0a8d0;
+  --glow-pink-soft: #f0a8d033;
+  --amber: #f6c453;
+  --amber-soft: #f6c45322;
+  --sage: #8fd6b4;
+  --text-hi: #f6f3ff;
+  --text-mid: #c9bfe0;
+  --text-low: #8b7fab;
+  --line: #241a3f;
 
-/* ---------------------------------------------------------------------------
-   Utilitários
---------------------------------------------------------------------------- */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Quicksand', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-full: 999px;
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+  --shadow-glow: 0 0 60px -10px rgba(168,85,247,0.35);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
 
-const randomBetween = (min, max) => Math.random() * (max - min) + min;
-
-const randomInt = (min, max) => Math.floor(randomBetween(min, max + 1));
-
-const pickWeighted = (items) => {
-  const total = items.reduce((sum, item) => sum + item.weight, 0);
-  let roll = Math.random() * total;
-  for (const item of items) {
-    if (roll < item.weight) return item;
-    roll -= item.weight;
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
-  return items[items.length - 1];
-};
+}
 
-const formatCurrency = (value) =>
-  value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
+*{ box-sizing: border-box; margin:0; padding:0; }
+html{ scroll-behavior: smooth; }
+body{
+  background: var(--void);
+  color: var(--text-hi);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
 
-const formatCompactNumber = (value) => {
-  if (value >= 1000) return `${(value / 1000).toFixed(1).replace(".0", "")}K`;
-  return `${value}`;
-};
+body::before{
+  content:"";
+  position: fixed; inset:0;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(124,58,237,0.25), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(240,168,208,0.10), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(91,33,182,0.20), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-const formatTime = (date) =>
-  date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+img, svg{ display:block; max-width: 100%; }
+a{ color: inherit; text-decoration: none; }
+button{ font-family: inherit; cursor: pointer; }
+ul{ list-style: none; }
 
-const formatDateShort = (date) =>
-  date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+.wrap{
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
 
-const formatRelative = (date, now) => {
-  const diffMs = now - date;
-  const diffSec = Math.floor(diffMs / 1000);
-  if (diffSec < 5) return "agora";
-  if (diffSec < 60) return `há ${diffSec}s`;
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `há ${diffMin} min`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `há ${diffHour} h`;
-  return formatDateShort(date);
-};
+h1,h2,h3,h4{
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-hi);
+}
 
-const maskBuyer = (name) => {
-  const parts = name.split(" ");
-  if (parts.length === 1) return `${parts[0][0]}${"*".repeat(Math.max(parts[0].length - 1, 2))}`;
-  const first = parts[0];
-  const last = parts[parts.length - 1];
-  return `${first} ${last[0]}${"*".repeat(Math.max(last.length - 1, 2))}`;
-};
+.eyebrow{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--violet-300);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.eyebrow::before{
+  content:"";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--glow-pink);
+  box-shadow: 0 0 10px 2px var(--glow-pink);
+}
 
-/* ---------------------------------------------------------------------------
-   Dados fictícios — catálogo de produtos, nomes de compradores
---------------------------------------------------------------------------- */
+.section{
+  padding: 96px 0;
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+.section-head{
+  max-width: 640px;
+  margin-bottom: 48px;
+}
+.section-head h2{
+  font-size: clamp(28px, 4vw, 40px);
+  margin-top: 14px;
+  line-height: 1.15;
+}
+.section-head p{
+  color: var(--text-mid);
+  font-size: 17px;
+  margin-top: 14px;
+}
 
-const BUYER_FIRST_NAMES = [
-  "Marina", "Thiago", "Camila", "Rafael", "Beatriz", "Lucas", "Fernanda",
-  "Gustavo", "Larissa", "André", "Juliana", "Diego", "Patrícia", "Bruno",
-  "Vanessa", "Eduardo", "Aline", "Rodrigo", "Sabrina", "Felipe", "Renata",
-  "Vitor", "Carolina", "Marcelo", "Isabela",
-];
+/* focus visibility */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+  outline: 2px solid var(--violet-300);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
 
-const BUYER_LAST_NAMES = [
-  "Souza", "Lima", "Pereira", "Costa", "Almeida", "Ribeiro", "Carvalho",
-  "Gomes", "Martins", "Rocha", "Barbosa", "Cardoso", "Teixeira", "Nunes",
-  "Moreira", "Araújo", "Correia", "Dias", "Fonseca", "Pinto",
-];
+/* ==========================================================================
+   1. NAV
+   ========================================================================== */
+.nav{
+  position: sticky; top:0; z-index: 100;
+  background: rgba(6,4,12,0.75);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-mark{
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 32% 30%, var(--violet-300), var(--violet-600) 60%, var(--violet-900) 100%);
+  box-shadow: 0 0 18px -2px rgba(168,85,247,0.7);
+  flex-shrink:0;
+}
+.brand-mark::after{
+  content:"";
+  position: absolute; top: 6px; left: 6px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--void);
+  opacity: 0.55;
+}
+.brand-name{ font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.01em; }
+.brand-sub{ font-size: 10px; color: var(--text-low); font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; margin-top:-2px; }
 
-const randomBuyerName = () =>
-  `${BUYER_FIRST_NAMES[randomInt(0, BUYER_FIRST_NAMES.length - 1)]} ${
-    BUYER_LAST_NAMES[randomInt(0, BUYER_LAST_NAMES.length - 1)]
-  }`;
+.nav-links{ display:flex; gap: 28px; align-items:center; }
+.nav-links a{
+  font-size: 14px; font-weight: 600; color: var(--text-mid);
+  transition: color 200ms var(--ease);
+}
+.nav-links a:hover{ color: var(--text-hi); }
+.nav-cta{
+  padding: 9px 18px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--violet-500), var(--violet-700));
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 4px 20px -6px rgba(168,85,247,0.6);
+}
+.nav-toggle{ display:none; background:none; border:none; color: var(--text-hi); }
 
-const PRODUCT_SEED = [
-  {
-    id: "p1",
-    name: "Mentoria Ápex",
-    category: "Mentoria",
-    basePrice: 497,
-    color: "#a78bfa",
-    weight: 3,
-    active: true,
-  },
-  {
-    id: "p2",
-    name: "Curso Domínio Total",
-    category: "Curso online",
-    basePrice: 197,
-    color: "#c084fc",
-    weight: 6,
-    active: true,
-  },
-  {
-    id: "p3",
-    name: "E-book Foco Absoluto",
-    category: "E-book",
-    basePrice: 37,
-    color: "#8b5cf6",
-    weight: 10,
-    active: true,
-  },
-  {
-    id: "p4",
-    name: "Clube Vórtice",
-    category: "Assinatura mensal",
-    basePrice: 67,
-    color: "#7c3aed",
-    weight: 7,
-    active: true,
-  },
-  {
-    id: "p5",
-    name: "Masterclass Escala Rápida",
-    category: "Curso online",
-    basePrice: 297,
-    color: "#d8b4fe",
-    weight: 4,
-    active: true,
-  },
-  {
-    id: "p6",
-    name: "Templates Nébula",
-    category: "Pacote digital",
-    basePrice: 27,
-    color: "#a855f7",
-    weight: 8,
-    active: true,
-  },
-];
-
-const NAV_ITEMS = [
-  { id: "conta", label: "Conta", icon: LayoutGrid },
-  { id: "vendas", label: "Vendas", icon: Receipt },
-  { id: "painel", label: "Íris", icon: Sparkles, isCenter: true },
-  { id: "saque", label: "Saque", icon: ArrowDownToLine },
-  { id: "ajustes", label: "Ajustes", icon: SettingsIcon },
-];
-
-const SIDEBAR_ITEMS = [
-  { id: "conta", label: "Conta", icon: LayoutGrid },
-  { id: "vendas", label: "Vendas", icon: Receipt },
-  { id: "relatorios", label: "Relatórios avançados", icon: BarChart3 },
-  { id: "produtos", label: "Gerenciar produtos", icon: ShoppingBag },
-  { id: "saque", label: "Saque", icon: ArrowDownToLine },
-  { id: "ajustes", label: "Ajustes", icon: SettingsIcon },
-  { id: "suporte", label: "Suporte", icon: LifeBuoy },
-];
-
-/* ---------------------------------------------------------------------------
-   Geração de série histórica (para gráficos) a partir do estado atual
---------------------------------------------------------------------------- */
-
-const buildHourlySeries = (sales) => {
-  const now = new Date();
-  const buckets = [];
-  for (let i = 23; i >= 0; i--) {
-    const bucketStart = new Date(now);
-    bucketStart.setHours(now.getHours() - i, 0, 0, 0);
-    buckets.push({
-      label: bucketStart.getHours().toString().padStart(2, "0") + "h",
-      start: bucketStart.getTime(),
-      end: bucketStart.getTime() + 60 * 60 * 1000,
-      total: 0,
-      vendas: 0,
-    });
+@media (max-width: 880px){
+  .nav-links{
+    position: fixed; inset: 60px 0 0 0;
+    background: var(--void);
+    flex-direction: column;
+    padding: 32px 24px;
+    align-items: flex-start;
+    gap: 20px;
+    transform: translateY(-110%);
+    transition: transform 320ms var(--ease);
+    border-bottom: 1px solid var(--line);
   }
-  sales.forEach((sale) => {
-    if (sale.status !== "approved") return;
-    const t = sale.approvedAt ? sale.approvedAt.getTime() : sale.createdAt.getTime();
-    const bucket = buckets.find((b) => t >= b.start && t < b.end);
-    if (bucket) {
-      bucket.total += sale.amount;
-      bucket.vendas += 1;
-    }
-  });
-  return buckets;
-};
-
-const buildProductShare = (sales, products) => {
-  const map = {};
-  products.forEach((p) => (map[p.id] = { name: p.name, value: 0, color: p.color }));
-  sales.forEach((sale) => {
-    if (sale.status !== "approved") return;
-    if (!map[sale.productId]) return;
-    map[sale.productId].value += sale.amount;
-  });
-  return Object.values(map).filter((entry) => entry.value > 0);
-};
-
-/* ---------------------------------------------------------------------------
-   Componente: marca / logotipo animado (elemento de assinatura)
---------------------------------------------------------------------------- */
-
-function IrisMark({ pulse, size = 40 }) {
-  return (
-    <div
-      className="relative flex items-center justify-center rounded-2xl"
-      style={{
-        width: size,
-        height: size,
-        background:
-          "radial-gradient(circle at 30% 30%, #c084fc, #7c3aed 55%, #2e1065 100%)",
-        boxShadow: pulse
-          ? "0 0 0 6px rgba(168,85,247,0.18), 0 0 24px rgba(168,85,247,0.55)"
-          : "0 0 0 0 rgba(168,85,247,0)",
-        transition: "box-shadow 400ms ease",
-      }}
-    >
-      <div
-        className="rounded-full"
-        style={{
-          width: size * 0.42,
-          height: size * 0.42,
-          background:
-            "conic-gradient(from 90deg, #ede9fe, #c084fc, #6d28d9, #ede9fe)",
-          animation: pulse ? "iris-spin 900ms linear" : "none",
-        }}
-      />
-      <style>{`
-        @keyframes iris-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  );
+  .nav-links.open{ transform: translateY(0); }
+  .nav-toggle{ display:block; }
 }
 
-/* ---------------------------------------------------------------------------
-   Componente: banner de aviso (fixo, contexto de estudo)
---------------------------------------------------------------------------- */
+/* ==========================================================================
+   2. HERO
+   ========================================================================== */
+.hero{
+  padding: 88px 0 60px;
+  position: relative;
+}
+.hero-grid{
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 56px;
+  align-items: center;
+}
+.hero h1{
+  font-size: clamp(36px, 5.4vw, 60px);
+  line-height: 1.06;
+  margin-top: 18px;
+}
+.hero h1 em{
+  font-style: normal;
+  background: linear-gradient(100deg, var(--violet-300), var(--glow-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p.lede{
+  margin-top: 22px;
+  font-size: 18px;
+  color: var(--text-mid);
+  max-width: 480px;
+}
+.hero-actions{ display:flex; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 13px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 700; font-size: 14.5px;
+  border: 1px solid transparent;
+  transition: transform 200ms var(--ease), box-shadow 200ms var(--ease), background 200ms var(--ease);
+}
+.btn-primary{
+  background: linear-gradient(135deg, var(--violet-500), var(--violet-700));
+  color: white;
+  box-shadow: 0 8px 30px -8px rgba(168,85,247,0.7);
+}
+.btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 12px 34px -6px rgba(168,85,247,0.85); }
+.btn-ghost{
+  background: transparent;
+  border-color: var(--panel-border);
+  color: var(--text-hi);
+}
+.btn-ghost:hover{ border-color: var(--violet-500); color: var(--violet-300); }
 
-function StudyBanner() {
-  return (
-    <div className="flex items-start gap-2 rounded-xl border border-violet-800/60 bg-violet-950/60 px-4 py-3 text-xs text-violet-200">
-      <Info size={16} className="mt-0.5 shrink-0 text-violet-400" />
-      <p>
-        Ambiente de simulação para fins de estudo. Vendas, saldos e clientes
-        são dados fictícios gerados neste navegador — nenhuma transação real
-        acontece e nada é enviado à central de notificações do sistema.
-      </p>
-    </div>
-  );
+.hero-stats{ display:flex; gap: 28px; margin-top: 44px; flex-wrap:wrap; }
+.hero-stat b{ display:block; font-family: var(--font-display); font-size: 22px; color: var(--text-hi); }
+.hero-stat span{ font-size: 12.5px; color: var(--text-low); }
+
+/* breathing orb */
+.orb-stage{
+  position: relative;
+  aspect-ratio: 1/1;
+  display:flex; align-items:center; justify-content:center;
+}
+.orb-rings{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.orb-ring{
+  position:absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(168,85,247,0.18);
+}
+.orb-ring:nth-child(1){ width: 100%; height:100%; }
+.orb-ring:nth-child(2){ width: 76%; height:76%; border-color: rgba(168,85,247,0.14); }
+.orb-ring:nth-child(3){ width: 52%; height:52%; border-color: rgba(240,168,208,0.16); }
+
+.orb-core{
+  width: 34%;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #f6ecff, var(--violet-500) 45%, var(--violet-900) 100%);
+  box-shadow: 0 0 90px 10px rgba(168,85,247,0.45);
+  animation: breathe 4.6s ease-in-out infinite;
+  position: relative;
+  z-index:2;
+}
+@keyframes breathe{
+  0%, 100%{ transform: scale(0.92); box-shadow: 0 0 60px 4px rgba(168,85,247,0.35); }
+  50%{ transform: scale(1.05); box-shadow: 0 0 100px 16px rgba(168,85,247,0.55); }
+}
+.orb-label{
+  position:absolute; bottom: -6px; left:50%; transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+  color: var(--text-low); text-transform: uppercase;
+  display:flex; align-items:center; gap:8px;
+  white-space: nowrap;
+}
+.orb-label .dot{ width:6px; height:6px; border-radius:50%; background: var(--sage); animation: blink 4.6s ease-in-out infinite; }
+@keyframes blink{ 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+@media (max-width: 880px){
+  .hero-grid{ grid-template-columns: 1fr; }
+  .orb-stage{ max-width: 280px; margin: 0 auto; }
 }
 
-/* ---------------------------------------------------------------------------
-   Componente: Toast de venda (aparece dentro da página)
---------------------------------------------------------------------------- */
+/* ==========================================================================
+   3. CARDS / GRID PRIMITIVES
+   ========================================================================== */
+.card{
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  padding: 26px;
+  transition: border-color 220ms var(--ease), transform 220ms var(--ease);
+}
+.card:hover{ border-color: rgba(168,85,247,0.4); }
 
-function SaleToast({ toast, onDismiss }) {
-  useEffect(() => {
-    const timer = setTimeout(() => onDismiss(toast.id), 5200);
-    return () => clearTimeout(timer);
-  }, [toast.id, onDismiss]);
-
-  const isApproved = toast.kind === "approved";
-
-  return (
-    <div
-      className="pointer-events-auto w-80 max-w-[90vw] overflow-hidden rounded-2xl border border-violet-800/50 bg-zinc-950/95 shadow-2xl shadow-violet-950/60 backdrop-blur"
-      style={{ animation: "iris-toast-in 320ms cubic-bezier(0.16,1,0.3,1)" }}
-    >
-      <div className="flex items-start gap-3 p-3.5">
-        <div
-          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-          style={{
-            background: isApproved
-              ? "linear-gradient(135deg,#22c55e,#15803d)"
-              : "linear-gradient(135deg,#a855f7,#6d28d9)",
-          }}
-        >
-          {isApproved ? <Check size={17} className="text-white" /> : <QrCode size={16} className="text-white" />}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-zinc-50">
-            {isApproved ? "Venda aprovada · simulada" : "Pix gerado · simulado"}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-zinc-400">{toast.productName}</p>
-          <p className="mt-1 text-sm font-medium text-violet-300">
-            Comissão: {formatCurrency(toast.commission)}
-          </p>
-        </div>
-        <button
-          onClick={() => onDismiss(toast.id)}
-          className="rounded-full p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
-          aria-label="Dispensar notificação"
-        >
-          <X size={14} />
-        </button>
-      </div>
-      <div className="h-0.5 w-full bg-zinc-800">
-        <div
-          className="h-full bg-violet-500"
-          style={{ animation: "iris-toast-bar 5.2s linear forwards" }}
-        />
-      </div>
-      <style>{`
-        @keyframes iris-toast-in {
-          from { opacity: 0; transform: translateX(24px) scale(0.97); }
-          to { opacity: 1; transform: translateX(0) scale(1); }
-        }
-        @keyframes iris-toast-bar {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
-    </div>
-  );
+.grid-3{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-2{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+@media (max-width: 880px){
+  .grid-3{ grid-template-columns: 1fr; }
+  .grid-2{ grid-template-columns: 1fr; }
 }
 
-function ToastStack({ toasts, onDismiss }) {
-  return (
-    <div className="pointer-events-none fixed right-3 top-16 z-[60] flex flex-col gap-2.5 sm:right-6 sm:top-6">
-      {toasts.map((toast) => (
-        <SaleToast key={toast.id} toast={toast} onDismiss={onDismiss} />
-      ))}
-    </div>
-  );
+.icon-badge{
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, rgba(168,85,247,0.22), rgba(240,168,208,0.14));
+  color: var(--violet-300);
+  margin-bottom: 16px;
+}
+.card h3{ font-size: 17px; margin-bottom: 8px; }
+.card p{ color: var(--text-mid); font-size: 14.5px; }
+
+.tag{
+  display:inline-block;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--panel-border);
+  color: var(--text-low);
+}
+.tag.safety{ color: var(--amber); border-color: rgba(246,196,83,0.4); background: var(--amber-soft); }
+.tag.ok{ color: var(--sage); border-color: rgba(143,214,180,0.35); background: rgba(143,214,180,0.08); }
+
+/* callout boxes */
+.callout{
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  display:flex; gap: 14px;
+  border: 1px solid;
+}
+.callout.warn{ background: var(--amber-soft); border-color: rgba(246,196,83,0.35); }
+.callout.info{ background: rgba(168,85,247,0.08); border-color: rgba(168,85,247,0.3); }
+.callout.care{ background: var(--glow-pink-soft); border-color: rgba(240,168,208,0.35); }
+.callout h4{ font-size: 14.5px; margin-bottom: 4px; }
+.callout p, .callout li{ font-size: 13.8px; color: var(--text-mid); }
+.callout .icon{ flex-shrink:0; font-size: 20px; line-height:1; }
+
+/* ==========================================================================
+   4. SIMULADOR DE COLO (signature interactive)
+   ========================================================================== */
+.sim{
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--panel-border);
+  background:
+    radial-gradient(circle at 80% 0%, rgba(240,168,208,0.10), transparent 55%),
+    linear-gradient(180deg, var(--panel), #0b0716);
+  padding: 8px;
+  overflow: hidden;
+}
+.sim-inner{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.sim-stage{
+  position: relative;
+  min-height: 420px;
+  border-radius: calc(var(--radius-lg) - 8px);
+  background: radial-gradient(circle at 50% 20%, rgba(124,58,237,0.22), transparent 60%), #0a0616;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.sim-stage::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image: radial-gradient(rgba(216,180,254,0.16) 1px, transparent 1px);
+  background-size: 26px 26px;
+  opacity: 0.5;
+}
+.sim-figure{
+  position: relative;
+  z-index: 2;
+  transform-origin: 50% 85%;
+  animation: sway var(--sim-speed, 2.6s) ease-in-out infinite;
+}
+@keyframes sway{
+  0%, 100%{ transform: rotate(-4deg); }
+  50%{ transform: rotate(4deg); }
+}
+.sim-panel{ padding: 30px 34px; display:flex; flex-direction:column; }
+.sim-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 20px; }
+.sim-tab{
+  padding: 9px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-mid);
+  font-size: 13px; font-weight: 700;
+  transition: all 180ms var(--ease);
+}
+.sim-tab.active{
+  background: linear-gradient(135deg, var(--violet-500), var(--violet-700));
+  border-color: transparent;
+  color: white;
+}
+.sim-tab.urgent{ border-color: rgba(246,196,83,0.5); color: var(--amber); }
+.sim-tab.urgent.active{
+  background: linear-gradient(135deg, var(--amber), #c2790a);
+  color: #1a1206;
+  border-color: transparent;
+}
+.sim-title{ font-size: 21px; margin-bottom: 10px; }
+.sim-desc{ color: var(--text-mid); font-size: 14.5px; margin-bottom: 16px; }
+.sim-steps{ display:flex; flex-direction:column; gap:10px; margin-bottom: 18px; }
+.sim-step{ display:flex; gap:10px; font-size: 13.8px; color: var(--text-mid); }
+.sim-step b{ color: var(--violet-300); font-family: var(--font-mono); font-size: 12px; flex-shrink:0; }
+.sim-controls{
+  margin-top: auto;
+  display:flex; align-items:center; gap: 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.sim-controls label{ font-size: 12px; color: var(--text-low); font-family: var(--font-mono); white-space:nowrap; }
+.sim-controls input[type=range]{ flex:1; accent-color: var(--violet-500); }
+
+@media (max-width: 880px){
+  .sim-inner{ grid-template-columns: 1fr; }
+  .sim-stage{ min-height: 300px; }
 }
 
-/* ---------------------------------------------------------------------------
-   Componente: Central de notificações (dropdown do sino)
---------------------------------------------------------------------------- */
+/* ==========================================================================
+   5. 5 S's METHOD
+   ========================================================================== */
+.s-list{ display:flex; flex-direction:column; gap: 14px; }
+.s-item{
+  display:grid;
+  grid-template-columns: 64px 1fr;
+  gap: 20px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  align-items: center;
+}
+.s-letter{
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--violet-300);
+  width: 64px; height: 64px;
+  border-radius: 16px;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(240,168,208,0.1));
+}
+.s-item h4{ font-size: 16px; margin-bottom: 4px; }
+.s-item p{ font-size: 13.8px; color: var(--text-mid); }
 
-function NotificationCenter({ open, onClose, notifications, onClearAll }) {
-  if (!open) return null;
-  return (
-    <div className="absolute right-0 top-12 z-50 w-80 max-w-[88vw] overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60">
-      <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-        <p className="text-sm font-semibold text-zinc-100">Notificações</p>
-        <button
-          onClick={onClearAll}
-          className="text-xs font-medium text-violet-400 transition hover:text-violet-300"
-        >
-          Limpar tudo
-        </button>
-      </div>
-      <div className="max-h-96 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-            <Bell size={22} className="text-zinc-700" />
-            <p className="text-xs text-zinc-500">
-              Nenhuma notificação por aqui ainda.
-            </p>
-          </div>
-        ) : (
-          notifications.map((n) => (
-            <div
-              key={n.id}
-              className="flex gap-3 border-b border-zinc-900 px-4 py-3 last:border-0 hover:bg-zinc-900/60"
-            >
-              <div
-                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                style={{
-                  background:
-                    n.kind === "approved"
-                      ? "linear-gradient(135deg,#22c55e,#15803d)"
-                      : "linear-gradient(135deg,#a855f7,#6d28d9)",
-                }}
-              >
-                {n.kind === "approved" ? (
-                  <Check size={14} className="text-white" />
-                ) : (
-                  <QrCode size={13} className="text-white" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-zinc-100">
-                  {n.kind === "approved" ? "Venda aprovada!" : "Pix gerado!"}
-                </p>
-                <p className="truncate text-[11px] text-zinc-500">{n.productName}</p>
-                <p className="text-[11px] text-violet-400">
-                  Comissão: {formatCurrency(n.commission)}
-                </p>
-              </div>
-              <span className="shrink-0 text-[10px] text-zinc-600">
-                {formatTime(n.createdAt)}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+/* ==========================================================================
+   6. CHECKLIST (routine)
+   ========================================================================== */
+.routine{
+  display:grid;
+  grid-template-columns: 1fr 300px;
+  gap: 28px;
+}
+.routine-list{ display:flex; flex-direction:column; gap: 10px; }
+.routine-item{
+  display:flex; align-items:center; gap: 14px;
+  padding: 15px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  transition: border-color 180ms var(--ease), background 180ms var(--ease);
+}
+.routine-item.done{ border-color: rgba(143,214,180,0.4); background: rgba(143,214,180,0.06); }
+.routine-check{
+  width: 22px; height: 22px; border-radius: 7px;
+  border: 1.5px solid var(--panel-border);
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background: transparent;
+  color: white;
+  font-size: 13px;
+}
+.routine-item.done .routine-check{ background: var(--sage); border-color: var(--sage); color: var(--void); }
+.routine-text b{ display:block; font-size: 14.5px; }
+.routine-text span{ font-size: 12.5px; color: var(--text-low); }
+.routine-item.done .routine-text b{ color: var(--text-low); text-decoration: line-through; }
+
+.routine-side{
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  padding: 24px;
+  text-align:center;
+  position: sticky;
+  top: 90px;
+  height: fit-content;
+}
+.progress-ring{ width: 140px; height: 140px; margin: 0 auto 14px; position:relative; }
+.progress-ring svg{ transform: rotate(-90deg); }
+.progress-ring circle{ fill:none; stroke-width: 8; }
+.progress-ring .bg{ stroke: var(--panel-border); }
+.progress-ring .fg{ stroke: url(#ringGrad); stroke-linecap: round; transition: stroke-dashoffset 400ms var(--ease); }
+.progress-num{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-display); font-size: 26px; font-weight: 700;
+}
+.routine-side p{ font-size: 13px; color: var(--text-mid); margin-top:6px; }
+.routine-reset{
+  margin-top: 16px; font-size: 12.5px; color: var(--violet-300); font-weight: 700;
+  background: none; border: none;
 }
 
-/* ---------------------------------------------------------------------------
-   Componente: campo editável em linha (deixa "tudo modificável")
---------------------------------------------------------------------------- */
+@media (max-width: 880px){
+  .routine{ grid-template-columns: 1fr; }
+  .routine-side{ position: static; }
+}
 
-function EditableValue({ value, onChange, prefix = "", suffix = "", asCurrency = false }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(value));
+/* ==========================================================================
+   7. TIMELINE (fases do sono / desenvolvimento)
+   ========================================================================== */
+.timeline{ position: relative; padding-left: 32px; }
+.timeline::before{
+  content:"";
+  position:absolute; left: 7px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(180deg, var(--violet-500), transparent);
+}
+.tl-item{ position: relative; padding-bottom: 32px; }
+.tl-item:last-child{ padding-bottom: 0; }
+.tl-item::before{
+  content:"";
+  position:absolute; left: -32px; top: 4px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--void);
+  border: 2px solid var(--violet-500);
+  box-shadow: 0 0 0 4px rgba(168,85,247,0.15);
+}
+.tl-item .tag{ margin-bottom: 8px; }
+.tl-item h4{ font-size: 16px; margin-bottom: 6px; }
+.tl-item p{ font-size: 14px; color: var(--text-mid); }
 
-  useEffect(() => {
-    setDraft(String(value));
-  }, [value]);
+/* ==========================================================================
+   8. CRY GUIDE (interactive)
+   ========================================================================== */
+.cry-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.cry-card{
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+}
+.cry-card:hover, .cry-card.active{ border-color: var(--violet-500); background: var(--panel-2); }
+.cry-card .wave{ display:flex; align-items:flex-end; gap:3px; height: 28px; margin-bottom: 12px; }
+.cry-card .wave span{ width: 3px; background: var(--violet-400, var(--violet-500)); border-radius: 2px; opacity:0.7; }
+.cry-card h4{ font-size: 14.5px; margin-bottom: 6px; }
+.cry-card p{ font-size: 13px; color: var(--text-low); }
+.cry-detail{
+  margin-top: 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(168,85,247,0.35);
+  background: rgba(168,85,247,0.06);
+  padding: 22px;
+  display:none;
+}
+.cry-detail.show{ display:block; animation: fadein 300ms var(--ease); }
+@keyframes fadein{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+.cry-detail h4{ font-size: 16px; margin-bottom: 8px; }
+.cry-detail p{ font-size: 14px; color: var(--text-mid); }
 
-  const commit = () => {
-    const parsed = parseFloat(draft.replace(",", "."));
-    if (!Number.isNaN(parsed) && parsed >= 0) {
-      onChange(parsed);
-    }
-    setEditing(false);
-  };
+@media (max-width: 880px){ .cry-grid{ grid-template-columns: 1fr; } }
 
-  if (editing) {
-    return (
-      <div className="flex items-center gap-1.5">
-        <span className="text-zinc-500">{prefix}</span>
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && commit()}
-          onBlur={commit}
-          className="w-28 rounded-lg border border-violet-600 bg-zinc-900 px-2 py-1 text-lg font-bold text-zinc-50 outline-none"
-        />
-        <span className="text-zinc-500">{suffix}</span>
-      </div>
-    );
-  }
+/* ==========================================================================
+   9. FAQ ACCORDION
+   ========================================================================== */
+.faq-item{
+  border-bottom: 1px solid var(--line);
+}
+.faq-q{
+  width:100%;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 20px 4px;
+  background:none; border:none; color: var(--text-hi);
+  font-family: var(--font-display); font-size: 16px; font-weight: 600;
+  text-align:left;
+}
+.faq-q .plus{ transition: transform 260ms var(--ease); color: var(--violet-300); font-size: 20px; flex-shrink:0; margin-left: 16px; }
+.faq-item.open .faq-q .plus{ transform: rotate(45deg); }
+.faq-a{
+  max-height: 0; overflow:hidden;
+  transition: max-height 320ms var(--ease);
+  color: var(--text-mid); font-size: 14.5px;
+}
+.faq-a-inner{ padding: 0 4px 22px; max-width: 720px; }
+.faq-item.open .faq-a{ max-height: 300px; }
 
-  return (
-    <button
-      onClick={() => setEditing(true)}
-      className="group flex items-center gap-2 text-left"
-      title="Clique para editar"
-    >
-      <span className="text-2xl font-bold tracking-tight text-zinc-50">
-        {asCurrency ? formatCurrency(value) : `${prefix}${value}${suffix}`}
+/* ==========================================================================
+   10. ALERT / WARNING SIGNS
+   ========================================================================== */
+.alert-grid{ display:grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+.alert-chip{
+  display:flex; align-items:flex-start; gap: 12px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(246,196,83,0.3);
+  background: var(--amber-soft);
+}
+.alert-chip .icon{ color: var(--amber); font-size: 18px; flex-shrink:0; }
+.alert-chip p{ font-size: 13.8px; color: var(--text-hi); }
+@media (max-width: 880px){ .alert-grid{ grid-template-columns: 1fr; } }
+
+/* ==========================================================================
+   11. MOTHER CARE
+   ========================================================================== */
+.mom-band{
+  border-radius: var(--radius-lg);
+  padding: 44px;
+  background: linear-gradient(135deg, rgba(240,168,208,0.12), rgba(124,58,237,0.16));
+  border: 1px solid rgba(240,168,208,0.25);
+}
+.mom-band .grid-2{ margin-top: 26px; }
+.mom-band .card{ background: rgba(6,4,12,0.5); }
+
+/* ==========================================================================
+   13. FOOTER
+   ========================================================================== */
+footer{
+  border-top: 1px solid var(--line);
+  padding: 56px 0 36px;
+}
+.footer-grid{
+  display:grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+.footer-grid h5{ font-size: 12px; color: var(--text-low); text-transform:uppercase; letter-spacing:0.08em; margin-bottom: 14px; font-family: var(--font-mono); }
+.footer-grid a{ display:block; font-size: 14px; color: var(--text-mid); margin-bottom: 10px; }
+.footer-grid a:hover{ color: var(--violet-300); }
+.footer-bottom{
+  display:flex; justify-content:space-between; align-items:center;
+  padding-top: 26px; border-top: 1px solid var(--line);
+  font-size: 12.5px; color: var(--text-low); flex-wrap:wrap; gap: 12px;
+}
+.disclaimer-box{
+  margin-top: 30px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--panel-border);
+  font-size: 12.5px; color: var(--text-low);
+  line-height: 1.7;
+}
+@media (max-width: 880px){ .footer-grid{ grid-template-columns: repeat(2,1fr); } }
+
+/* ==========================================================================
+   14. DIÁRIO DE SONO
+   ========================================================================== */
+.diary{
+  display:grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+.diary-form{
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  padding: 24px;
+  display:flex; flex-direction:column; gap:14px;
+  height: fit-content;
+}
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size: 12px; color: var(--text-low); font-family: var(--font-mono); text-transform:uppercase; letter-spacing:0.06em; }
+.field select, .field input{
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-2);
+  color: var(--text-hi);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.diary-list{ display:flex; flex-direction:column; gap:10px; }
+.diary-entry{
+  display:grid;
+  grid-template-columns: 46px 1fr auto auto;
+  align-items:center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+}
+.diary-icon{
+  width: 40px; height:40px; border-radius: 10px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(168,85,247,0.15); font-size: 18px;
+}
+.diary-entry b{ font-size: 14px; display:block; }
+.diary-entry span{ font-size: 12px; color: var(--text-low); }
+.diary-dur{ font-family: var(--font-mono); font-size: 13px; color: var(--violet-300); white-space:nowrap; }
+.diary-del{ background:none; border:none; color: var(--text-low); font-size: 15px; }
+.diary-del:hover{ color: var(--amber); }
+.diary-empty{ padding: 40px 20px; text-align:center; color: var(--text-low); font-size: 13.5px; border: 1px dashed var(--panel-border); border-radius: var(--radius-md); }
+.diary-summary{ display:flex; gap: 20px; margin-bottom: 16px; flex-wrap:wrap; }
+.diary-summary .mini{ }
+.diary-summary .mini b{ display:block; font-family: var(--font-display); font-size: 20px; }
+.diary-summary .mini span{ font-size: 11.5px; color: var(--text-low); }
+@media (max-width: 880px){ .diary{ grid-template-columns: 1fr; } }
+
+/* ==========================================================================
+   15. GLOSSÁRIO
+   ========================================================================== */
+.glossary{ display:grid; grid-template-columns: repeat(2,1fr); gap: 4px 32px; }
+.gloss-item{ padding: 16px 0; border-bottom: 1px solid var(--line); }
+.gloss-item dt{ font-family: var(--font-display); font-size: 14.5px; color: var(--violet-300); margin-bottom: 4px; }
+.gloss-item dd{ font-size: 13.5px; color: var(--text-mid); }
+@media (max-width: 880px){ .glossary{ grid-template-columns: 1fr; } }
+
+/* Baby illustration shared styling */
+.baby-illus{ filter: drop-shadow(0 20px 40px rgba(168,85,247,0.35)); }
+
+</style>
+</head>
+<body>
+
+<!-- shared gradients for hold illustrations (referenced by url(#id)) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="momGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c9a8f5"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="momGradHair" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a3564"/>
+      <stop offset="100%" stop-color="#2c1c47"/>
+    </linearGradient>
+    <linearGradient id="babyGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<!-- ============================================================ NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark"></span>
+      <span>
+        <span class="brand-name">Luar</span>
+        <span class="brand-sub" style="display:block;">colo &amp; sono</span>
       </span>
-      <Pencil
-        size={13}
-        className="text-zinc-600 opacity-0 transition group-hover:opacity-100"
-      />
-    </button>
-  );
-}
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="#simulador">Simulador de colo</a>
+      <a href="#metodo-5s">Método 5 S's</a>
+      <a href="#sono-seguro">Sono seguro</a>
+      <a href="#choro">Entender o choro</a>
+      <a href="#alerta">Sinais de alerta</a>
+      <a href="#mae">Cuidando de você</a>
+      <a href="#faq" class="nav-cta">Tirar dúvidas</a>
+      <!-- diario e glossário acessíveis por rolagem, entre alerta e mãe -->
 
-/* ---------------------------------------------------------------------------
-   Componente: cartão de estatística
---------------------------------------------------------------------------- */
-
-function StatCard({ label, value, icon: Icon, accent, actionLabel, onAction, hidden, sub }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-zinc-500">{label}</p>
-        {Icon && (
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-lg"
-            style={{ background: `${accent}22` }}
-          >
-            <Icon size={14} style={{ color: accent }} />
-          </div>
-        )}
-      </div>
-      <p className="mt-2 text-2xl font-bold text-zinc-50">
-        {hidden ? "••••••" : value}
-      </p>
-      {sub && <p className="mt-1 text-[11px] text-zinc-500">{sub}</p>}
-      {actionLabel && (
-        <button
-          onClick={onAction}
-          className="mt-3 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-500"
-        >
-          {actionLabel}
-        </button>
-      )}
     </div>
-  );
-}
+  </div>
+</nav>
 
-/* ---------------------------------------------------------------------------
-   Componente: barra de progresso da meta de faturamento
---------------------------------------------------------------------------- */
-
-function GoalProgress({ revenue, goal, onEditGoal }) {
-  const pct = clamp((revenue / goal) * 100, 0, 100);
-  return (
-    <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-zinc-950 to-zinc-950 p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🏆</span>
-          <p className="text-sm font-medium text-zinc-300">Faturamento</p>
-        </div>
-        <button
-          onClick={onEditGoal}
-          className="text-[11px] font-medium text-amber-400 hover:text-amber-300"
-        >
-          editar meta
-        </button>
-      </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="text-xl font-bold text-zinc-50">
-          {formatCurrency(revenue)}
-        </span>
-        <span className="text-sm text-zinc-500">/ {formatCurrency(goal)}</span>
-      </div>
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300 transition-all duration-700"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <p className="mt-1.5 text-right text-[11px] text-zinc-500">
-        {pct.toFixed(1)}%
-      </p>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Componente: acesso rápido
---------------------------------------------------------------------------- */
-
-function QuickAccessGrid({ onNavigate }) {
-  const items = [
-    { id: "relatorios", label: "Relatórios\nAvançados", icon: BarChart3 },
-    { id: "produtos", label: "Gerenciar\nProdutos", icon: ShoppingBag },
-    { id: "seguranca", label: "iToken de\nSegurança", icon: ShieldCheck },
-    { id: "suporte", label: "Suporte\nSuper Rápido", icon: LifeBuoy },
-  ];
-  return (
+<!-- ============================================================ HERO -->
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
     <div>
-      <p className="mb-2 text-sm font-semibold text-zinc-200">Acesso rápido</p>
-      <div className="grid grid-cols-2 gap-3">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
-            className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3.5 text-left transition hover:border-violet-700 hover:bg-zinc-900"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400">
-              <item.icon size={17} />
-            </div>
-            <span className="whitespace-pre-line text-xs font-medium leading-tight text-zinc-300">
-              {item.label}
-            </span>
-          </button>
-        ))}
+      <span class="eyebrow">Guia para as primeiras semanas</span>
+      <h1>Ele vai dormir. <em>Você vai respirar.</em></h1>
+      <p class="lede">
+        Um espaço calmo, direto e sem julgamento para mães de recém-nascidos:
+        como segurar, embalar e acalmar seu bebê para dormir — com uma
+        simulação visual de cada posição de colo, passo a passo.
+      </p>
+      <div class="hero-actions">
+        <a href="#simulador" class="btn btn-primary">Ver simulador de colo →</a>
+        <a href="#rotina" class="btn btn-ghost">Montar rotina de sono</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>0–3 meses</b><span>fase de adaptação do sono</span></div>
+        <div class="hero-stat"><b>14–17h</b><span>sono total recomendado/dia</span></div>
+        <div class="hero-stat"><b>4</b><span>posições de colo simuladas</span></div>
       </div>
     </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Página: Conta (dashboard principal)
---------------------------------------------------------------------------- */
-
-function AccountPage({
-  state,
-  setState,
-  hideValues,
-  onNavigate,
-  sales,
-  now,
-}) {
-  const hourly = useMemo(() => buildHourlySeries(sales), [sales]);
-  const productShare = useMemo(
-    () => buildProductShare(sales, state.products),
-    [sales, state.products]
-  );
-
-  const todaySales = sales.filter(
-    (s) => s.status === "approved" && s.approvedAt && isSameDay(s.approvedAt, now)
-  );
-  const todayTotal = todaySales.reduce((sum, s) => sum + s.amount, 0);
-  const todayCount = todaySales.length;
-  const avgTicket = todayCount ? todayTotal / todayCount : 0;
-
-  return (
-    <div className="flex flex-col gap-5">
-      <StudyBanner />
-
-      <div className="overflow-hidden rounded-2xl border border-violet-800/40 bg-gradient-to-br from-violet-700/30 via-zinc-950 to-zinc-950 p-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-violet-400">
-          Simule enquanto estuda
-        </p>
-        <p className="mt-1 text-lg font-semibold text-zinc-50">
-          Lucre com o motor de simulação de vendas
-        </p>
-        <p className="mt-1 max-w-md text-sm text-zinc-400">
-          Configure a frequência e o valor das vendas em Ajustes e acompanhe
-          o painel reagir em tempo real.
-        </p>
-        <button
-          onClick={() => onNavigate("ajustes")}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-violet-500"
-        >
-          Configurar simulação <ChevronRight size={14} />
-        </button>
+    <div class="orb-stage" aria-hidden="true">
+      <div class="orb-rings">
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
       </div>
+      <div class="orb-core"></div>
+      <div class="orb-label"><span class="dot"></span> respiração calma simulada</div>
+    </div>
+  </div>
+</header>
 
-      <GoalProgress
-        revenue={state.revenue}
-        goal={state.goal}
-        onEditGoal={() => {
-          const next = window.prompt("Nova meta de faturamento (R$):", state.goal);
-          const parsed = parseFloat(next);
-          if (!Number.isNaN(parsed) && parsed > 0) {
-            setState((s) => ({ ...s, goal: parsed }));
-          }
-        }}
-      />
-
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Saldo"
-          value={formatCurrency(state.balance)}
-          icon={Wallet}
-          accent="#22c55e"
-          hidden={hideValues}
-          actionLabel="Sacar"
-          onAction={() => onNavigate("saque")}
-        />
-        <StatCard
-          label="Saldo pendente"
-          value={formatCurrency(state.pendingBalance)}
-          icon={Clock}
-          accent="#a855f7"
-          hidden={hideValues}
-          actionLabel="Receitas"
-          onAction={() => onNavigate("vendas")}
-        />
+<!-- ============================================================ POR QUE NÃO DORME -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Entendendo o começo</span>
+      <h2>Por que ele ainda não "dorme a noite toda"</h2>
+      <p>
+        Recém-nascidos não têm ritmo circadiano formado — o relógio biológico
+        que diferencia dia e noite só amadurece por volta de 3 a 4 meses. Isso
+        não é algo que você fez errado. É biologia.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon-badge">🌙</div>
+        <h3>Ciclos curtos de sono</h3>
+        <p>O sono do bebê tem ciclos de 40 a 50 minutos, bem mais curtos que o
+        do adulto (90 min). Acordar entre ciclos é esperado — muitos bebês
+        conseguem voltar a dormir sozinhos, outros precisam de ajuda.</p>
       </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Vendas hoje" value={String(todayCount)} icon={Receipt} accent="#c084fc" />
-        <StatCard
-          label="Faturado hoje"
-          value={formatCurrency(todayTotal)}
-          icon={TrendingUp}
-          accent="#22c55e"
-        />
-        <StatCard
-          label="Ticket médio"
-          value={formatCurrency(avgTicket)}
-          icon={CircleDollarSign}
-          accent="#f59e0b"
-        />
+      <div class="card">
+        <div class="icon-badge">🍼</div>
+        <h3>Estômago pequeno</h3>
+        <p>O estômago de um recém-nascido tem o tamanho de uma cereja. Ele
+        precisa comer com frequência, inclusive à noite — isso é fome real,
+        não "manha".</p>
       </div>
+      <div class="card">
+        <div class="icon-badge">🌀</div>
+        <h3>Reflexo de Moro</h3>
+        <p>O bebê pode se assustar com o próprio corpo e "acordar sobressaltado"
+        ao relaxar. É um reflexo neurológico normal, e é uma das razões pelas
+        quais enrolar (swaddle) costuma ajudar.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-semibold text-zinc-200">
-            Faturamento nas últimas 24h
-          </p>
-          <span className="text-[11px] text-zinc-500">simulado</span>
+<!-- ============================================================ SIMULADOR DE COLO -->
+<section class="section" id="simulador">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Simulação visual</span>
+      <h2>Simulador de colo — veja o movimento antes de tentar</h2>
+      <p>
+        Escolha uma posição abaixo. A ilustração mostra o balanço ideal —
+        curto, ritmado, nunca brusco — e o painel explica o passo a passo e
+        quando usar cada uma.
+      </p>
+    </div>
+
+    <div class="sim">
+      <div class="sim-inner">
+        <div class="sim-stage">
+          <div class="sim-figure" id="simFigure">
+            <!-- SVG illustration swapped by JS -->
+          </div>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={hourly}>
+        <div class="sim-panel">
+          <div class="sim-tabs" id="simTabs">
+            <button class="sim-tab active" data-hold="aconchego">Aconchego</button>
+            <button class="sim-tab" data-hold="xale">Xale</button>
+            <button class="sim-tab" data-hold="ombro">Ombro</button>
+            <button class="sim-tab" data-hold="tigre">Tigre na árvore</button>
+            <button class="sim-tab urgent" data-hold="engasgo">⚠ Engasgo (emergência)</button>
+          </div>
+          <h3 class="sim-title" id="simTitle">Aconchego (cradle hold)</h3>
+          <p class="sim-desc" id="simDesc">
+            A posição clássica: a cabeça do bebê apoiada na dobra do seu
+            cotovelo, corpo virado de lado contra o seu tronco. Ótima para
+            embalar antes do sono e para os primeiros minutos de amamentação.
+          </p>
+          <div class="sim-steps" id="simSteps"></div>
+          <div class="callout warn" id="simEmergencyNote" style="display:none; margin-bottom:16px;">
+            <span class="icon">🚨</span>
+            <div>
+              <h4>Ligue 192 se o bebê não conseguir respirar, tossir ou chorar</h4>
+              <p>Esta ilustração é apenas uma referência visual. Ela não substitui um curso certificado de primeiros socorros/RCP infantil — considere fazer um, é uma das coisas mais úteis que você pode aprender.</p>
+            </div>
+          </div>
+          <div class="sim-controls">
+            <label for="speedRange">Ritmo do balanço</label>
+            <input type="range" id="speedRange" min="1.6" max="4" step="0.2" value="2.6" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:20px;">
+      <span class="icon">⚠️</span>
+      <div>
+        <h4>Isto é uma simulação de colo, não de sono</h4>
+        <p>As posições acima são para <b>segurar, acalmar e embalar o bebê acordado, no colo</b>.
+        Para dormir, o bebê deve sempre ser colocado <b>de costas, sozinho, no berço</b> — veja a seção "Sono seguro" abaixo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 5 S's -->
+<section class="section" id="metodo-5s">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Método clássico de acalmar</span>
+      <h2>Os 5 S's: recriando o útero</h2>
+      <p>
+        Popularizado pelo pediatra Harvey Karp, o método parte de uma ideia
+        simples: os primeiros três meses são como um "quarto trimestre" — o
+        bebê se acalma quando recriamos as sensações de dentro da barriga.
+      </p>
+    </div>
+    <div class="s-list">
+      <div class="s-item">
+        <div class="s-letter">S1</div>
+        <div>
+          <h4>Swaddle — Enrolar</h4>
+          <p>Enrolar os bracinhos com um pano leve, deixando os quadris livres para se mover. Reduz o reflexo de se assustar (Moro) e ajuda o bebê a se sentir contido, como estava no útero. Pare de enrolar assim que o bebê começar a tentar virar de bruços sozinho.</p>
+        </div>
+      </div>
+      <div class="s-item">
+        <div class="s-letter">S2</div>
+        <div>
+          <h4>Side/Stomach — De lado ou de bruços (só no colo, acordado)</h4>
+          <p>Segurar o bebê de lado ou com a barriga apoiada no seu antebraço costuma acalmar mais rápido que de costas. Importante: essa posição é <b>apenas para segurar enquanto acordado</b> — para dormir, sempre de costas no berço.</p>
+        </div>
+      </div>
+      <div class="s-item">
+        <div class="s-letter">S3</div>
+        <div>
+          <h4>Shush — Chiado</h4>
+          <p>Um som "shhh" constante e razoavelmente alto perto do ouvido do bebê imita o som do sangue circulando no útero (que é mais alto do que se imagina). Um ruído branco constante — chuveiro, ventilador, aplicativo de white noise — tem o mesmo efeito.</p>
+        </div>
+      </div>
+      <div class="s-item">
+        <div class="s-letter">S4</div>
+        <div>
+          <h4>Swing — Balançar</h4>
+          <p>Movimentos pequenos, rápidos e ritmados (não embalos largos e lentos) lembram o movimento constante que o bebê sentia durante a gestação. Sempre apoiando bem a cabeça e o pescoço.</p>
+        </div>
+      </div>
+      <div class="s-item">
+        <div class="s-letter">S5</div>
+        <div>
+          <h4>Suck — Sucção</h4>
+          <p>Sugar (seio, dedo limpo ou chupeta) ativa um reflexo natural de relaxamento. A Sociedade Brasileira de Pediatria também associa o uso de chupeta durante o sono a uma possível redução do risco de morte súbita do lactente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ ROTINA DE SONO -->
+<section class="section" id="rotina">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Construindo um hábito</span>
+      <h2>Monte a rotina da soneca de hoje</h2>
+      <p>
+        Uma sequência curta e sempre igual — de 10 a 20 minutos — ensina o
+        corpo do bebê a reconhecer "está na hora de dormir". Marque os passos
+        conforme for fazendo.
+      </p>
+    </div>
+    <div class="routine">
+      <div class="routine-list" id="routineList">
+        <!-- injected by JS -->
+      </div>
+      <div class="routine-side">
+        <div class="progress-ring">
+          <svg width="140" height="140" viewBox="0 0 140 140">
             <defs>
-              <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#a855f7" stopOpacity={0.55} />
-                <stop offset="100%" stopColor="#a855f7" stopOpacity={0} />
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#a855f7"/>
+                <stop offset="100%" stop-color="#f0a8d0"/>
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="label"
-              stroke="#71717a"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              interval={2}
-            />
-            <YAxis
-              stroke="#71717a"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `R$${formatCompactNumber(v)}`}
-              width={48}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "#18181b",
-                border: "1px solid #3f3f46",
-                borderRadius: 10,
-                fontSize: 12,
-              }}
-              formatter={(value) => [formatCurrency(value), "Faturamento"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="total"
-              stroke="#a855f7"
-              strokeWidth={2}
-              fill="url(#revGradient)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {productShare.length > 0 && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-          <p className="mb-3 text-sm font-semibold text-zinc-200">
-            Receita por produto
-          </p>
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width="55%" height={180}>
-              <PieChart>
-                <Pie
-                  data={productShare}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={45}
-                  outerRadius={75}
-                  paddingAngle={3}
-                >
-                  {productShare.map((entry, idx) => (
-                    <Cell key={idx} fill={entry.color} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "#18181b",
-                    border: "1px solid #3f3f46",
-                    borderRadius: 10,
-                    fontSize: 12,
-                  }}
-                  formatter={(value) => formatCurrency(value)}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex-1 space-y-1.5">
-              {productShare
-                .sort((a, b) => b.value - a.value)
-                .map((entry) => (
-                  <div key={entry.name} className="flex items-center gap-2 text-xs">
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ background: entry.color }}
-                    />
-                    <span className="flex-1 truncate text-zinc-400">{entry.name}</span>
-                    <span className="font-medium text-zinc-200">
-                      {formatCurrency(entry.value)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
+            <circle class="bg" cx="70" cy="70" r="60"></circle>
+            <circle class="fg" id="ringFg" cx="70" cy="70" r="60" stroke-dasharray="377" stroke-dashoffset="377"></circle>
+          </svg>
+          <div class="progress-num" id="ringNum">0/6</div>
         </div>
-      )}
-
-      <QuickAccessGrid onNavigate={onNavigate} />
-    </div>
-  );
-}
-
-function isSameDay(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Página: Vendas
---------------------------------------------------------------------------- */
-
-function SalesPage({ sales, now }) {
-  const [filter, setFilter] = useState("all");
-
-  const filtered = sales.filter((s) => {
-    if (filter === "all") return true;
-    return s.status === filter;
-  });
-
-  const statusMeta = {
-    pending: { label: "Pix gerado", color: "#c084fc" },
-    approved: { label: "Aprovada", color: "#22c55e" },
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-lg font-semibold text-zinc-50">Vendas</p>
-        <span className="text-xs text-zinc-500">{filtered.length} registros</span>
-      </div>
-
-      <div className="flex gap-2">
-        {[
-          { id: "all", label: "Todas" },
-          { id: "pending", label: "Pix gerado" },
-          { id: "approved", label: "Aprovadas" },
-        ].map((f) => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
-              filter === f.id
-                ? "bg-violet-600 text-white"
-                : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-zinc-800">
-        <div className="max-h-[560px] divide-y divide-zinc-900 overflow-y-auto">
-          {filtered.length === 0 && (
-            <div className="p-8 text-center text-sm text-zinc-500">
-              Nenhuma venda simulada ainda. Ative a simulação em Ajustes.
-            </div>
-          )}
-          {filtered.map((sale) => (
-            <div
-              key={sale.id}
-              className="flex items-center gap-3 bg-zinc-950 px-4 py-3 hover:bg-zinc-900/60"
-            >
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white"
-                style={{ background: sale.productColor }}
-              >
-                {sale.productName.slice(0, 1)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-zinc-100">
-                  {sale.productName}
-                </p>
-                <p className="truncate text-[11px] text-zinc-500">
-                  {maskBuyer(sale.buyer)} · Pix
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-zinc-100">
-                  {formatCurrency(sale.amount)}
-                </p>
-                <p className="text-[11px]" style={{ color: statusMeta[sale.status].color }}>
-                  {statusMeta[sale.status].label}
-                </p>
-              </div>
-              <span className="w-14 shrink-0 text-right text-[11px] text-zinc-600">
-                {formatRelative(sale.createdAt, now)}
-              </span>
-            </div>
-          ))}
-        </div>
+        <p>Concluído da rotina de hoje</p>
+        <button class="routine-reset" id="routineReset">Reiniciar rotina</button>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-/* ---------------------------------------------------------------------------
-   Página: Relatórios avançados
---------------------------------------------------------------------------- */
-
-function ReportsPage({ sales, state }) {
-  const hourly = useMemo(() => buildHourlySeries(sales), [sales]);
-  const productShare = useMemo(
-    () => buildProductShare(sales, state.products),
-    [sales, state.products]
-  );
-
-  const approved = sales.filter((s) => s.status === "approved");
-  const totalRevenue = approved.reduce((sum, s) => sum + s.amount, 0);
-  const totalCommission = approved.reduce((sum, s) => sum + s.commission, 0);
-  const conversionBase = sales.length || 1;
-  const conversionRate = (approved.length / conversionBase) * 100;
-
-  const byProductBar = state.products
-    .map((p) => ({
-      name: p.name.length > 14 ? p.name.slice(0, 13) + "…" : p.name,
-      vendas: approved.filter((s) => s.productId === p.id).length,
-      color: p.color,
-    }))
-    .sort((a, b) => b.vendas - a.vendas);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <p className="text-lg font-semibold text-zinc-50">Relatórios avançados</p>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Receita total" value={formatCurrency(totalRevenue)} icon={TrendingUp} accent="#22c55e" />
-        <StatCard label="Comissão total" value={formatCurrency(totalCommission)} icon={CircleDollarSign} accent="#a855f7" />
-        <StatCard label="Vendas aprovadas" value={String(approved.length)} icon={Check} accent="#c084fc" />
-        <StatCard label="Taxa de aprovação" value={`${conversionRate.toFixed(1)}%`} icon={Zap} accent="#f59e0b" />
-      </div>
-
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <p className="mb-3 text-sm font-semibold text-zinc-200">
-          Vendas por hora (últimas 24h)
-        </p>
-        <ResponsiveContainer width="100%" height={230}>
-          <BarChart data={hourly}>
-            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="label" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} interval={2} />
-            <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} width={30} allowDecimals={false} />
-            <Tooltip
-              contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 10, fontSize: 12 }}
-            />
-            <Bar dataKey="vendas" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <p className="mb-3 text-sm font-semibold text-zinc-200">
-          Vendas aprovadas por produto
-        </p>
-        <ResponsiveContainer width="100%" height={230}>
-          <BarChart data={byProductBar} layout="vertical" margin={{ left: 10 }}>
-            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
-            <YAxis
-              type="category"
-              dataKey="name"
-              stroke="#a1a1aa"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              width={110}
-            />
-            <Tooltip contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 10, fontSize: 12 }} />
-            <Bar dataKey="vendas" radius={[0, 4, 4, 0]}>
-              {byProductBar.map((entry, idx) => (
-                <Cell key={idx} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {productShare.length > 0 && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-          <p className="mb-3 text-sm font-semibold text-zinc-200">Distribuição de receita</p>
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie data={productShare} dataKey="value" nameKey="name" outerRadius={95} label>
-                {productShare.map((entry, idx) => (
-                  <Cell key={idx} fill={entry.color} stroke="#09090b" />
-                ))}
-              </Pie>
-              <Legend
-                formatter={(value) => <span className="text-xs text-zinc-400">{value}</span>}
-              />
-              <Tooltip
-                contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 10, fontSize: 12 }}
-                formatter={(value) => formatCurrency(value)}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+<!-- ============================================================ FASES DO SONO -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">O que esperar</span>
+      <h2>Como o sono muda nos primeiros meses</h2>
+      <p>Cada bebê tem seu tempo — estes marcos são médias, não metas.</p>
     </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Página: Saque
---------------------------------------------------------------------------- */
-
-function WithdrawPage({ state, setState }) {
-  const [amount, setAmount] = useState("");
-  const [withdrawals, setWithdrawals] = useState([
-    { id: uid(), amount: 340.12, date: new Date(Date.now() - 86400000 * 3), status: "Concluído" },
-    { id: uid(), amount: 128.5, date: new Date(Date.now() - 86400000 * 8), status: "Concluído" },
-  ]);
-
-  const handleWithdraw = () => {
-    const parsed = parseFloat(amount.replace(",", "."));
-    if (Number.isNaN(parsed) || parsed <= 0) return;
-    if (parsed > state.balance) {
-      window.alert("Saldo simulado insuficiente para este saque.");
-      return;
-    }
-    setState((s) => ({ ...s, balance: s.balance - parsed }));
-    setWithdrawals((w) => [
-      { id: uid(), amount: parsed, date: new Date(), status: "Processando" },
-      ...w,
-    ]);
-    setAmount("");
-  };
-
-  return (
-    <div className="flex flex-col gap-5">
-      <p className="text-lg font-semibold text-zinc-50">Saque</p>
-
-      <div className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-violet-700/20 to-zinc-950 p-5">
-        <p className="text-xs text-zinc-500">Saldo disponível para saque</p>
-        <p className="mt-1 text-3xl font-bold text-zinc-50">
-          {formatCurrency(state.balance)}
-        </p>
-        <p className="mt-1 text-xs text-zinc-500">
-          Saldo pendente (em liberação): {formatCurrency(state.pendingBalance)}
-        </p>
-
-        <div className="mt-4 flex gap-2">
-          <div className="flex flex-1 items-center rounded-xl border border-zinc-700 bg-zinc-900 px-3">
-            <span className="text-sm text-zinc-500">R$</span>
-            <input
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
-              className="w-full bg-transparent px-2 py-2.5 text-sm text-zinc-100 outline-none"
-            />
-          </div>
-          <button
-            onClick={handleWithdraw}
-            className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500"
-          >
-            Sacar
-          </button>
-        </div>
-        <button
-          onClick={() => setAmount(String(state.balance.toFixed(2)))}
-          className="mt-2 text-[11px] font-medium text-violet-400 hover:text-violet-300"
-        >
-          usar saldo total
-        </button>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tag">0–6 semanas</span>
+        <h4>Sono fragmentado, sem padrão dia/noite</h4>
+        <p>O bebê dorme de 16 a 18h por dia, em blocos curtos e imprevisíveis. Acordar a cada 2–3h para mamar é esperado, inclusive de madrugada.</p>
       </div>
-
-      <div>
-        <p className="mb-2 text-sm font-semibold text-zinc-200">Histórico de saques</p>
-        <div className="divide-y divide-zinc-900 overflow-hidden rounded-2xl border border-zinc-800">
-          {withdrawals.map((w) => (
-            <div key={w.id} className="flex items-center gap-3 bg-zinc-950 px-4 py-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400">
-                <ArrowUpRight size={16} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-zinc-100">
-                  {formatCurrency(w.amount)}
-                </p>
-                <p className="text-[11px] text-zinc-500">
-                  {w.date.toLocaleDateString("pt-BR")}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                  w.status === "Concluído"
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-amber-500/15 text-amber-400"
-                }`}
-              >
-                {w.status}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div class="tl-item">
+        <span class="tag">6–12 semanas</span>
+        <h4>Início da diferenciação dia/noite</h4>
+        <p>O relógio biológico começa a amadurecer. Blocos de sono noturno ficam um pouco mais longos; ainda são comuns 2–4 despertares.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tag">3–4 meses</span>
+        <h4>Regressão do sono (comum, temporária)</h4>
+        <p>Com a maturação neurológica, os ciclos de sono passam a se parecer mais com os do adulto — e o bebê "aprende" a acordar entre eles. É normal e passa.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tag">4–6 meses</span>
+        <h4>Blocos noturnos mais longos</h4>
+        <p>Muitos bebês conseguem dormir de 4 a 6h seguidas à noite, com o acompanhamento do pediatra sobre alimentação noturna.</p>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-/* ---------------------------------------------------------------------------
-   Página: Gerenciar produtos
---------------------------------------------------------------------------- */
-
-function ProductsPage({ products, setProducts }) {
-  const [editingId, setEditingId] = useState(null);
-  const [draft, setDraft] = useState({ name: "", basePrice: "", category: "" });
-
-  const startEdit = (product) => {
-    setEditingId(product.id);
-    setDraft({ name: product.name, basePrice: String(product.basePrice), category: product.category });
-  };
-
-  const saveEdit = (id) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              name: draft.name || p.name,
-              category: draft.category || p.category,
-              basePrice: parseFloat(draft.basePrice) || p.basePrice,
-            }
-          : p
-      )
-    );
-    setEditingId(null);
-  };
-
-  const toggleActive = (id) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
-  };
-
-  const removeProduct = (id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const addProduct = () => {
-    const palette = ["#a78bfa", "#c084fc", "#8b5cf6", "#7c3aed", "#d8b4fe", "#a855f7"];
-    setProducts((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        name: "Novo produto",
-        category: "Categoria",
-        basePrice: 47,
-        color: palette[randomInt(0, palette.length - 1)],
-        weight: 5,
-        active: true,
-      },
-    ]);
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-lg font-semibold text-zinc-50">Gerenciar produtos</p>
-        <button
-          onClick={addProduct}
-          className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500"
-        >
-          <Plus size={14} /> Novo produto
-        </button>
-      </div>
-      <p className="text-xs text-zinc-500">
-        Produtos ativos entram no sorteio de vendas simuladas. O peso relativo
-        (definido em Ajustes → distribuição) controla a frequência de cada um.
+<!-- ============================================================ SONO SEGURO -->
+<section class="section" id="sono-seguro">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">O mais importante desta página</span>
+      <h2>Sono seguro: as regras que não têm exceção</h2>
+      <p>
+        Seguir estas orientações reduz de forma comprovada o risco de morte
+        súbita do lactente (SMSL) e de sufocamento. Elas valem para todas as
+        sonecas, não só a noite.
       </p>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
-          >
-            {editingId === product.id ? (
-              <div className="flex flex-col gap-2">
-                <input
-                  value={draft.name}
-                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-600"
-                  placeholder="Nome do produto"
-                />
-                <input
-                  value={draft.category}
-                  onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-600"
-                  placeholder="Categoria"
-                />
-                <input
-                  value={draft.basePrice}
-                  onChange={(e) => setDraft((d) => ({ ...d, basePrice: e.target.value }))}
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-600"
-                  placeholder="Preço base"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => saveEdit(product.id)}
-                    className="flex-1 rounded-lg bg-violet-600 py-1.5 text-xs font-semibold text-white hover:bg-violet-500"
-                  >
-                    Salvar
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="flex-1 rounded-lg bg-zinc-800 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-700"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-white"
-                      style={{ background: product.color }}
-                    >
-                      {product.name.slice(0, 1)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-100">{product.name}</p>
-                      <p className="text-[11px] text-zinc-500">{product.category}</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      product.active
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "bg-zinc-800 text-zinc-500"
-                    }`}
-                  >
-                    {product.active ? "Ativo" : "Pausado"}
-                  </span>
-                </div>
-                <p className="mt-3 text-lg font-bold text-zinc-50">
-                  {formatCurrency(product.basePrice)}
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => startEdit(product)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-zinc-900 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
-                  >
-                    <Pencil size={12} /> Editar
-                  </button>
-                  <button
-                    onClick={() => toggleActive(product.id)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-zinc-900 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
-                  >
-                    {product.active ? <Pause size={12} /> : <Play size={12} />}
-                    {product.active ? "Pausar" : "Ativar"}
-                  </button>
-                  <button
-                    onClick={() => removeProduct(product.id)}
-                    className="flex items-center justify-center rounded-lg bg-zinc-900 px-2.5 py-1.5 text-red-400 hover:bg-red-500/10"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon-badge">⬆️</div>
+        <span class="tag safety">Regra 1</span>
+        <h3 style="margin-top:10px;">Sempre de costas</h3>
+        <p>Deite o bebê de barriga para cima para todas as sonecas até 1 ano, mesmo que ele durma melhor de bruços no colo. É a posição com menor risco de SMSL.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🛏️</div>
+        <span class="tag safety">Regra 2</span>
+        <h3 style="margin-top:10px;">Berço vazio e firme</h3>
+        <p>Colchão firme, lençol bem ajustado. Sem travesseiro, protetor de berço, pelúcias, edredom ou almofadas soltas dentro do berço.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🚪</div>
+        <span class="tag safety">Regra 3</span>
+        <h3 style="margin-top:10px;">Mesmo quarto, berço próprio</h3>
+        <p>Dividir o quarto com o bebê (sem dividir a cama) nos primeiros 6 a 12 meses é recomendado e facilita as mamadas noturnas com segurança.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🌡️</div>
+        <span class="tag safety">Regra 4</span>
+        <h3 style="margin-top:10px;">Sem excesso de calor</h3>
+        <p>Vista o bebê como você se vestiria, sem uma camada extra. Superaquecimento é fator de risco. Prefira saco de dormir (sleep bag) a cobertores soltos.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🚭</div>
+        <span class="tag safety">Regra 5</span>
+        <h3 style="margin-top:10px;">Ambiente livre de fumaça</h3>
+        <p>Exposição à fumaça de cigarro, mesmo indireta, aumenta o risco de SMSL. Mantenha o ambiente do bebê 100% livre de fumaça.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🍼</div>
+        <span class="tag safety">Regra 6</span>
+        <h3 style="margin-top:10px;">Amamentação e chupeta</h3>
+        <p>Amamentar (mesmo que parcialmente) e oferecer chupeta na hora de dormir — depois que a amamentação estiver bem estabelecida — estão associados a menor risco.</p>
       </div>
     </div>
-  );
-}
 
-/* ---------------------------------------------------------------------------
-   Página: Ajustes (motor de simulação — coração do pedido do usuário)
---------------------------------------------------------------------------- */
-
-function Slider({ label, value, min, max, step, onChange, formatValue }) {
-  return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between">
-        <label className="text-xs font-medium text-zinc-400">{label}</label>
-        <span className="text-xs font-semibold text-violet-400">
-          {formatValue ? formatValue(value) : value}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="iris-slider w-full"
-      />
-      <style>{`
-        .iris-slider {
-          -webkit-appearance: none;
-          height: 6px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, #7c3aed, #3f3f46);
-          outline: none;
-        }
-        .iris-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 16px;
-          height: 16px;
-          border-radius: 999px;
-          background: #c084fc;
-          border: 2px solid #f5f3ff;
-          cursor: pointer;
-          margin-top: -5px;
-        }
-        .iris-slider::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
-          border-radius: 999px;
-          background: #c084fc;
-          border: 2px solid #f5f3ff;
-          cursor: pointer;
-        }
-      `}</style>
-    </div>
-  );
-}
-
-function ToggleSwitch({ checked, onChange }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-        checked ? "bg-violet-600" : "bg-zinc-700"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-          checked ? "translate-x-5" : "translate-x-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
-function SettingsPage({ settings, setSettings, state, setState, onResetAll }) {
-  return (
-    <div className="flex flex-col gap-5">
-      <p className="text-lg font-semibold text-zinc-50">Ajustes</p>
-      <StudyBanner />
-
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-zinc-100">Motor de simulação</p>
-            <p className="text-[11px] text-zinc-500">
-              Liga/desliga a geração automática de vendas fictícias.
-            </p>
-          </div>
-          <ToggleSwitch
-            checked={settings.simulationActive}
-            onChange={(v) => setSettings((s) => ({ ...s, simulationActive: v }))}
-          />
-        </div>
-
-        <div className="flex flex-col gap-5">
-          <Slider
-            label="Vendas geradas por minuto"
-            value={settings.salesPerMinute}
-            min={0.5}
-            max={20}
-            step={0.5}
-            onChange={(v) => setSettings((s) => ({ ...s, salesPerMinute: v }))}
-            formatValue={(v) => `${v} / min`}
-          />
-
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-zinc-400">
-              Faixa de valor por venda
-            </p>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5">
-                <span className="text-xs text-zinc-500">min R$</span>
-                <input
-                  type="number"
-                  value={settings.minValue}
-                  onChange={(e) =>
-                    setSettings((s) => ({
-                      ...s,
-                      minValue: clamp(parseFloat(e.target.value) || 0, 1, s.maxValue),
-                    }))
-                  }
-                  className="w-full bg-transparent px-1.5 py-0.5 text-sm text-zinc-100 outline-none"
-                />
-              </div>
-              <span className="text-zinc-600">—</span>
-              <div className="flex flex-1 items-center rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5">
-                <span className="text-xs text-zinc-500">máx R$</span>
-                <input
-                  type="number"
-                  value={settings.maxValue}
-                  onChange={(e) =>
-                    setSettings((s) => ({
-                      ...s,
-                      maxValue: Math.max(parseFloat(e.target.value) || 0, s.minValue),
-                    }))
-                  }
-                  className="w-full bg-transparent px-1.5 py-0.5 text-sm text-zinc-100 outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          <Slider
-            label="Taxa de comissão sobre a venda"
-            value={settings.commissionRate * 100}
-            min={10}
-            max={100}
-            step={5}
-            onChange={(v) => setSettings((s) => ({ ...s, commissionRate: v / 100 }))}
-            formatValue={(v) => `${v}%`}
-          />
-
-          <Slider
-            label="Tempo até aprovação do Pix"
-            value={settings.approvalDelaySeconds}
-            min={2}
-            max={60}
-            step={1}
-            onChange={(v) => setSettings((s) => ({ ...s, approvalDelaySeconds: v }))}
-            formatValue={(v) => `${v}s`}
-          />
-
-          <Slider
-            label="Chance de aprovação"
-            value={settings.approvalRate * 100}
-            min={30}
-            max={100}
-            step={5}
-            onChange={(v) => setSettings((s) => ({ ...s, approvalRate: v / 100 }))}
-            formatValue={(v) => `${v}%`}
-          />
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <p className="mb-1 text-sm font-semibold text-zinc-100">Notificações</p>
-        <p className="mb-3 text-[11px] text-zinc-500">
-          As notificações aparecem como cartões dentro do painel (canto da
-          tela) e ficam salvas na central do sino — não usam o sistema de
-          notificações do celular.
-        </p>
-        <div className="flex items-center justify-between py-2">
-          <span className="text-xs text-zinc-400">Mostrar toasts na tela</span>
-          <ToggleSwitch
-            checked={settings.showToasts}
-            onChange={(v) => setSettings((s) => ({ ...s, showToasts: v }))}
-          />
-        </div>
-        <div className="flex items-center justify-between py-2">
-          <span className="text-xs text-zinc-400">Notificar Pix gerado</span>
-          <ToggleSwitch
-            checked={settings.notifyPending}
-            onChange={(v) => setSettings((s) => ({ ...s, notifyPending: v }))}
-          />
-        </div>
-        <div className="flex items-center justify-between py-2">
-          <span className="text-xs text-zinc-400">Notificar venda aprovada</span>
-          <ToggleSwitch
-            checked={settings.notifyApproved}
-            onChange={(v) => setSettings((s) => ({ ...s, notifyApproved: v }))}
-          />
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <p className="mb-3 text-sm font-semibold text-zinc-100">Valores da conta</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="mb-1 text-xs text-zinc-500">Saldo disponível</p>
-            <EditableValue
-              value={state.balance}
-              onChange={(v) => setState((s) => ({ ...s, balance: v }))}
-              asCurrency
-            />
-          </div>
-          <div>
-            <p className="mb-1 text-xs text-zinc-500">Saldo pendente</p>
-            <EditableValue
-              value={state.pendingBalance}
-              onChange={(v) => setState((s) => ({ ...s, pendingBalance: v }))}
-              asCurrency
-            />
-          </div>
-          <div>
-            <p className="mb-1 text-xs text-zinc-500">Faturamento acumulado</p>
-            <EditableValue
-              value={state.revenue}
-              onChange={(v) => setState((s) => ({ ...s, revenue: v }))}
-              asCurrency
-            />
-          </div>
-          <div>
-            <p className="mb-1 text-xs text-zinc-500">Meta de faturamento</p>
-            <EditableValue
-              value={state.goal}
-              onChange={(v) => setState((s) => ({ ...s, goal: v }))}
-              asCurrency
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4">
-        <p className="text-sm font-semibold text-red-300">Zona de risco</p>
-        <p className="mt-1 text-[11px] text-red-300/70">
-          Reinicia todos os valores simulados (saldo, vendas, notificações)
-          para o estado inicial.
-        </p>
-        <button
-          onClick={onResetAll}
-          className="mt-3 rounded-lg bg-red-600/80 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-red-600"
-        >
-          Reiniciar simulação
-        </button>
+    <div class="callout care" style="margin-top:24px;">
+      <span class="icon">💜</span>
+      <div>
+        <h4>Sobre o "colo para dormir"</h4>
+        <p>É normal e humano o bebê pegar no sono no colo, principalmente durante mamadas. Quando isso acontecer, assim que possível, transfira-o com cuidado para o berço, de costas. O colo é maravilhoso para acalmar — o berço é o lugar mais seguro para o sono prolongado e sem supervisão direta.</p>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-/* ---------------------------------------------------------------------------
-   Página: Suporte (placeholder simples)
---------------------------------------------------------------------------- */
+<!-- ============================================================ ENTENDER O CHORO -->
+<section class="section" id="choro">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Decifrando a comunicação do bebê</span>
+      <h2>Um choro, muitos significados</h2>
+      <p>Toque em cada card para ver como reconhecer e responder a cada tipo de choro.</p>
+    </div>
+    <div class="cry-grid" id="cryGrid">
+      <!-- injected -->
+    </div>
+    <div class="cry-detail" id="cryDetail"></div>
+  </div>
+</section>
 
-function SupportPage() {
-  const faqs = [
-    {
-      q: "As vendas geradas aqui são reais?",
-      a: "Não. Todo o painel roda localmente no seu navegador para fins de estudo de front-end e dashboards — nenhum pagamento é processado.",
-    },
-    {
-      q: "Posso mudar a frequência das vendas simuladas?",
-      a: "Sim, em Ajustes → Motor de simulação você controla vendas por minuto, faixa de valor e taxa de aprovação.",
-    },
-    {
-      q: "As notificações aparecem fora do site?",
-      a: "Não. Elas ficam confinadas à interface (toasts e central de notificações), sem usar a API de notificações do sistema operacional.",
-    },
-  ];
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-lg font-semibold text-zinc-50">Suporte</p>
-      <div className="divide-y divide-zinc-900 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
-        {faqs.map((f, idx) => (
-          <div key={idx} className="p-4">
-            <p className="text-sm font-medium text-zinc-100">{f.q}</p>
-            <p className="mt-1 text-xs text-zinc-500">{f.a}</p>
-          </div>
-        ))}
+<!-- ============================================================ CÓLICA -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Choro difícil de acalmar</span>
+      <h2>Cólica do bebê: o que ajuda de verdade</h2>
+      <p>
+        A cólica costuma seguir a "regra dos 3": choro por mais de 3h por dia,
+        mais de 3 dias por semana, por mais de 3 semanas, geralmente no fim da
+        tarde/noite. Costuma melhorar sozinha por volta dos 3–4 meses.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="icon-badge">🤲</div>
+        <h3>Posição "tigre na árvore"</h3>
+        <p>Deite o bebê de bruços sobre o seu antebraço, cabeça na dobra do cotovelo, pernas de cada lado. A leve pressão na barriga costuma aliviar gases. Veja no simulador acima.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🚿</div>
+        <h3>Ruído branco constante</h3>
+        <p>Som contínuo (chuveiro, exaustor, aplicativo de white noise em volume moderado) reduz a estimulação e ajuda o sistema nervoso imaturo do bebê a regular.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🔄</div>
+        <h3>Pedalinho e compressa morna</h3>
+        <p>Com o bebê de costas, mova as perninhas em movimento de pedalada. Uma compressa morna (não quente) na barriga também pode aliviar desconforto por gases.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🧘‍♀️</div>
+        <h3>Revezar e respirar</h3>
+        <p>Cólica é exaustiva para os pais. É seguro e importante colocar o bebê no berço por alguns minutos e sair do quarto para respirar, se o choro estiver te sobrecarregando. Revezar com outro cuidador ajuda muito.</p>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-/* ---------------------------------------------------------------------------
-   Layout: Sidebar (desktop)
---------------------------------------------------------------------------- */
+<!-- ============================================================ CUIDADOS BÁSICOS -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">O dia a dia</span>
+      <h2>Cuidados básicos, sem complicação</h2>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon-badge">🛁</div>
+        <h3>Banho</h3>
+        <p>Até a queda do coto umbilical, prefira banho de esponja. Água morna (36–37ºC), ambiente sem correntes de ar, banho rápido (5–10 min) e nunca deixe o bebê sozinho na banheira, nem por segundos.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🩹</div>
+        <h3>Coto umbilical</h3>
+        <p>Mantenha limpo e seco; limpe a base com álcool 70% ou conforme orientação do pediatra, a cada troca de fralda. Dobre a fralda abaixo do coto para não abafar. Cai sozinho entre 7 e 21 dias.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">👶</div>
+        <h3>Troca de fralda</h3>
+        <p>Troque assim que perceber, para evitar assaduras. Limpe sempre da frente para trás (principalmente em meninas). Deixe a pele arejar alguns minutos antes de fechar a fralda nova.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">✂️</div>
+        <h3>Unhas</h3>
+        <p>Corte com tesourinha de ponta arredondada, de preferência enquanto o bebê dorme ou está tranquilo no colo. Unhas compridas favorecem arranhões no rosto.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🤱</div>
+        <h3>Alimentação</h3>
+        <p>Leite materno ou fórmula, em livre demanda nas primeiras semanas — geralmente a cada 2 a 3h, inclusive à noite. Sinais de fome: chupar as mãos, virar a cabeça procurando o seio, agitação.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🌡️</div>
+        <h3>Temperatura do quarto</h3>
+        <p>Entre 20°C e 24°C costuma ser confortável. Toque a nuca do bebê para avaliar (não as mãozinhas, que costumam estar mais frias) — deve estar morna, nem suada nem gelada.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-function Sidebar({ page, onNavigate }) {
-  return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-zinc-900 bg-zinc-950/60 p-4 lg:flex">
-      <div className="mb-6 flex items-center gap-2.5 px-1">
-        <IrisMark size={34} />
-        <div>
-          <p className="text-sm font-bold tracking-tight text-zinc-50">ÍRIS</p>
-          <p className="text-[10px] text-zinc-500">painel simulado</p>
+<!-- ============================================================ TUMMY TIME -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Acordado, supervisionado, breve</span>
+      <h2>Tempo de bruços (tummy time)</h2>
+      <p>
+        Diferente do sono — que é sempre de costas — o tempo de bruços é uma
+        atividade curta e vigiada, feita com o bebê acordado, que fortalece
+        pescoço, ombros e tronco.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="icon-badge">⏱️</div>
+        <h3>Comece pequeno</h3>
+        <p>De 2 a 3 minutos, algumas vezes ao dia, desde a primeira semana. Aumente aos poucos conforme o bebê ganha força e tolerância.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">👀</div>
+        <h3>Sempre supervisionado</h3>
+        <p>Nunca deixe o bebê de bruços sozinho, nem por um instante — mesmo acordado. Fique ao lado, no chão, na altura dos olhos dele.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge">🧸</div>
+        <h3>Torne divertido</h3>
+        <p>Um espelho, um brinquedo colorido ou o seu rosto bem perto ajudam o bebê a levantar a cabeça e explorar — e tornam o momento mais tolerável para quem ainda estranha a posição.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ DIÁRIO DE SONO -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Ferramenta prática</span>
+      <h2>Diário de sono do dia</h2>
+      <p>
+        Registrar sonecas e mamadas por alguns dias ajuda a enxergar um
+        padrão — e é ótimo material para mostrar ao pediatra. Os registros
+        abaixo ficam salvos apenas nesta sessão do navegador.
+      </p>
+    </div>
+    <div class="diary-summary" id="diarySummary"></div>
+    <div class="diary">
+      <form class="diary-form" id="diaryForm">
+        <div class="field">
+          <label for="diaryType">Tipo de registro</label>
+          <select id="diaryType">
+            <option value="soneca">😴 Soneca</option>
+            <option value="noite">🌙 Sono noturno</option>
+            <option value="mamada">🍼 Mamada</option>
+            <option value="fralda">👶 Troca de fralda</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="diaryStart">Horário de início</label>
+          <input type="time" id="diaryStart" required />
+        </div>
+        <div class="field">
+          <label for="diaryDur">Duração (minutos)</label>
+          <input type="number" id="diaryDur" min="1" max="720" placeholder="ex: 45" />
+        </div>
+        <div class="field">
+          <label for="diaryNote">Observação (opcional)</label>
+          <input type="text" id="diaryNote" placeholder="ex: acordou assustado" maxlength="60" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="justify-content:center;">Adicionar registro</button>
+      </form>
+      <div class="diary-list" id="diaryList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SINAIS DE ALERTA -->
+<section class="section" id="alerta">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Quando procurar ajuda médica</span>
+      <h2>Sinais de alerta — não espere, ligue para o pediatra</h2>
+      <p>
+        A maioria das dúvidas do dia a dia pode esperar a próxima consulta.
+        Estes sinais, não. Em caso de dúvida, ligue mesmo assim — nenhuma
+        pergunta é boba quando se trata de um recém-nascido.
+      </p>
+    </div>
+    <div class="alert-grid">
+      <div class="alert-chip"><span class="icon">🌡️</span><p><b>Febre</b> (temperatura retal ≥ 38°C) em bebê com menos de 3 meses é emergência médica — procure atendimento imediatamente.</p></div>
+      <div class="alert-chip"><span class="icon">😮‍💨</span><p>Dificuldade para respirar, respiração muito rápida, gemidos ao respirar ou lábios/rosto azulados.</p></div>
+      <div class="alert-chip"><span class="icon">😴</span><p>Sonolência incomum, dificuldade para acordar para mamar, ou "moleza" fora do padrão do bebê.</p></div>
+      <div class="alert-chip"><span class="icon">🍼</span><p>Recusa persistente em mamar, vômitos em jato repetidos, ou sinais de desidratação (poucas fraldas molhadas).</p></div>
+      <div class="alert-chip"><span class="icon">🟡</span><p>Icterícia (pele/olhos amarelados) que piora, se espalha para braços e pernas, ou aparece após o 2º dia de vida.</p></div>
+      <div class="alert-chip"><span class="icon">😭</span><p>Choro muito diferente do habitual — agudo, contínuo, ou o bebê parece não conseguir se acalmar de jeito nenhum.</p></div>
+      <div class="alert-chip"><span class="icon">🩸</span><p>Sangramento, secreção com mau cheiro ou vermelhidão ao redor do coto umbilical.</p></div>
+      <div class="alert-chip"><span class="icon">🧠</span><p>Movimentos estranhos e repetitivos, olhos reviro, ou qualquer coisa que pareça uma convulsão.</p></div>
+    </div>
+    <div class="callout info" style="margin-top:24px;">
+      <span class="icon">📞</span>
+      <div>
+        <h4>Guarde estes contatos</h4>
+        <p>Número do pediatra, da maternidade/hospital mais próximo e o SAMU (192) em local visível — geladeira, ou salvos como favoritos no celular. Confie no seu instinto: você conhece o padrão do seu bebê melhor do que ninguém.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CUIDANDO DE VOCÊ -->
+<section class="section" id="mae">
+  <div class="wrap">
+    <div class="mom-band">
+      <span class="eyebrow">Isto também importa</span>
+      <h2 style="margin-top:10px; font-size: clamp(26px,4vw,34px);">Cuidar dele começa por cuidar de você</h2>
+      <p style="color:var(--text-mid); margin-top:12px; max-width:600px;">
+        Noites mal dormidas, corpo em recuperação e um bebê que depende
+        totalmente de você — é muita coisa de uma vez. Isto não é fraqueza,
+        é o pós-parto real.
+      </p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Baby blues (normal e passageiro)</h3>
+          <p>Choro fácil, oscilação de humor e ansiedade leve nas primeiras 2 semanas atingem até 80% das mães. Costuma melhorar sozinho com apoio, sono e tempo.</p>
+        </div>
+        <div class="card">
+          <h3>Depressão pós-parto (procure ajuda)</h3>
+          <p>Se a tristeza, o desânimo, a falta de conexão com o bebê ou pensamentos negativos persistirem por mais de 2 semanas, ou vierem fortes desde o início, converse com seu obstetra ou um psicólogo. É tratável, e pedir ajuda é um ato de cuidado — com você e com seu bebê.</p>
+        </div>
+        <div class="card">
+          <h3>Durma quando ele dormir (de verdade)</h3>
+          <p>Nem toda soneca precisa virar tempo de tarefas domésticas. Descanso é parte do cuidado, não um luxo.</p>
+        </div>
+        <div class="card">
+          <h3>Peça e aceite ajuda</h3>
+          <p>Delegar o jantar, deixar alguém segurar o bebê por 20 minutos, ou simplesmente tomar um banho em paz — tudo isso é cuidado válido e necessário.</p>
         </div>
       </div>
-      <nav className="flex flex-1 flex-col gap-1">
-        {SIDEBAR_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-              page === item.id
-                ? "bg-violet-600/20 text-violet-300"
-                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-            }`}
-          >
-            <item.icon size={16} />
-            {item.label}
-          </button>
-        ))}
-      </nav>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
-        <p className="text-[11px] font-medium text-zinc-300">Modo estudo</p>
-        <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">
-          Dados fictícios, gerados no navegador.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ GLOSSÁRIO -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Termos que você vai ouvir</span>
+      <h2>Glossário rápido da maternidade</h2>
+    </div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </div>
+</section>
+
+<!-- ============================================================ FAQ -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Dúvidas frequentes</span>
+      <h2>Perguntas que toda mãe de primeira viagem já fez</h2>
+    </div>
+    <div id="faqList"></div>
+  </div>
+</section>
+
+<!-- ============================================================ FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:14px;">
+          <span class="brand-mark"></span>
+          <span class="brand-name">Luar</span>
+        </div>
+        <p style="color:var(--text-mid); font-size:13.5px; max-width:260px;">
+          Um guia calmo para as primeiras semanas com o bebê — colo, sono e
+          cuidado, um passo de cada vez.
         </p>
       </div>
-    </aside>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Layout: Bottom navigation (mobile)
---------------------------------------------------------------------------- */
-
-function BottomNav({ page, onNavigate }) {
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-900 bg-zinc-950/95 backdrop-blur lg:hidden">
-      <div className="mx-auto flex max-w-md items-center justify-between px-4 py-2">
-        {NAV_ITEMS.map((item) =>
-          item.isCenter ? (
-            <button
-              key={item.id}
-              onClick={() => onNavigate("conta")}
-              className="-mt-6 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg shadow-violet-900/50"
-              style={{ background: "linear-gradient(135deg,#a855f7,#6d28d9)" }}
-            >
-              <Sparkles size={22} className="text-white" />
-            </button>
-          ) : (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className="flex flex-col items-center gap-1 px-2 py-1"
-            >
-              <item.icon
-                size={19}
-                className={page === item.id ? "text-violet-400" : "text-zinc-500"}
-              />
-              <span
-                className={`text-[10px] font-medium ${
-                  page === item.id ? "text-violet-400" : "text-zinc-500"
-                }`}
-              >
-                {item.label}
-              </span>
-            </button>
-          )
-        )}
+      <div>
+        <h5>Explorar</h5>
+        <a href="#simulador">Simulador de colo</a>
+        <a href="#metodo-5s">Método 5 S's</a>
+        <a href="#rotina">Rotina de sono</a>
+        <a href="#sono-seguro">Sono seguro</a>
       </div>
-    </nav>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   Layout: Top bar
---------------------------------------------------------------------------- */
-
-function TopBar({
-  hideValues,
-  onToggleHide,
-  notifOpen,
-  setNotifOpen,
-  notifications,
-  onClearAll,
-  onOpenSidebarMobile,
-}) {
-  const unread = notifications.length > 0;
-  return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-zinc-900 bg-zinc-950/90 px-4 py-3 backdrop-blur lg:px-6">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onOpenSidebarMobile}
-          className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-900 lg:hidden"
-        >
-          <Menu size={18} />
-        </button>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-700 text-sm font-bold text-white">
-          B
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-zinc-100">Olá, Bernardo</p>
-          <p className="text-[10px] text-zinc-500">Painel simulado · Íris</p>
-        </div>
+      <div>
+        <h5>Cuidados</h5>
+        <a href="#choro">Entender o choro</a>
+        <a href="#alerta">Sinais de alerta</a>
+        <a href="#mae">Cuidando de você</a>
+        <a href="#faq">Dúvidas frequentes</a>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onToggleHide}
-          className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-          title={hideValues ? "Mostrar valores" : "Ocultar valores"}
-        >
-          {hideValues ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-        <div className="relative">
-          <button
-            onClick={() => setNotifOpen((v) => !v)}
-            className="relative rounded-lg p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-          >
-            <Bell size={18} />
-            {unread && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
-                {notifications.length > 9 ? "9+" : notifications.length}
-              </span>
-            )}
-          </button>
-          <NotificationCenter
-            open={notifOpen}
-            onClose={() => setNotifOpen(false)}
-            notifications={notifications}
-            onClearAll={onClearAll}
-          />
-        </div>
+      <div>
+        <h5>Emergência</h5>
+        <a href="tel:192">SAMU — 192</a>
+        <a href="tel:193">Bombeiros — 193</a>
       </div>
-    </header>
-  );
-}
+    </div>
+    <div class="disclaimer-box">
+      <b>Aviso importante:</b> este site tem finalidade educativa e informativa
+      e não substitui consulta, diagnóstico ou orientação do pediatra da sua
+      família. Cada bebê é único — em caso de dúvida sobre saúde, sempre
+      procure um profissional de saúde.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Luar. Conteúdo educativo, sem fins médicos.</span>
+      <span>Feito com calma, para noites mais leves.</span>
+    </div>
+  </div>
+</footer>
 
-/* ---------------------------------------------------------------------------
-   App raiz
---------------------------------------------------------------------------- */
+<script>
+/* ==========================================================================
+   DATA
+   ========================================================================== */
 
-const INITIAL_STATE = {
-  balance: 15.03,
-  pendingBalance: 125.72,
-  revenue: 726,
-  goal: 10000,
-  products: PRODUCT_SEED,
+const HOLDS = {
+  aconchego: {
+    title: "Aconchego (cradle hold)",
+    desc: "A cabeça do bebê apoiada na dobra do seu cotovelo, corpo virado de lado contra o seu tronco. Ótima para embalar antes do sono e no início da amamentação.",
+    steps: [
+      ["01", "Apoie a cabeça do bebê na dobra interna do cotovelo."],
+      ["02", "Deixe o corpo dele virado de lado, encostado no seu tronco."],
+      ["03", "Use o outro braço para apoiar as costas e o quadril."],
+      ["04", "Balance em movimentos curtos, para os lados, sem sacudir."],
+    ],
+    svg: `<svg class="baby-illus" width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="130" cy="235" rx="70" ry="10" fill="#000" opacity="0.25"/>
+      <path d="M40 210 Q60 110 130 100 Q200 110 220 210" stroke="#7c3aed" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.55"/>
+      <ellipse cx="150" cy="170" rx="58" ry="40" fill="#c084fc" opacity="0.9"/>
+      <circle cx="112" cy="150" r="34" fill="#f6ecff"/>
+      <circle cx="100" cy="146" r="3.4" fill="#3b1c66"/>
+      <circle cx="122" cy="148" r="3.4" fill="#3b1c66"/>
+      <path d="M104 160 Q112 165 120 160" stroke="#3b1c66" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M90 128 Q112 112 132 126" stroke="#e0c4ff" stroke-width="10" fill="none" stroke-linecap="round"/>
+    </svg>`,
+  },
+  xale: {
+    title: "Xale / football hold",
+    desc: "O corpo do bebê passa por debaixo do seu braço, como uma bolsa apoiada no quadril — mãos livres, ótimo contato visual e boa opção para amamentar sentada.",
+    steps: [
+      ["01", "Posicione o corpo do bebê ao longo do seu antebraço, embaixo do braço."],
+      ["02", "Apoie a cabeça na palma da mão, próxima ao seu quadril."],
+      ["03", "As perninhas ficam para trás, junto ao seu corpo."],
+      ["04", "Use o outro braço/mão livre para ajustar a pega na amamentação."],
+    ],
+    svg: `<svg class="baby-illus" width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="130" cy="235" rx="70" ry="10" fill="#000" opacity="0.25"/>
+      <path d="M60 130 Q130 100 210 140" stroke="#7c3aed" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <ellipse cx="150" cy="160" rx="66" ry="34" fill="#c084fc" opacity="0.9"/>
+      <circle cx="92" cy="158" r="32" fill="#f6ecff"/>
+      <circle cx="82" cy="154" r="3.2" fill="#3b1c66"/>
+      <circle cx="100" cy="154" r="3.2" fill="#3b1c66"/>
+      <path d="M86 168 Q91 172 98 168" stroke="#3b1c66" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </svg>`,
+  },
+  ombro: {
+    title: "Ombro (upright hold)",
+    desc: "O bebê ereto, encostado no seu peito com a cabeça apoiada no seu ombro. A posição favorita para arrotar depois das mamadas e para acalmar em pé.",
+    steps: [
+      ["01", "Segure o bebê na vertical, peito contra peito."],
+      ["02", "Apoie a cabeça e o pescoço com uma mão firme no ombro."],
+      ["03", "Com a outra mão, faça carinho ou tapinhas leves nas costas."],
+      ["04", "Balance suavemente de um pé para o outro, em pé."],
+    ],
+    svg: `<svg class="baby-illus" width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="130" cy="235" rx="70" ry="10" fill="#000" opacity="0.25"/>
+      <path d="M90 220 Q80 130 130 100 Q180 130 170 220" stroke="#7c3aed" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.55"/>
+      <ellipse cx="130" cy="150" rx="34" ry="52" fill="#c084fc" opacity="0.9"/>
+      <circle cx="130" cy="102" r="30" fill="#f6ecff"/>
+      <circle cx="120" cy="98" r="3.2" fill="#3b1c66"/>
+      <circle cx="140" cy="98" r="3.2" fill="#3b1c66"/>
+      <path d="M122 112 Q130 116 138 112" stroke="#3b1c66" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </svg>`,
+  },
+  tigre: {
+    title: 'Tigre na árvore ("colic hold")',
+    desc: "Bebê de bruços sobre o antebraço, cabeça na dobra do cotovelo, pernas de cada lado. A leve pressão na barriga alivia gases e cólica — só para acordado, no colo.",
+    steps: [
+      ["01", "Apoie a barriga do bebê ao longo do seu antebraço."],
+      ["02", "A cabeça fica apoiada na dobra do cotovelo, virada de lado."],
+      ["03", "As perninhas ficam penduradas, uma de cada lado do braço."],
+      ["04", "Balance devagar, andando ou de pé, com a outra mão apoiando as costas."],
+    ],
+    svg: `<svg class="baby-illus" width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="130" cy="235" rx="70" ry="10" fill="#000" opacity="0.25"/>
+      <path d="M50 160 Q130 200 220 150" stroke="#7c3aed" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <ellipse cx="140" cy="150" rx="62" ry="30" fill="#c084fc" opacity="0.9"/>
+      <circle cx="88" cy="146" r="30" fill="#f6ecff"/>
+      <circle cx="80" cy="150" r="3.2" fill="#3b1c66"/>
+      <path d="M76 158 Q82 161 88 158" stroke="#3b1c66" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </svg>`,
+  },
 };
 
-const INITIAL_SETTINGS = {
-  simulationActive: true,
-  salesPerMinute: 4,
-  minValue: 15,
-  maxValue: 60,
-  commissionRate: 1,
-  approvalDelaySeconds: 8,
-  approvalRate: 0.85,
-  showToasts: true,
-  notifyPending: true,
-  notifyApproved: true,
+const CRIES = [
+  { id:"fome", label:"Curto e repetitivo", title:"Choro de fome", short:"Ritmo baixo, sobe aos poucos", detail:"Começa baixo e vai ficando mais intenso e ritmado, quase como um pedido repetido. Costuma vir acompanhado de sinais anteriores: chupar a mão, virar a cabeça em busca do seio, se agitar. Responder à fome cedo (nos primeiros sinais) evita que o choro fique difícil de acalmar." },
+  { id:"sono", label:"Choramingo + esfrega o rosto", title:"Choro de sono / cansaço", short:"Resmungado, com bocejos", detail:"Mais fraco e entrecortado, geralmente junto de bocejos, esfregar os olhos ou o rosto, e um olhar mais 'perdido'. Nesse ponto o bebê já está cansado — o ideal é iniciar a rotina de soneca antes que o choro fique mais forte." },
+  { id:"dor", label:"Agudo e repentino", title:"Choro de dor", short:"Alto, súbito, sem aviso", detail:"Um grito agudo e repentino, muitas vezes seguido de uma pausa longa (como se estivesse prendendo a respiração) antes do próximo choro. Merece atenção imediata — verifique fralda presa, dedinho preso na roupa, ou procure o pediatra se persistir." },
+  { id:"colica", label:"Intenso, fim de tarde", title:"Choro de cólica", short:"Difícil de consolar, pernas encolhidas", detail:"Choro forte, contínuo, geralmente no fim da tarde/noite, com o bebê encolhendo as pernas em direção à barriga e ficando vermelho. Experimente a posição tigre na árvore, ruído branco e o pedalinho (veja a seção de cólica)." },
+  { id:"tedio", label:"Curto, para e volta", title:"Choro de tédio / colo", short:"Some quando pega no colo", detail:"Um choro mais fraco que praticamente some assim que o bebê é pego no colo ou tem contato visual — ele está pedindo companhia e interação, o que é uma necessidade tão real quanto fome ou sono." },
+  { id:"desconforto", label:"Irritado e contínuo", title:"Choro de desconforto", short:"Fralda, temperatura, roupa apertada", detail:"Um choro irritado e persistente. Verifique fralda suja/molhada, etiquetas ou costuras apertando a pele, excesso de roupa (calor) ou frio. Costuma resolver rápido assim que a causa é corrigida." },
+];
+
+const ROUTINE_STEPS = [
+  ["Banho ou troca de roupa calma", "Sinaliza para o corpo que o dia está terminando"],
+  ["Ambiente com luz baixa", "Reduz estímulos visuais que mantêm o bebê alerta"],
+  ["Massagem leve ou troca de fralda", "Momento de contato e relaxamento"],
+  ["Mamada ou mamadeira", "Sucção ativa o reflexo natural de relaxamento"],
+  ["Música suave ou ruído branco", "Ambiente sonoro consistente, sempre igual"],
+  ["Colo até relaxar, depois berço de costas", "Transição do colo para o sono seguro"],
+];
+
+const GLOSSARY = [
+  ["SMSL", "Morte Súbita do Lactente — óbito repentino e inexplicado de um bebê com menos de 1 ano, geralmente durante o sono. Reduzida com as regras de sono seguro."],
+  ["Quarto trimestre", "Termo usado para descrever os primeiros 3 meses de vida, quando o bebê ainda se comporta como se estivesse se adaptando à vida fora do útero."],
+  ["Ruído branco", "Som constante e uniforme (chuveiro, estática, ventilador) usado para acalmar o bebê, imitando os sons ouvidos dentro do útero."],
+  ["Reflexo de Moro", "Reflexo neurológico normal em que o bebê estica os braços e chora ao sentir uma sensação de queda — comum ao ser deitado."],
+  ["Regressão do sono", "Período temporário, comum por volta dos 3-4 meses, em que o sono que parecia estar melhorando piora, devido à maturação neurológica."],
+  ["Cólica", "Choro intenso e recorrente, sem causa médica identificável, comum entre a 2ª semana e o 3º-4º mês de vida."],
+  ["Icterícia neonatal", "Coloração amarelada da pele e dos olhos do recém-nascido, comum nos primeiros dias, mas que deve ser acompanhada pelo pediatra."],
+  ["Coto umbilical", "Resquício do cordão umbilical que permanece após o nascimento e cai naturalmente entre 1 e 3 semanas de vida."],
+  ["Marco de desenvolvimento", "Habilidade esperada em uma determinada faixa de idade, como sustentar a cabeça ou sorrir socialmente."],
+  ["Livre demanda", "Prática de amamentar ou alimentar o bebê sempre que ele mostra sinais de fome, sem horários fixos."],
+];
+
+const DIARY_META = {
+  soneca:  { icon: "😴", label: "Soneca" },
+  noite:   { icon: "🌙", label: "Sono noturno" },
+  mamada:  { icon: "🍼", label: "Mamada" },
+  fralda:  { icon: "👶", label: "Troca de fralda" },
 };
 
-export default function App() {
-  const [page, setPage] = useState("conta");
-  const [state, setState] = useState(INITIAL_STATE);
-  const [settings, setSettings] = useState(INITIAL_SETTINGS);
-  const [sales, setSales] = useState([]);
-  const [toasts, setToasts] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [hideValues, setHideValues] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [now, setNow] = useState(new Date());
-  const [pulse, setPulse] = useState(false);
+const FAQS = [
+  ["É normal o bebê só dormir no colo?", "Sim, é muito comum nas primeiras semanas. O calor, o cheiro e o movimento do colo imitam o ambiente do útero. Vá reduzindo aos poucos o tempo de colo antes de colocar no berço, ainda sonolento mas acordado, para que ele aprenda a adormecer sozinho com o tempo."],
+  ["Posso deixar o bebê chorar um pouco para 'aprender a dormir'?", "Nos primeiros meses (0–4 meses), a recomendação é responder ao choro prontamente — o bebê ainda não tem capacidade de autorregulação. Técnicas de 'treino de sono' costumam ser indicadas, quando indicadas, apenas a partir de idades maiores e sempre com orientação do pediatra."],
+  ["Quantas vezes é normal o bebê acordar à noite?", "Muito variável, mas 2 a 4 despertares por noite nos primeiros 3 meses são absolutamente normais e esperados, por causa da fome e dos ciclos curtos de sono."],
+  ["Posso usar travesseiro ou protetor de berço?", "Não, para bebês com menos de 1 ano. Berço vazio, apenas com colchão firme e lençol ajustado, é a recomendação de segurança — mesmo que pareça 'desconfortável' aos nossos olhos de adulto."],
+  ["Chupeta atrapalha a amamentação?", "Se introduzida após a amamentação estar bem estabelecida (geralmente após 3–4 semanas), a chupeta não costuma atrapalhar e ainda está associada a um possível efeito protetor contra morte súbita do lactente."],
+  ["Enrolar (swaddle) é seguro?", "Sim, quando feito corretamente: bracinhos enrolados, mas quadris e pernas livres para se mexer, e sempre com o bebê de costas. Pare de enrolar assim que ele começar a tentar virar de bruços sozinho, geralmente por volta de 2–4 meses."],
+  ["Por que meu bebê troca o dia pela noite?", "É comum nas primeiras semanas, já que o ritmo circadiano ainda não amadureceu. Exponha o bebê à luz natural durante o dia e mantenha as noites escuras e silenciosas — isso ajuda o relógio biológico a se ajustar em algumas semanas."],
+];
 
-  const pendingTimersRef = useRef({});
-
-  // Clock tick, used for "relative time" labels around the app.
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const pushToast = useCallback((toast) => {
-    setToasts((prev) => [...prev, toast]);
-    setPulse(true);
-    setTimeout(() => setPulse(false), 900);
-  }, []);
-
-  const dismissToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  const pushNotification = useCallback((notif) => {
-    setNotifications((prev) => [notif, ...prev].slice(0, 40));
-  }, []);
-
-  const generateSale = useCallback(() => {
-    const activeProducts = state.products.filter((p) => p.active);
-    if (activeProducts.length === 0) return;
-    const product = pickWeighted(activeProducts);
-    const priceVariance = randomBetween(0.85, 1.15);
-    const rawAmount = clamp(
-      product.basePrice * priceVariance,
-      settings.minValue,
-      settings.maxValue
-    );
-    const amount = Math.round(rawAmount * 100) / 100;
-    const commission = Math.round(amount * settings.commissionRate * 100) / 100;
-    const id = uid();
-    const buyer = randomBuyerName();
-    const createdAt = new Date();
-
-    const sale = {
-      id,
-      productId: product.id,
-      productName: product.name,
-      productColor: product.color,
-      amount,
-      commission,
-      buyer,
-      status: "pending",
-      createdAt,
-      approvedAt: null,
-    };
-
-    setSales((prev) => [sale, ...prev].slice(0, 400));
-    setState((s) => ({ ...s, pendingBalance: s.pendingBalance + commission }));
-
-    if (settings.notifyPending) {
-      const toast = { id: uid(), kind: "pending", productName: product.name, commission };
-      if (settings.showToasts) pushToast(toast);
-      pushNotification({ ...toast, createdAt });
-    } else {
-      pushToast({});
-    }
-
-    const approvalDelay = settings.approvalDelaySeconds * 1000;
-    const timer = setTimeout(() => {
-      const approved = Math.random() < settings.approvalRate;
-      setSales((prev) =>
-        prev.map((s) =>
-          s.id === id
-            ? { ...s, status: approved ? "approved" : "pending", approvedAt: approved ? new Date() : null }
-            : s
-        )
-      );
-      if (approved) {
-        setState((s) => ({
-          ...s,
-          pendingBalance: Math.max(s.pendingBalance - commission, 0),
-          balance: s.balance + commission,
-          revenue: s.revenue + amount,
-        }));
-        if (settings.notifyApproved) {
-          const toast = { id: uid(), kind: "approved", productName: product.name, commission };
-          if (settings.showToasts) pushToast(toast);
-          pushNotification({ ...toast, createdAt: new Date() });
-        }
-      }
-      delete pendingTimersRef.current[id];
-    }, approvalDelay);
-
-    pendingTimersRef.current[id] = timer;
-  }, [state.products, settings, pushToast, pushNotification]);
-
-  // Simulation engine — interval derived from "vendas por minuto".
-  useEffect(() => {
-    if (!settings.simulationActive) return;
-    const intervalMs = clamp(60000 / settings.salesPerMinute, 400, 120000);
-    const t = setInterval(() => {
-      generateSale();
-    }, intervalMs);
-    return () => clearInterval(t);
-  }, [settings.simulationActive, settings.salesPerMinute, generateSale]);
-
-  // Cleanup any pending approval timers on unmount.
-  useEffect(() => {
-    return () => {
-      Object.values(pendingTimersRef.current).forEach(clearTimeout);
-    };
-  }, []);
-
-  const handleClearNotifications = () => setNotifications([]);
-
-  const handleResetAll = () => {
-    if (!window.confirm("Reiniciar toda a simulação para os valores iniciais?")) return;
-    Object.values(pendingTimersRef.current).forEach(clearTimeout);
-    pendingTimersRef.current = {};
-    setState(INITIAL_STATE);
-    setSales([]);
-    setToasts([]);
-    setNotifications([]);
-  };
-
-  const setProducts = (updater) => {
-    setState((s) => ({
-      ...s,
-      products: typeof updater === "function" ? updater(s.products) : updater,
-    }));
-  };
-
-  const navigate = (target) => {
-    setPage(target);
-    setMobileSidebarOpen(false);
-    setNotifOpen(false);
-  };
-
-  return (
-    <div
-      className="flex h-screen w-full overflow-hidden bg-zinc-950 text-zinc-100"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
-    >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
-        * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
-        *::-webkit-scrollbar { width: 6px; height: 6px; }
-        *::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
-        .font-display { font-family: 'Sora', 'Inter', system-ui, sans-serif; }
-      `}</style>
-
-      {/* Mobile sidebar drawer */}
-      {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-          <div className="relative flex h-full w-64 flex-col bg-zinc-950 p-4">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <IrisMark size={32} />
-                <p className="font-display text-sm font-bold text-zinc-50">ÍRIS</p>
-              </div>
-              <button onClick={() => setMobileSidebarOpen(false)}>
-                <X size={18} className="text-zinc-400" />
-              </button>
-            </div>
-            <nav className="flex flex-col gap-1">
-              {SIDEBAR_ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => navigate(item.id)}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                    page === item.id
-                      ? "bg-violet-600/20 text-violet-300"
-                      : "text-zinc-400 hover:bg-zinc-900"
-                  }`}
-                >
-                  <item.icon size={16} />
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      )}
-
-      <Sidebar page={page} onNavigate={navigate} />
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar
-          hideValues={hideValues}
-          onToggleHide={() => setHideValues((v) => !v)}
-          notifOpen={notifOpen}
-          setNotifOpen={setNotifOpen}
-          notifications={notifications}
-          onClearAll={handleClearNotifications}
-          onOpenSidebarMobile={() => setMobileSidebarOpen(true)}
-        />
-
-        <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4 lg:px-8 lg:pb-8">
-          <div className="mx-auto w-full max-w-3xl">
-            {page === "conta" && (
-              <AccountPage
-                state={state}
-                setState={setState}
-                hideValues={hideValues}
-                onNavigate={navigate}
-                sales={sales}
-                now={now}
-              />
-            )}
-            {page === "vendas" && <SalesPage sales={sales} now={now} />}
-            {page === "relatorios" && <ReportsPage sales={sales} state={state} />}
-            {page === "produtos" && (
-              <ProductsPage products={state.products} setProducts={setProducts} />
-            )}
-            {page === "saque" && <WithdrawPage state={state} setState={setState} />}
-            {page === "ajustes" && (
-              <SettingsPage
-                settings={settings}
-                setSettings={setSettings}
-                state={state}
-                setState={setState}
-                onResetAll={handleResetAll}
-              />
-            )}
-            {page === "suporte" && <SupportPage />}
-          </div>
-        </main>
-      </div>
-
-      <BottomNav page={page} onNavigate={navigate} />
-
-      {settings.showToasts && <ToastStack toasts={toasts} onDismiss={dismissToast} />}
-
-      {/* Floating simulation status pill */}
-      <div className="pointer-events-none fixed bottom-20 left-1/2 z-30 -translate-x-1/2 lg:bottom-6">
-        <div
-          className={`pointer-events-auto flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-medium shadow-lg backdrop-blur transition ${
-            settings.simulationActive
-              ? "border-violet-700/50 bg-zinc-950/90 text-violet-300"
-              : "border-zinc-800 bg-zinc-950/90 text-zinc-500"
-          }`}
-        >
-          <IrisMark size={16} pulse={pulse} />
-          {settings.simulationActive
-            ? `Simulando ~${settings.salesPerMinute}/min`
-            : "Simulação pausada"}
-          <button
-            onClick={() => setSettings((s) => ({ ...s, simulationActive: !s.simulationActive }))}
-            className="ml-1 rounded-full bg-zinc-900 p-1 hover:bg-zinc-800"
-          >
-            {settings.simulationActive ? <Pause size={11} /> : <Play size={11} />}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+/* ==========================================================================
+   INIT: HOLD SIMULATOR
+   ========================================================================== */
+function renderHold(key){
+  const h = HOLDS[key];
+  document.getElementById("simFigure").innerHTML = h.svg;
+  document.getElementById("simTitle").textContent = h.title;
+  document.getElementById("simDesc").textContent = h.desc;
+  document.getElementById("simSteps").innerHTML = h.steps
+    .map(([n, t]) => `<div class="sim-step"><b>${n}</b><span>${t}</span></div>`)
+    .join("");
+  document.querySelectorAll(".sim-tab").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.hold === key);
+  });
 }
+document.getElementById("simTabs").addEventListener("click", (e)=>{
+  const btn = e.target.closest(".sim-tab");
+  if(!btn) return;
+  renderHold(btn.dataset.hold);
+});
+document.getElementById("speedRange").addEventListener("input", (e)=>{
+  document.getElementById("simFigure").style.setProperty("--sim-speed", `${e.target.value}s`);
+});
+renderHold("aconchego");
+document.getElementById("simFigure").style.setProperty("--sim-speed", "2.6s");
+
+/* ==========================================================================
+   INIT: CRY GUIDE
+   ========================================================================== */
+function waveBars(){
+  let bars = "";
+  for(let i=0;i<14;i++){
+    const h = 6 + Math.round(Math.random()*22);
+    bars += `<span style="height:${h}px;"></span>`;
+  }
+  return bars;
+}
+const cryGrid = document.getElementById("cryGrid");
+cryGrid.innerHTML = CRIES.map(c => `
+  <div class="cry-card" data-id="${c.id}" role="button" tabindex="0">
+    <div class="wave">${waveBars()}</div>
+    <h4>${c.title}</h4>
+    <p>${c.label}</p>
+  </div>
+`).join("");
+
+const cryDetail = document.getElementById("cryDetail");
+function showCry(id){
+  const c = CRIES.find(x=>x.id===id);
+  document.querySelectorAll(".cry-card").forEach(el=>el.classList.toggle("active", el.dataset.id===id));
+  cryDetail.innerHTML = `<h4>${c.title}</h4><p>${c.detail}</p>`;
+  cryDetail.classList.add("show");
+}
+cryGrid.addEventListener("click", (e)=>{
+  const card = e.target.closest(".cry-card");
+  if(!card) return;
+  showCry(card.dataset.id);
+});
+cryGrid.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter" || e.key === " "){
+    const card = e.target.closest(".cry-card");
+    if(card){ e.preventDefault(); showCry(card.dataset.id); }
+  }
+});
+
+/* ==========================================================================
+   INIT: ROTINA CHECKLIST
+   ========================================================================== */
+let routineState = ROUTINE_STEPS.map(()=>false);
+const routineList = document.getElementById("routineList");
+const ringFg = document.getElementById("ringFg");
+const ringNum = document.getElementById("ringNum");
+const CIRC = 2 * Math.PI * 60;
+
+function renderRoutine(){
+  routineList.innerHTML = ROUTINE_STEPS.map(([title, sub], i)=>`
+    <div class="routine-item ${routineState[i] ? "done":""}" data-i="${i}" role="button" tabindex="0">
+      <span class="routine-check">${routineState[i] ? "✓" : ""}</span>
+      <span class="routine-text"><b>${title}</b><span>${sub}</span></span>
+    </div>
+  `).join("");
+  const done = routineState.filter(Boolean).length;
+  const pct = done / routineState.length;
+  ringFg.setAttribute("stroke-dasharray", CIRC);
+  ringFg.setAttribute("stroke-dashoffset", CIRC * (1-pct));
+  ringNum.textContent = `${done}/${routineState.length}`;
+}
+routineList.addEventListener("click", (e)=>{
+  const item = e.target.closest(".routine-item");
+  if(!item) return;
+  const i = +item.dataset.i;
+  routineState[i] = !routineState[i];
+  renderRoutine();
+});
+routineList.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter" || e.key === " "){
+    const item = e.target.closest(".routine-item");
+    if(item){ e.preventDefault(); const i = +item.dataset.i; routineState[i] = !routineState[i]; renderRoutine(); }
+  }
+});
+document.getElementById("routineReset").addEventListener("click", ()=>{
+  routineState = ROUTINE_STEPS.map(()=>false);
+  renderRoutine();
+});
+renderRoutine();
+
+/* ==========================================================================
+   INIT: DIÁRIO DE SONO (in-memory only, resets on reload)
+   ========================================================================== */
+let diaryEntries = [];
+
+function fmtMinutes(min){
+  if(!min) return "—";
+  const h = Math.floor(min/60), m = min%60;
+  if(h > 0) return `${h}h${m ? " " + m + "min" : ""}`;
+  return `${m}min`;
+}
+
+function renderDiary(){
+  const list = document.getElementById("diaryList");
+  if(diaryEntries.length === 0){
+    list.innerHTML = `<div class="diary-empty">Nenhum registro ainda hoje. Adicione a primeira soneca ou mamada ao lado.</div>`;
+  } else {
+    list.innerHTML = diaryEntries
+      .slice()
+      .sort((a,b)=> a.start.localeCompare(b.start))
+      .map(e => `
+        <div class="diary-entry">
+          <span class="diary-icon">${DIARY_META[e.type].icon}</span>
+          <span>
+            <b>${DIARY_META[e.type].label}${e.note ? " — " + e.note : ""}</b>
+            <span>desde as ${e.start}</span>
+          </span>
+          <span class="diary-dur">${fmtMinutes(e.dur)}</span>
+          <button class="diary-del" data-id="${e.id}" aria-label="Remover registro">✕</button>
+        </div>
+      `).join("");
+  }
+
+  const sonecaMin = diaryEntries.filter(e=>e.type==="soneca"||e.type==="noite").reduce((s,e)=>s+(e.dur||0),0);
+  const mamadas = diaryEntries.filter(e=>e.type==="mamada").length;
+  const fraldas = diaryEntries.filter(e=>e.type==="fralda").length;
+  document.getElementById("diarySummary").innerHTML = `
+    <div class="mini"><b>${fmtMinutes(sonecaMin)}</b><span>de sono registrado</span></div>
+    <div class="mini"><b>${mamadas}</b><span>mamadas hoje</span></div>
+    <div class="mini"><b>${fraldas}</b><span>trocas de fralda</span></div>
+    <div class="mini"><b>${diaryEntries.length}</b><span>registros no total</span></div>
+  `;
+}
+
+document.getElementById("diaryForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  const type = document.getElementById("diaryType").value;
+  const start = document.getElementById("diaryStart").value;
+  const dur = parseInt(document.getElementById("diaryDur").value) || 0;
+  const note = document.getElementById("diaryNote").value.trim();
+  if(!start) return;
+  diaryEntries.push({ id: Date.now(), type, start, dur, note });
+  renderDiary();
+  e.target.reset();
+  document.getElementById("diaryType").value = type;
+});
+document.getElementById("diaryList").addEventListener("click",(e)=>{
+  const btn = e.target.closest(".diary-del");
+  if(!btn) return;
+  diaryEntries = diaryEntries.filter(en => en.id !== +btn.dataset.id);
+  renderDiary();
+});
+renderDiary();
+
+/* ==========================================================================
+   INIT: GLOSSÁRIO
+   ========================================================================== */
+document.getElementById("glossaryList").innerHTML = GLOSSARY
+  .map(([term, def]) => `<div class="gloss-item"><dt>${term}</dt><dd>${def}</dd></div>`)
+  .join("");
+
+/* ==========================================================================
+   INIT: FAQ ACCORDION
+   ========================================================================== */
+const faqList = document.getElementById("faqList");
+faqList.innerHTML = FAQS.map(([q,a], i)=>`
+  <div class="faq-item" data-i="${i}">
+    <button class="faq-q">${q}<span class="plus">+</span></button>
+    <div class="faq-a"><div class="faq-a-inner">${a}</div></div>
+  </div>
+`).join("");
+faqList.addEventListener("click",(e)=>{
+  const q = e.target.closest(".faq-q");
+  if(!q) return;
+  const item = q.closest(".faq-item");
+  item.classList.toggle("open");
+});
+
+/* ==========================================================================
+   INIT: NAV MOBILE + CTA FORM
+   ========================================================================== */
+document.getElementById("navToggle").addEventListener("click", ()=>{
+  document.getElementById("navLinks").classList.toggle("open");
+});
+document.querySelectorAll(".nav-links a").forEach(a=>{
+  a.addEventListener("click", ()=> document.getElementById("navLinks").classList.remove("open"));
+});
+
 </script>
 </body>
 </html>
