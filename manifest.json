@@ -1,0 +1,15 @@
+{
+  "name": "Dymple",
+  "short_name": "Dymple",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#00C853",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
