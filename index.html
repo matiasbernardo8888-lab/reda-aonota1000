@@ -1,624 +1,73 @@
--- ============================================================
--- NEXUS FIN — Supabase Database Schema
--- Versão: 1.0 | PostgreSQL 15+
--- ============================================================
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dymple - Simulador</title>
+<style>
+  body { background:#0A0A0A; color:#fff; font-family:Arial; margin:0; padding:16px; padding-bottom:80px; }
+  .config { background:#1A1A1A; padding:16px; border-radius:12px; margin-bottom:20px; }
+  input, button { width:100%; padding:10px; margin-top:8px; border-radius:8px; border:none; }
+  button { background:#00C853; font-weight:bold; cursor:pointer; }
+  .card { background:#1A1A1A; padding:16px; border-radius:12px; margin-bottom:12px; }
+  .notif { position:fixed; top:20px; right:20px; background:#00C853; color:#000; padding:12px; border-radius:10px; display:none; animation:slide 0.5s; }
+  @keyframes slide { from {transform:translateX(200px);} to {transform:translateX(0);} }
+  .menu { position:fixed; bottom:0; left:0; right:0; background:#111; display:flex; justify-content:space-around; padding:10px 0; }
+</style>
+</head>
+<body>
 
--- EXTENSÕES
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";   -- para busca fuzzy de estabelecimentos
+<h2>Dymple <span style="color:#00C853;">Simulador</span></h2>
 
--- ============================================================
--- TABELA: profiles (estende auth.users do Supabase)
--- ============================================================
-CREATE TABLE public.profiles (
-  id                    UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  full_name             TEXT NOT NULL,
-  avatar_url            TEXT,
-  monthly_income        DECIMAL(12,2) DEFAULT 0.00,
-  income_type           TEXT DEFAULT 'salary' CHECK (income_type IN ('salary','freelance','mixed','other')),
-  budget_essentials     DECIMAL(5,2) DEFAULT 50.00,   -- % da renda
-  budget_wants          DECIMAL(5,2) DEFAULT 30.00,
-  budget_investments    DECIMAL(5,2) DEFAULT 20.00,
-  score                 INTEGER DEFAULT 0 CHECK (score BETWEEN 0 AND 1000),
-  currency              TEXT DEFAULT 'BRL',
-  locale                TEXT DEFAULT 'pt-BR',
-  theme                 TEXT DEFAULT 'dark' CHECK (theme IN ('dark','light')),
-  notifications_enabled BOOLEAN DEFAULT TRUE,
-  onboarding_completed  BOOLEAN DEFAULT FALSE,
-  onboarding_step       INTEGER DEFAULT 1,
-  created_at            TIMESTAMPTZ DEFAULT NOW(),
-  updated_at            TIMESTAMPTZ DEFAULT NOW()
-);
+<div class="config">
+  <h3>Painel de Teste</h3>
+  <label>Valor da Venda R$</label>
+  <input id="valor" type="number" value="97.00">
+  <label>Nome do Produto</label>
+  <input id="produto" type="text" value="Curso Dymple">
+  <label>Notificações por Minuto</label>
+  <input id="qtd" type="number" value="1">
+  <button onclick="iniciarSimulacao()">Iniciar Simulação</button>
+  <button onclick="pararSimulacao()" style="background:#555;">Parar</button>
+</div>
 
--- RLS
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can view own profile"   ON public.profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+<div class="card">
+  <h3>Última Venda</h3>
+  <p id="ultimaVenda">Aguardando...</p>
+</div>
 
--- Trigger: criar profile ao criar user no Auth
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+<div id="notif" class="notif"></div>
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+<div class="menu">
+  <div>Conta</div><div>Vendas</div><div style="background:#00C853; border-radius:50%; padding:12px;">🌵</div><div>Saque</div><div>Ajustes</div>
+</div>
 
--- Trigger: atualizar updated_at automaticamente
-CREATE OR REPLACE FUNCTION public.set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+<script>
+let intervalo;
 
-CREATE TRIGGER profiles_updated_at
-  BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+function mostrarNotif(valor, produto) {
+  const notif = document.getElementById('notif');
+  notif.innerHTML = `🎉 Nova Venda!<br>${produto} - R$ ${valor}`;
+  notif.style.display = 'block';
+  document.getElementById('ultimaVenda').innerText = `${produto} - R$ ${valor}`;
+  setTimeout(()=> notif.style.display = 'none', 4000);
+}
 
--- ============================================================
--- TABELA: accounts (contas bancárias e carteiras)
--- ============================================================
-CREATE TABLE public.accounts (
-  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  name          TEXT NOT NULL,
-  type          TEXT NOT NULL CHECK (type IN ('checking','savings','cash','investment','credit','wallet')),
-  bank_slug     TEXT,          -- 'nubank', 'itau', 'bradesco', etc.
-  bank_code     TEXT,          -- código FEBRABAN
-  color         TEXT DEFAULT '#00D4FF',
-  icon          TEXT DEFAULT 'wallet',
-  balance       DECIMAL(12,2) DEFAULT 0.00,
-  credit_limit  DECIMAL(12,2),   -- para cartões de crédito
-  is_default    BOOLEAN DEFAULT FALSE,
-  is_active     BOOLEAN DEFAULT TRUE,
-  display_order INTEGER DEFAULT 0,
-  created_at    TIMESTAMPTZ DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ DEFAULT NOW()
-);
+function iniciarSimulacao() {
+  pararSimulacao();
+  const valor = document.getElementById('valor').value;
+  const produto = document.getElementById('produto').value;
+  const qtd = document.getElementById('qtd').value;
+  const tempo = 60000 / qtd; // converte min para ms
+  
+  mostrarNotif(valor, produto); // mostra 1 na hora
+  intervalo = setInterval(()=> mostrarNotif(valor, produto), tempo);
+}
 
-ALTER TABLE public.accounts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own accounts" ON public.accounts FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE INDEX idx_accounts_user ON public.accounts(user_id);
-CREATE TRIGGER accounts_updated_at BEFORE UPDATE ON public.accounts FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+function pararSimulacao() {
+  clearInterval(intervalo);
+}
+</script>
 
--- ============================================================
--- TABELA: categories (categorias de transações)
--- ============================================================
-CREATE TABLE public.categories (
-  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES public.profiles(id) ON DELETE CASCADE,  -- NULL = sistema
-  name          TEXT NOT NULL,
-  slug          TEXT NOT NULL,     -- 'alimentacao', 'transporte', etc.
-  icon          TEXT NOT NULL,
-  color         TEXT NOT NULL,
-  type          TEXT NOT NULL CHECK (type IN ('expense','income','transfer','investment')),
-  parent_id     UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  budget_pct    DECIMAL(5,2),      -- % do orçamento desta categoria
-  budget_amount DECIMAL(12,2),     -- valor fixo de orçamento
-  is_system     BOOLEAN DEFAULT FALSE,
-  is_active     BOOLEAN DEFAULT TRUE,
-  display_order INTEGER DEFAULT 0,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can view system and own categories" ON public.categories FOR SELECT
-  USING (is_system = TRUE OR auth.uid() = user_id);
-CREATE POLICY "users can CRUD own categories" ON public.categories FOR ALL
-  USING (auth.uid() = user_id AND is_system = FALSE) WITH CHECK (auth.uid() = user_id);
-
-CREATE INDEX idx_categories_user ON public.categories(user_id);
-CREATE INDEX idx_categories_parent ON public.categories(parent_id);
-
--- Inserir categorias padrão do sistema
-INSERT INTO public.categories (user_id, name, slug, icon, color, type, is_system, display_order) VALUES
-  (NULL, 'Alimentação',   'alimentacao',   '🍔', '#FF6B6B', 'expense',    TRUE, 1),
-  (NULL, 'Transporte',    'transporte',    '🚗', '#4ECDC4', 'expense',    TRUE, 2),
-  (NULL, 'Lazer',         'lazer',         '🎬', '#A855F7', 'expense',    TRUE, 3),
-  (NULL, 'Saúde',         'saude',         '🏥', '#00E676', 'expense',    TRUE, 4),
-  (NULL, 'Educação',      'educacao',      '📚', '#FFB300', 'expense',    TRUE, 5),
-  (NULL, 'Moradia',       'moradia',       '🏠', '#0080FF', 'expense',    TRUE, 6),
-  (NULL, 'Assinaturas',   'assinaturas',   '📱', '#FF4081', 'expense',    TRUE, 7),
-  (NULL, 'Investimentos', 'investimentos', '💰', '#00D4FF', 'investment', TRUE, 8),
-  (NULL, 'Compras',       'compras',       '🛒', '#FF9800', 'expense',    TRUE, 9),
-  (NULL, 'Salário',       'salario',       '💵', '#00E676', 'income',     TRUE, 10),
-  (NULL, 'Freelance',     'freelance',     '💼', '#00E676', 'income',     TRUE, 11),
-  (NULL, 'Transferência', 'transferencia', '↔️', '#9E9E9E', 'transfer',   TRUE, 12),
-  (NULL, 'Outros',        'outros',        '📦', '#9E9E9E', 'expense',    TRUE, 99);
-
--- ============================================================
--- TABELA: transactions (lançamentos)
--- ============================================================
-CREATE TABLE public.transactions (
-  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id                 UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  account_id              UUID REFERENCES public.accounts(id) ON DELETE SET NULL,
-  category_id             UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  amount                  DECIMAL(12,2) NOT NULL,  -- negativo = despesa, positivo = receita
-  description             TEXT NOT NULL,
-  merchant_name           TEXT,          -- normalizado pela IA/OCR
-  merchant_slug           TEXT,          -- para matching de padrões
-  date                    DATE NOT NULL,
-  type                    TEXT NOT NULL CHECK (type IN ('expense','income','transfer')),
-  status                  TEXT DEFAULT 'confirmed' CHECK (status IN ('pending','confirmed','cancelled','reconciled')),
-  source                  TEXT DEFAULT 'manual' CHECK (source IN ('manual','ocr','csv','ofx','api','recurring')),
-  ai_category_confidence  DECIMAL(4,2),  -- 0.00 a 1.00
-  ai_suggestion_accepted  BOOLEAN,       -- usuário aceitou sugestão da IA?
-  is_recurring            BOOLEAN DEFAULT FALSE,
-  recurring_id            UUID,          -- referência ao grupo recorrente
-  transfer_pair_id        UUID REFERENCES public.transactions(id),  -- par em transferências
-  notes                   TEXT,
-  tags                    TEXT[],
-  attachment_url          TEXT,          -- comprovante no Supabase Storage
-  metadata                JSONB DEFAULT '{}',  -- dados extras do OCR/import
-  created_at              TIMESTAMPTZ DEFAULT NOW(),
-  updated_at              TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own transactions" ON public.transactions FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- Índices críticos de performance
-CREATE INDEX idx_transactions_user_date       ON public.transactions(user_id, date DESC);
-CREATE INDEX idx_transactions_user_month      ON public.transactions(user_id, date_trunc('month', date));
-CREATE INDEX idx_transactions_category        ON public.transactions(category_id);
-CREATE INDEX idx_transactions_account         ON public.transactions(account_id);
-CREATE INDEX idx_transactions_type            ON public.transactions(user_id, type);
-CREATE INDEX idx_transactions_merchant        ON public.transactions USING gin(merchant_name gin_trgm_ops);
-CREATE INDEX idx_transactions_recurring       ON public.transactions(recurring_id) WHERE is_recurring = TRUE;
-
-CREATE TRIGGER transactions_updated_at BEFORE UPDATE ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-
--- ============================================================
--- TABELA: recurring_rules (regras de recorrência)
--- ============================================================
-CREATE TABLE public.recurring_rules (
-  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  category_id   UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  account_id    UUID REFERENCES public.accounts(id) ON DELETE SET NULL,
-  description   TEXT NOT NULL,
-  amount        DECIMAL(12,2),
-  type          TEXT NOT NULL CHECK (type IN ('expense','income')),
-  frequency     TEXT NOT NULL CHECK (frequency IN ('daily','weekly','biweekly','monthly','yearly')),
-  start_date    DATE NOT NULL,
-  end_date      DATE,
-  day_of_month  INTEGER CHECK (day_of_month BETWEEN 1 AND 31),
-  day_of_week   INTEGER CHECK (day_of_week BETWEEN 0 AND 6),   -- 0=domingo
-  last_run_date DATE,
-  next_run_date DATE,
-  is_active     BOOLEAN DEFAULT TRUE,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.recurring_rules ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own recurring_rules" ON public.recurring_rules FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE INDEX idx_recurring_rules_user ON public.recurring_rules(user_id);
-CREATE INDEX idx_recurring_next_run   ON public.recurring_rules(next_run_date) WHERE is_active = TRUE;
-
--- ============================================================
--- TABELA: calendar_events (agenda financeira)
--- ============================================================
-CREATE TABLE public.calendar_events (
-  id                        UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id                   UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  title                     TEXT NOT NULL,
-  description               TEXT,
-  date                      DATE NOT NULL,
-  time                      TIME,
-  amount                    DECIMAL(12,2),
-  type                      TEXT DEFAULT 'reminder' CHECK (type IN ('bill','income','reminder','meeting','goal')),
-  color                     TEXT DEFAULT '#00D4FF',
-  category_id               UUID REFERENCES public.categories(id),
-  account_id                UUID REFERENCES public.accounts(id),
-  linked_transaction_id     UUID REFERENCES public.transactions(id),
-  is_paid                   BOOLEAN DEFAULT FALSE,
-  paid_at                   TIMESTAMPTZ,
-  recurrence                TEXT DEFAULT 'none' CHECK (recurrence IN ('none','weekly','monthly','yearly')),
-  notification_days_before  INTEGER[] DEFAULT ARRAY[1],   -- ex: [7, 1] = 7 dias e 1 dia antes
-  notification_hours_before INTEGER[] DEFAULT ARRAY[1],   -- ex: [1] = 1 hora antes
-  created_at                TIMESTAMPTZ DEFAULT NOW(),
-  updated_at                TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own calendar_events" ON public.calendar_events FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE INDEX idx_calendar_events_user_date ON public.calendar_events(user_id, date);
-CREATE TRIGGER calendar_events_updated_at BEFORE UPDATE ON public.calendar_events FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-
--- ============================================================
--- TABELA: goals (metas financeiras)
--- ============================================================
-CREATE TABLE public.goals (
-  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id         UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  name            TEXT NOT NULL,
-  description     TEXT,
-  emoji           TEXT DEFAULT '🎯',
-  target_amount   DECIMAL(12,2) NOT NULL,
-  current_amount  DECIMAL(12,2) DEFAULT 0.00,
-  deadline        DATE,
-  account_id      UUID REFERENCES public.accounts(id),  -- conta "cofre"
-  category_id     UUID REFERENCES public.categories(id),
-  color           TEXT DEFAULT '#00D4FF',
-  priority        TEXT DEFAULT 'medium' CHECK (priority IN ('low','medium','high')),
-  is_completed    BOOLEAN DEFAULT FALSE,
-  completed_at    TIMESTAMPTZ,
-  is_active       BOOLEAN DEFAULT TRUE,
-  created_at      TIMESTAMPTZ DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own goals" ON public.goals FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE INDEX idx_goals_user ON public.goals(user_id);
-CREATE TRIGGER goals_updated_at BEFORE UPDATE ON public.goals FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-
--- ============================================================
--- TABELA: goal_contributions (depósitos em metas)
--- ============================================================
-CREATE TABLE public.goal_contributions (
-  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  goal_id         UUID REFERENCES public.goals(id) ON DELETE CASCADE NOT NULL,
-  user_id         UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  amount          DECIMAL(12,2) NOT NULL,
-  date            DATE NOT NULL DEFAULT CURRENT_DATE,
-  transaction_id  UUID REFERENCES public.transactions(id),
-  notes           TEXT,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.goal_contributions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own goal_contributions" ON public.goal_contributions FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE INDEX idx_goal_contributions_goal ON public.goal_contributions(goal_id);
-
--- Trigger: atualizar current_amount na goal ao inserir contribuição
-CREATE OR REPLACE FUNCTION public.update_goal_amount()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE public.goals
-  SET current_amount = (
-    SELECT COALESCE(SUM(amount), 0) FROM public.goal_contributions
-    WHERE goal_id = NEW.goal_id
-  )
-  WHERE id = NEW.goal_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_goal_contribution
-  AFTER INSERT OR UPDATE OR DELETE ON public.goal_contributions
-  FOR EACH ROW EXECUTE FUNCTION public.update_goal_amount();
-
--- ============================================================
--- TABELA: ai_merchant_patterns (padrões de categorização)
--- ============================================================
-CREATE TABLE public.ai_merchant_patterns (
-  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES public.profiles(id) ON DELETE CASCADE,  -- NULL = padrão global
-  pattern       TEXT NOT NULL,          -- string parcial ou regex
-  pattern_type  TEXT DEFAULT 'contains' CHECK (pattern_type IN ('exact','contains','starts_with','regex')),
-  category_id   UUID REFERENCES public.categories(id) NOT NULL,
-  confidence    DECIMAL(4,2) DEFAULT 1.00,
-  match_count   INTEGER DEFAULT 1,
-  last_matched  TIMESTAMPTZ,
-  is_active     BOOLEAN DEFAULT TRUE,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.ai_merchant_patterns ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can view global and own patterns" ON public.ai_merchant_patterns FOR SELECT
-  USING (user_id IS NULL OR auth.uid() = user_id);
-CREATE POLICY "users can CRUD own patterns" ON public.ai_merchant_patterns FOR ALL
-  USING (auth.uid() = user_id AND user_id IS NOT NULL) WITH CHECK (auth.uid() = user_id);
-
-CREATE INDEX idx_merchant_patterns_user    ON public.ai_merchant_patterns(user_id);
-CREATE INDEX idx_merchant_patterns_pattern ON public.ai_merchant_patterns USING gin(pattern gin_trgm_ops);
-
--- Padrões globais do sistema
-INSERT INTO public.ai_merchant_patterns (user_id, pattern, pattern_type, category_id, confidence)
-SELECT NULL, p.pattern, 'starts_with', c.id, 0.95
-FROM (VALUES
-  ('UBER',         'transporte'),
-  ('99APP',        'transporte'),
-  ('CABIFY',       'transporte'),
-  ('IFOOD',        'alimentacao'),
-  ('RAPPI',        'alimentacao'),
-  ('MCDONALDS',    'alimentacao'),
-  ('BURGER KING',  'alimentacao'),
-  ('NETFLIX',      'assinaturas'),
-  ('SPOTIFY',      'assinaturas'),
-  ('AMAZON PRIME', 'assinaturas'),
-  ('DISNEY+',      'assinaturas'),
-  ('GLOBOPLAY',    'assinaturas'),
-  ('ADOBE',        'assinaturas'),
-  ('FARMACIA',     'saude'),
-  ('DROGARIA',     'saude'),
-  ('HOSPITAL',     'saude'),
-  ('CLINICA',      'saude'),
-  ('SHELL',        'transporte'),
-  ('IPIRANGA',     'transporte'),
-  ('PETROBRAS',    'transporte'),
-  ('AMAZON',       'compras'),
-  ('MERCADO LIVRE','compras'),
-  ('AMERICANAS',   'compras'),
-  ('STEAM',        'lazer'),
-  ('CINEMATICA',   'lazer'),
-  ('CINEMARK',     'lazer')
-) AS p(pattern, slug)
-JOIN public.categories c ON c.slug = p.slug AND c.is_system = TRUE;
-
--- ============================================================
--- TABELA: score_history (histórico de score financeiro)
--- ============================================================
-CREATE TABLE public.score_history (
-  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id     UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  score       INTEGER NOT NULL CHECK (score BETWEEN 0 AND 1000),
-  dimensions  JSONB NOT NULL DEFAULT '{}',
-  -- Ex: { "spending_control": 180, "budget_adherence": 165, "income_consistency": 120,
-  --        "goals_progress": 100, "subscriptions_ratio": 90, "logging_habit": 87, "emergency_fund": 0 }
-  month       DATE NOT NULL,   -- primeiro dia do mês (2025-06-01)
-  created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.score_history ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can view own score_history" ON public.score_history FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "service can insert score_history" ON public.score_history FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE UNIQUE INDEX idx_score_history_user_month ON public.score_history(user_id, month);
-
--- ============================================================
--- TABELA: notifications (histórico de alertas)
--- ============================================================
-CREATE TABLE public.notifications (
-  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id     UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  title       TEXT NOT NULL,
-  body        TEXT NOT NULL,
-  type        TEXT DEFAULT 'info' CHECK (type IN ('info','warning','success','danger','score')),
-  icon        TEXT DEFAULT '🔔',
-  action_url  TEXT,
-  is_read     BOOLEAN DEFAULT FALSE,
-  read_at     TIMESTAMPTZ,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can CRUD own notifications" ON public.notifications FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_notifications_user ON public.notifications(user_id, created_at DESC);
-
--- ============================================================
--- VIEWS: para queries frequentes com performance
--- ============================================================
-
--- View: resumo mensal por usuário
-CREATE OR REPLACE VIEW public.v_monthly_summary AS
-SELECT
-  t.user_id,
-  date_trunc('month', t.date) AS month,
-  SUM(CASE WHEN t.type = 'income'   THEN t.amount ELSE 0 END)  AS total_income,
-  SUM(CASE WHEN t.type = 'expense'  THEN ABS(t.amount) ELSE 0 END) AS total_expenses,
-  SUM(CASE WHEN t.type = 'expense'  THEN ABS(t.amount) ELSE 0 END) /
-    NULLIF(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) * 100 AS expense_ratio,
-  COUNT(*) AS transaction_count
-FROM public.transactions t
-WHERE t.status != 'cancelled'
-GROUP BY t.user_id, date_trunc('month', t.date);
-
--- View: gastos por categoria (30 dias)
-CREATE OR REPLACE VIEW public.v_category_expenses_30d AS
-SELECT
-  t.user_id,
-  c.id AS category_id,
-  c.name AS category_name,
-  c.icon,
-  c.color,
-  SUM(ABS(t.amount)) AS total,
-  COUNT(*) AS count
-FROM public.transactions t
-JOIN public.categories c ON c.id = t.category_id
-WHERE
-  t.type = 'expense'
-  AND t.status != 'cancelled'
-  AND t.date >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY t.user_id, c.id, c.name, c.icon, c.color;
-
--- View: top estabelecimentos (30 dias)
-CREATE OR REPLACE VIEW public.v_top_merchants_30d AS
-SELECT
-  t.user_id,
-  t.merchant_name,
-  SUM(ABS(t.amount)) AS total,
-  COUNT(*) AS count,
-  MAX(t.date) AS last_transaction
-FROM public.transactions t
-WHERE
-  t.type = 'expense'
-  AND t.merchant_name IS NOT NULL
-  AND t.status != 'cancelled'
-  AND t.date >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY t.user_id, t.merchant_name
-ORDER BY total DESC;
-
--- ============================================================
--- FUNÇÕES: lógica de negócio no banco
--- ============================================================
-
--- Função: calcular score financeiro
-CREATE OR REPLACE FUNCTION public.calculate_user_score(p_user_id UUID, p_month DATE DEFAULT date_trunc('month', CURRENT_DATE))
-RETURNS TABLE(
-  total_score        INTEGER,
-  spending_control   INTEGER,
-  budget_adherence   INTEGER,
-  income_consistency INTEGER,
-  goals_progress     INTEGER,
-  subscriptions_ratio INTEGER,
-  logging_habit      INTEGER,
-  emergency_fund     INTEGER
-) AS $$
-DECLARE
-  v_income         DECIMAL;
-  v_expenses       DECIMAL;
-  v_budget_e       DECIMAL;
-  v_budget_w       DECIMAL;
-  v_budget_i       DECIMAL;
-  v_tx_count       INTEGER;
-  v_goals_on_track INTEGER;
-  v_goals_total    INTEGER;
-  v_sub_ratio      DECIMAL;
-  v_s1 INTEGER := 0; v_s2 INTEGER := 0; v_s3 INTEGER := 0;
-  v_s4 INTEGER := 0; v_s5 INTEGER := 0; v_s6 INTEGER := 0; v_s7 INTEGER := 0;
-BEGIN
-  -- Buscar perfil
-  SELECT monthly_income, budget_essentials, budget_wants, budget_investments
-  INTO v_income, v_budget_e, v_budget_w, v_budget_i
-  FROM public.profiles WHERE id = p_user_id;
-
-  -- Gastos do mês
-  SELECT COALESCE(SUM(ABS(amount)), 0) INTO v_expenses
-  FROM public.transactions
-  WHERE user_id = p_user_id AND type = 'expense'
-    AND date_trunc('month', date) = p_month AND status != 'cancelled';
-
-  -- s1: Controle de gastos (0-200)
-  -- Ideal: gastar entre 80-95% do orçamento (sobrar algo sem desperdiçar)
-  IF v_income > 0 THEN
-    DECLARE ratio DECIMAL := v_expenses / v_income;
-    BEGIN
-      IF ratio <= 0.95 AND ratio >= 0.70 THEN v_s1 := 200;
-      ELSIF ratio < 0.70 THEN v_s1 := ROUND(ratio / 0.70 * 160)::INTEGER;
-      ELSIF ratio <= 1.05 THEN v_s1 := ROUND(200 - (ratio - 0.95) * 1000)::INTEGER;
-      ELSE v_s1 := GREATEST(0, ROUND(200 - (ratio - 1) * 500)::INTEGER);
-      END IF;
-    END;
-  END IF;
-
-  -- s2: Aderência ao orçamento (0-200) — simplificado
-  v_s2 := LEAST(200, ROUND(v_s1 * 0.9)::INTEGER);
-
-  -- s3: Consistência de renda (0-150) — por ora fixo
-  v_s3 := 120;
-
-  -- s4: Progresso em metas (0-150)
-  SELECT COUNT(*) INTO v_goals_total FROM public.goals
-  WHERE user_id = p_user_id AND is_active = TRUE AND NOT is_completed;
-  IF v_goals_total > 0 THEN
-    SELECT COUNT(*) INTO v_goals_on_track FROM public.goals g
-    WHERE g.user_id = p_user_id AND g.is_active = TRUE AND NOT g.is_completed
-      AND (g.deadline IS NULL OR g.current_amount / NULLIF(g.target_amount, 0) >=
-           (CURRENT_DATE - g.created_at::DATE) /
-           NULLIF(g.deadline - g.created_at::DATE, 0));
-    v_s4 := ROUND(v_goals_on_track::DECIMAL / v_goals_total * 150)::INTEGER;
-  END IF;
-
-  -- s5: Controle de assinaturas (0-100)
-  SELECT COALESCE(SUM(ABS(amount)), 0) INTO v_sub_ratio
-  FROM public.transactions t
-  JOIN public.categories c ON c.id = t.category_id AND c.slug = 'assinaturas'
-  WHERE t.user_id = p_user_id AND date_trunc('month', t.date) = p_month;
-  IF v_income > 0 THEN
-    DECLARE sub_pct DECIMAL := v_sub_ratio / v_income;
-    BEGIN
-      IF sub_pct <= 0.10 THEN v_s5 := 100;
-      ELSIF sub_pct <= 0.15 THEN v_s5 := 75;
-      ELSIF sub_pct <= 0.20 THEN v_s5 := 50;
-      ELSE v_s5 := GREATEST(0, ROUND(100 - sub_pct * 300)::INTEGER);
-      END IF;
-    END;
-  END IF;
-
-  -- s6: Hábito de registro (0-100)
-  SELECT COUNT(DISTINCT date) INTO v_tx_count
-  FROM public.transactions
-  WHERE user_id = p_user_id AND source = 'manual'
-    AND date >= CURRENT_DATE - 30;
-  v_s6 := LEAST(100, ROUND(v_tx_count * 4.0)::INTEGER);  -- 25 dias = 100 pts
-
-  -- s7: Reserva de emergência (0-100)
-  SELECT COALESCE(SUM(a.balance), 0) INTO v_sub_ratio
-  FROM public.accounts a WHERE a.user_id = p_user_id AND a.type IN ('savings','investment');
-  IF v_income > 0 THEN
-    v_s7 := LEAST(100, ROUND(v_sub_ratio / (v_income * 6) * 100)::INTEGER);
-  END IF;
-
-  RETURN QUERY SELECT
-    (v_s1 + v_s2 + v_s3 + v_s4 + v_s5 + v_s6 + v_s7),
-    v_s1, v_s2, v_s3, v_s4, v_s5, v_s6, v_s7;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Função: projeção de gastos do fim do mês
-CREATE OR REPLACE FUNCTION public.project_month_end(p_user_id UUID)
-RETURNS TABLE(
-  daily_avg         DECIMAL,
-  projected_total   DECIMAL,
-  projected_savings DECIMAL,
-  days_remaining    INTEGER
-) AS $$
-DECLARE
-  v_income       DECIMAL;
-  v_expenses_mtd DECIMAL;
-  v_day          INTEGER := EXTRACT(DAY FROM CURRENT_DATE)::INTEGER;
-  v_days_month   INTEGER := EXTRACT(DAY FROM date_trunc('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day')::INTEGER;
-BEGIN
-  SELECT monthly_income INTO v_income FROM public.profiles WHERE id = p_user_id;
-  SELECT COALESCE(SUM(ABS(amount)), 0) INTO v_expenses_mtd
-  FROM public.transactions
-  WHERE user_id = p_user_id AND type = 'expense' AND status != 'cancelled'
-    AND date_trunc('month', date) = date_trunc('month', CURRENT_DATE);
-
-  RETURN QUERY SELECT
-    v_expenses_mtd / v_day,
-    (v_expenses_mtd / v_day) * v_days_month,
-    v_income - (v_expenses_mtd / v_day) * v_days_month,
-    v_days_month - v_day;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ============================================================
--- REALTIME: habilitar para updates em tempo real
--- ============================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE public.transactions;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.calendar_events;
-
--- ============================================================
--- STORAGE: bucket para comprovantes e avatares
--- ============================================================
--- Execute via Dashboard do Supabase ou API:
--- INSERT INTO storage.buckets (id, name, public) VALUES ('attachments', 'attachments', FALSE);
--- INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', TRUE);
-
--- Política de storage (attachments privados):
--- CREATE POLICY "users can upload own attachments"
---   ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'attachments' AND auth.uid()::text = (storage.foldername(name))[1]);
-
--- ============================================================
--- SUPABASE EDGE FUNCTIONS (structure — deploy separately)
--- ============================================================
--- /supabase/functions/categorize-transaction/index.ts  → IA de categorização
--- /supabase/functions/process-ocr/index.ts             → Google Vision + parsing
--- /supabase/functions/calculate-score/index.ts         → calcular e salvar score
--- /supabase/functions/send-notification/index.ts       → push notifications
--- /supabase/functions/generate-pdf-report/index.ts     → relatório PDF
-
--- ============================================================
--- FIM DO SCHEMA
--- ============================================================
+</body>
+</html>
