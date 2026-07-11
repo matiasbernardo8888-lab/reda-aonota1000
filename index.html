@@ -3,67 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dymple - Simulador</title>
+<title>Dymple</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00C853">
 <style>
-  body { background:#0A0A0A; color:#fff; font-family:Arial; margin:0; padding:16px; padding-bottom:80px; }
-  .config { background:#1A1A1A; padding:16px; border-radius:12px; margin-bottom:20px; }
-  input, button { width:100%; padding:10px; margin-top:8px; border-radius:8px; border:none; }
-  button { background:#00C853; font-weight:bold; cursor:pointer; }
-  .card { background:#1A1A1A; padding:16px; border-radius:12px; margin-bottom:12px; }
-  .notif { position:fixed; top:20px; right:20px; background:#00C853; color:#000; padding:12px; border-radius:10px; display:none; animation:slide 0.5s; }
-  @keyframes slide { from {transform:translateX(200px);} to {transform:translateX(0);} }
-  .menu { position:fixed; bottom:0; left:0; right:0; background:#111; display:flex; justify-content:space-around; padding:10px 0; }
+  body { background:#0A0A0A; color:#fff; font-family:Arial; margin:0; padding:16px; padding-bottom:80px; text-align:center; }
+  .card { background:#1A1A1A; padding:16px; border-radius:12px; margin:20px 0; }
+  button { background:#00C853; color:#000; border:none; padding:14px 20px; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; width:100%; margin-top:10px; }
+  .menu { position:fixed; bottom:0; left:0; right:0; background:#111; display:flex; justify-content:space-around; padding:12px 0; }
+  h2 { color:#00C853; }
 </style>
 </head>
 <body>
 
-<h2>Dymple <span style="color:#00C853;">Simulador</span></h2>
-
-<div class="config">
-  <h3>Painel de Teste</h3>
-  <label>Valor da Venda R$</label>
-  <input id="valor" type="number" value="97.00">
-  <label>Nome do Produto</label>
-  <input id="produto" type="text" value="Curso Dymple">
-  <label>Notificações por Minuto</label>
-  <input id="qtd" type="number" value="1">
-  <button onclick="iniciarSimulacao()">Iniciar Simulação</button>
-  <button onclick="pararSimulacao()" style="background:#555;">Parar</button>
-</div>
+<h2>🌵 Dymple</h2>
+<p>Painel de Teste de Notificação</p>
 
 <div class="card">
-  <h3>Última Venda</h3>
-  <p id="ultimaVenda">Aguardando...</p>
+  <h3>Última Venda Simulada</h3>
+  <p id="ultimaVenda">Nenhuma venda ainda</p>
 </div>
 
-<div id="notif" class="notif"></div>
+<button onclick="ativarNotificacao()">1. Ativar Notificações</button>
+<button onclick="simularVenda()">2. Simular Venda R$ 97,00</button>
+<p id="status" style="color:#aaa; font-size:12px;">Status: Aguardando</p>
 
 <div class="menu">
   <div>Conta</div><div>Vendas</div><div style="background:#00C853; border-radius:50%; padding:12px;">🌵</div><div>Saque</div><div>Ajustes</div>
 </div>
 
 <script>
-let intervalo;
-function mostrarNotif(valor, produto) {
-  const notif = document.getElementById('notif');
-  notif.innerHTML = `🎉 Nova Venda!<br>${produto} - R$ ${valor}`;
-  notif.style.display = 'block';
-  document.getElementById('ultimaVenda').innerText = `${produto} - R$ ${valor}`;
-  setTimeout(()=> notif.style.display = 'none', 4000);
+// Registra o Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
 }
-function iniciarSimulacao() {
-  pararSimulacao();
-  const valor = document.getElementById('valor').value;
-  const produto = document.getElementById('produto').value;
-  const qtd = document.getElementById('qtd').value;
-  const tempo = 60000 / qtd;
-  mostrarNotif(valor, produto);
-  intervalo = setInterval(()=> mostrarNotif(valor, produto), tempo);
+
+// Pede permissão
+async function ativarNotificacao() {
+  const permission = await Notification.requestPermission();
+  document.getElementById('status').innerText = 'Status: ' + permission;
+  if(permission === 'granted') alert('Notificações do Dymple ativadas!');
 }
-function pararSimulacao() {
-  clearInterval(intervalo);
+
+// Simula uma venda e mostra notificação
+function simularVenda() {
+  if(Notification.permission === 'granted') {
+    const valor = "R$ 97,00";
+    const produto = "Curso Dymple";
+    
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification('Dymple', {
+        body: `Nova venda! ${produto} - Comissão ${valor}`,
+        icon: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png',
+        badge: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png',
+        vibrate: [200, 100, 200]
+      });
+    });
+    
+    document.getElementById('ultimaVenda').innerText = `${produto} - ${valor}`;
+  } else {
+    alert('Ative as notificações primeiro');
+  }
 }
 </script>
-
 </body>
 </html>
