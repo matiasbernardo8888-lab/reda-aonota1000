@@ -39,16 +39,22 @@
 </div>
 
 <script>
-// Registra o Service Worker - CORRIGIDO PRA GITHUB
+// 1. REGISTRA O SERVICE WORKER - CORRIGIDO PRA IOS
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
-    .then(reg => console.log('SW registrado'))
-    .catch(err => console.log('Erro SW:', err));
+    .then(reg => {
+      console.log('SW registrado');
+      document.getElementById('status').innerText = 'Status: SW OK';
+    })
+    .catch(err => {
+      console.log('Erro SW:', err);
+      document.getElementById('status').innerText = 'Status: Erro SW';
+    });
   });
 }
 
-// Pede permissão
+// 2. PEDE PERMISSÃO
 async function ativarNotificacao() {
   if (!("Notification" in window)) {
     alert("Seu navegador não suporta notificações");
@@ -59,15 +65,13 @@ async function ativarNotificacao() {
   document.getElementById('status').innerText = 'Status: ' + permission;
   
   if(permission === 'granted') {
-    alert('Notificações do Dymple ativadas!');
-  } else if(permission === 'default') {
-    alert('Toque em "Permitir" quando aparecer');
+    alert('Notificações do Dymple ativadas! \nAgora vá em Ajustes > Dymple > Notificações e ative tudo');
   } else {
-    alert('Permissão negada. Libere nas Ajustes do iPhone > Safari');
+    alert('Permissão negada. Libere em Ajustes do iPhone > Dymple > Notificações');
   }
 }
 
-// Simula uma venda e mostra notificação
+// 3. SIMULA VENDA USANDO O SERVICE WORKER
 function simularVenda() {
   if(Notification.permission === 'granted') {
     const valor = "R$ 97,00";
@@ -78,7 +82,8 @@ function simularVenda() {
         body: `Nova venda! ${produto} - Comissão ${valor}`,
         icon: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png',
         badge: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png',
-        vibrate: [200, 100, 200]
+        vibrate: [200, 100, 200],
+        tag: 'venda'
       });
     });
     
@@ -90,4 +95,3 @@ function simularVenda() {
 </script>
 </body>
 </html>
-alert("Notificação suportada: " + ("Notification" in window) + " Permissão: " + Notification.permission)
