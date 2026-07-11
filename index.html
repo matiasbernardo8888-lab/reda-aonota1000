@@ -2,16 +2,21 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Dymple</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00C853">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dymple">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
 <style>
-  body { background:#0A0A0A; color:#fff; font-family:Arial; margin:0; padding:16px; padding-bottom:80px; text-align:center; }
+  body { background:#0A0A0A; color:#fff; font-family:-apple-system, Arial; margin:0; padding:16px; padding-bottom:80px; text-align:center; }
   .card { background:#1A1A1A; padding:16px; border-radius:12px; margin:20px 0; }
   button { background:#00C853; color:#000; border:none; padding:14px 20px; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; width:100%; margin-top:10px; }
   .menu { position:fixed; bottom:0; left:0; right:0; background:#111; display:flex; justify-content:space-around; padding:12px 0; }
   h2 { color:#00C853; }
+  .aviso { color:#FFC107; font-size:12px; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -27,22 +32,39 @@
 <button onclick="ativarNotificacao()">1. Ativar Notificações</button>
 <button onclick="simularVenda()">2. Simular Venda R$ 97,00</button>
 <p id="status" style="color:#aaa; font-size:12px;">Status: Aguardando</p>
+<p class="aviso">iPhone: Instale na Tela Inicial primeiro</p>
 
 <div class="menu">
   <div>Conta</div><div>Vendas</div><div style="background:#00C853; border-radius:50%; padding:12px;">🌵</div><div>Saque</div><div>Ajustes</div>
 </div>
 
 <script>
-// Registra o Service Worker
+// Registra o Service Worker - CORRIGIDO PRA GITHUB
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+    .then(reg => console.log('SW registrado'))
+    .catch(err => console.log('Erro SW:', err));
+  });
 }
 
 // Pede permissão
 async function ativarNotificacao() {
+  if (!("Notification" in window)) {
+    alert("Seu navegador não suporta notificações");
+    return;
+  }
+  
   const permission = await Notification.requestPermission();
   document.getElementById('status').innerText = 'Status: ' + permission;
-  if(permission === 'granted') alert('Notificações do Dymple ativadas!');
+  
+  if(permission === 'granted') {
+    alert('Notificações do Dymple ativadas!');
+  } else if(permission === 'default') {
+    alert('Toque em "Permitir" quando aparecer');
+  } else {
+    alert('Permissão negada. Libere nas Ajustes do iPhone > Safari');
+  }
 }
 
 // Simula uma venda e mostra notificação
@@ -62,7 +84,7 @@ function simularVenda() {
     
     document.getElementById('ultimaVenda').innerText = `${produto} - ${valor}`;
   } else {
-    alert('Ative as notificações primeiro');
+    alert('Ative as notificações primeiro no botão acima');
   }
 }
 </script>
