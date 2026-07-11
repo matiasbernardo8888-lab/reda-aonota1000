@@ -44,7 +44,6 @@
 
 <script>
 let intervalo;
-
 function mostrarNotif(valor, produto) {
   const notif = document.getElementById('notif');
   notif.innerHTML = `🎉 Nova Venda!<br>${produto} - R$ ${valor}`;
@@ -52,18 +51,15 @@ function mostrarNotif(valor, produto) {
   document.getElementById('ultimaVenda').innerText = `${produto} - R$ ${valor}`;
   setTimeout(()=> notif.style.display = 'none', 4000);
 }
-
 function iniciarSimulacao() {
   pararSimulacao();
   const valor = document.getElementById('valor').value;
   const produto = document.getElementById('produto').value;
   const qtd = document.getElementById('qtd').value;
-  const tempo = 60000 / qtd; // converte min para ms
-  
-  mostrarNotif(valor, produto); // mostra 1 na hora
+  const tempo = 60000 / qtd;
+  mostrarNotif(valor, produto);
   intervalo = setInterval(()=> mostrarNotif(valor, produto), tempo);
 }
-
 function pararSimulacao() {
   clearInterval(intervalo);
 }
