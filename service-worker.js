@@ -1,12 +1,14 @@
+// FORÇA ATIVAR IMEDIATO
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('notificationclick', function(event) {
+// QUANDO CLICAR NA NOTIFICAÇÃO
+self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
     clients.openWindow('/')
