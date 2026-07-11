@@ -1,97 +1,2018 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Dymple</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00C853">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dymple">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
-<style>
-  body { background:#0A0A0A; color:#fff; font-family:-apple-system, Arial; margin:0; padding:16px; padding-bottom:80px; text-align:center; }
-  .card { background:#1A1A1A; padding:16px; border-radius:12px; margin:20px 0; }
-  button { background:#00C853; color:#000; border:none; padding:14px 20px; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; width:100%; margin-top:10px; }
-  .menu { position:fixed; bottom:0; left:0; right:0; background:#111; display:flex; justify-content:space-around; padding:12px 0; }
-  h2 { color:#00C853; }
-  .aviso { color:#FFC107; font-size:12px; margin-top:10px; }
-</style>
-</head>
-<body>
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
+  Eye,
+  EyeOff,
+  Bell,
+  Wallet,
+  ArrowDownToLine,
+  BarChart3,
+  ShoppingBag,
+  Settings as SettingsIcon,
+  LayoutGrid,
+  Receipt,
+  LifeBuoy,
+  ShieldCheck,
+  ChevronRight,
+  X,
+  Check,
+  Pencil,
+  Plus,
+  Trash2,
+  Play,
+  Pause,
+  Sparkles,
+  TrendingUp,
+  Clock,
+  Zap,
+  CircleDollarSign,
+  QrCode,
+  Info,
+  ArrowUpRight,
+  ArrowDownRight,
+  Menu,
+} from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-<h2>🌵 Dymple</h2>
-<p>Painel de Teste de Notificação</p>
+/* ============================================================================
+   ÍRIS — PAINEL DE VENDAS (SIMULADO)
+   ----------------------------------------------------------------------------
+   Ferramenta de estudo de front-end / dashboards de vendas.
+   Todos os dados (vendas, saldos, clientes) são 100% fictícios e gerados no
+   navegador. Nenhuma transação real ocorre. As "notificações" de venda são
+   renderizadas dentro da própria página (toasts + central de notificações),
+   e não usam a API de notificações do sistema operacional — este painel não
+   deve ser confundido com uma plataforma de pagamentos real.
+   ============================================================================ */
 
-<div class="card">
-  <h3>Última Venda Simulada</h3>
-  <p id="ultimaVenda">Nenhuma venda ainda</p>
-</div>
+/* ---------------------------------------------------------------------------
+   Utilitários
+--------------------------------------------------------------------------- */
 
-<button onclick="ativarNotificacao()">1. Ativar Notificações</button>
-<button onclick="simularVenda()">2. Simular Venda R$ 97,00</button>
-<p id="status" style="color:#aaa; font-size:12px;">Status: Aguardando</p>
-<p class="aviso">iPhone: Instale na Tela Inicial primeiro</p>
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
-<div class="menu">
-  <div>Conta</div><div>Vendas</div><div style="background:#00C853; border-radius:50%; padding:12px;">🌵</div><div>Saque</div><div>Ajustes</div>
-</div>
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-<script>
-// 1. REGISTRA O SERVICE WORKER - CORRIGIDO PRA IOS
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-    .then(reg => {
-      console.log('SW registrado');
-      document.getElementById('status').innerText = 'Status: SW OK';
-    })
-    .catch(err => {
-      console.log('Erro SW:', err);
-      document.getElementById('status').innerText = 'Status: Erro SW';
-    });
+const randomBetween = (min, max) => Math.random() * (max - min) + min;
+
+const randomInt = (min, max) => Math.floor(randomBetween(min, max + 1));
+
+const pickWeighted = (items) => {
+  const total = items.reduce((sum, item) => sum + item.weight, 0);
+  let roll = Math.random() * total;
+  for (const item of items) {
+    if (roll < item.weight) return item;
+    roll -= item.weight;
+  }
+  return items[items.length - 1];
+};
+
+const formatCurrency = (value) =>
+  value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
   });
-}
 
-// 2. PEDE PERMISSÃO
-async function ativarNotificacao() {
-  if (!("Notification" in window)) {
-    alert("Seu navegador não suporta notificações");
-    return;
-  }
-  
-  const permission = await Notification.requestPermission();
-  document.getElementById('status').innerText = 'Status: ' + permission;
-  
-  if(permission === 'granted') {
-    alert('Notificações do Dymple ativadas! \nAgora vá em Ajustes > Dymple > Notificações e ative tudo');
-  } else {
-    alert('Permissão negada. Libere em Ajustes do iPhone > Dymple > Notificações');
-  }
-}
+const formatCompactNumber = (value) => {
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace(".0", "")}K`;
+  return `${value}`;
+};
 
-// 3. SIMULA VENDA USANDO O SERVICE WORKER
-function simularVenda() {
-  if(Notification.permission === 'granted') {
-    const valor = "R$ 97,00";
-    const produto = "Curso Dymple";
-    
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification('Dymple', {
-        body: `Nova venda! ${produto} - Comissão ${valor}`,
-        icon: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png',
-        badge: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png',
-        vibrate: [200, 100, 200],
-        tag: 'venda'
-      });
+const formatTime = (date) =>
+  date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+const formatDateShort = (date) =>
+  date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+
+const formatRelative = (date, now) => {
+  const diffMs = now - date;
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 5) return "agora";
+  if (diffSec < 60) return `há ${diffSec}s`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `há ${diffHour} h`;
+  return formatDateShort(date);
+};
+
+const maskBuyer = (name) => {
+  const parts = name.split(" ");
+  if (parts.length === 1) return `${parts[0][0]}${"*".repeat(Math.max(parts[0].length - 1, 2))}`;
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  return `${first} ${last[0]}${"*".repeat(Math.max(last.length - 1, 2))}`;
+};
+
+/* ---------------------------------------------------------------------------
+   Dados fictícios — catálogo de produtos, nomes de compradores
+--------------------------------------------------------------------------- */
+
+const BUYER_FIRST_NAMES = [
+  "Marina", "Thiago", "Camila", "Rafael", "Beatriz", "Lucas", "Fernanda",
+  "Gustavo", "Larissa", "André", "Juliana", "Diego", "Patrícia", "Bruno",
+  "Vanessa", "Eduardo", "Aline", "Rodrigo", "Sabrina", "Felipe", "Renata",
+  "Vitor", "Carolina", "Marcelo", "Isabela",
+];
+
+const BUYER_LAST_NAMES = [
+  "Souza", "Lima", "Pereira", "Costa", "Almeida", "Ribeiro", "Carvalho",
+  "Gomes", "Martins", "Rocha", "Barbosa", "Cardoso", "Teixeira", "Nunes",
+  "Moreira", "Araújo", "Correia", "Dias", "Fonseca", "Pinto",
+];
+
+const randomBuyerName = () =>
+  `${BUYER_FIRST_NAMES[randomInt(0, BUYER_FIRST_NAMES.length - 1)]} ${
+    BUYER_LAST_NAMES[randomInt(0, BUYER_LAST_NAMES.length - 1)]
+  }`;
+
+const PRODUCT_SEED = [
+  {
+    id: "p1",
+    name: "Mentoria Ápex",
+    category: "Mentoria",
+    basePrice: 497,
+    color: "#a78bfa",
+    weight: 3,
+    active: true,
+  },
+  {
+    id: "p2",
+    name: "Curso Domínio Total",
+    category: "Curso online",
+    basePrice: 197,
+    color: "#c084fc",
+    weight: 6,
+    active: true,
+  },
+  {
+    id: "p3",
+    name: "E-book Foco Absoluto",
+    category: "E-book",
+    basePrice: 37,
+    color: "#8b5cf6",
+    weight: 10,
+    active: true,
+  },
+  {
+    id: "p4",
+    name: "Clube Vórtice",
+    category: "Assinatura mensal",
+    basePrice: 67,
+    color: "#7c3aed",
+    weight: 7,
+    active: true,
+  },
+  {
+    id: "p5",
+    name: "Masterclass Escala Rápida",
+    category: "Curso online",
+    basePrice: 297,
+    color: "#d8b4fe",
+    weight: 4,
+    active: true,
+  },
+  {
+    id: "p6",
+    name: "Templates Nébula",
+    category: "Pacote digital",
+    basePrice: 27,
+    color: "#a855f7",
+    weight: 8,
+    active: true,
+  },
+];
+
+const NAV_ITEMS = [
+  { id: "conta", label: "Conta", icon: LayoutGrid },
+  { id: "vendas", label: "Vendas", icon: Receipt },
+  { id: "painel", label: "Íris", icon: Sparkles, isCenter: true },
+  { id: "saque", label: "Saque", icon: ArrowDownToLine },
+  { id: "ajustes", label: "Ajustes", icon: SettingsIcon },
+];
+
+const SIDEBAR_ITEMS = [
+  { id: "conta", label: "Conta", icon: LayoutGrid },
+  { id: "vendas", label: "Vendas", icon: Receipt },
+  { id: "relatorios", label: "Relatórios avançados", icon: BarChart3 },
+  { id: "produtos", label: "Gerenciar produtos", icon: ShoppingBag },
+  { id: "saque", label: "Saque", icon: ArrowDownToLine },
+  { id: "ajustes", label: "Ajustes", icon: SettingsIcon },
+  { id: "suporte", label: "Suporte", icon: LifeBuoy },
+];
+
+/* ---------------------------------------------------------------------------
+   Geração de série histórica (para gráficos) a partir do estado atual
+--------------------------------------------------------------------------- */
+
+const buildHourlySeries = (sales) => {
+  const now = new Date();
+  const buckets = [];
+  for (let i = 23; i >= 0; i--) {
+    const bucketStart = new Date(now);
+    bucketStart.setHours(now.getHours() - i, 0, 0, 0);
+    buckets.push({
+      label: bucketStart.getHours().toString().padStart(2, "0") + "h",
+      start: bucketStart.getTime(),
+      end: bucketStart.getTime() + 60 * 60 * 1000,
+      total: 0,
+      vendas: 0,
     });
-    
-    document.getElementById('ultimaVenda').innerText = `${produto} - ${valor}`;
-  } else {
-    alert('Ative as notificações primeiro no botão acima');
   }
+  sales.forEach((sale) => {
+    if (sale.status !== "approved") return;
+    const t = sale.approvedAt ? sale.approvedAt.getTime() : sale.createdAt.getTime();
+    const bucket = buckets.find((b) => t >= b.start && t < b.end);
+    if (bucket) {
+      bucket.total += sale.amount;
+      bucket.vendas += 1;
+    }
+  });
+  return buckets;
+};
+
+const buildProductShare = (sales, products) => {
+  const map = {};
+  products.forEach((p) => (map[p.id] = { name: p.name, value: 0, color: p.color }));
+  sales.forEach((sale) => {
+    if (sale.status !== "approved") return;
+    if (!map[sale.productId]) return;
+    map[sale.productId].value += sale.amount;
+  });
+  return Object.values(map).filter((entry) => entry.value > 0);
+};
+
+/* ---------------------------------------------------------------------------
+   Componente: marca / logotipo animado (elemento de assinatura)
+--------------------------------------------------------------------------- */
+
+function IrisMark({ pulse, size = 40 }) {
+  return (
+    <div
+      className="relative flex items-center justify-center rounded-2xl"
+      style={{
+        width: size,
+        height: size,
+        background:
+          "radial-gradient(circle at 30% 30%, #c084fc, #7c3aed 55%, #2e1065 100%)",
+        boxShadow: pulse
+          ? "0 0 0 6px rgba(168,85,247,0.18), 0 0 24px rgba(168,85,247,0.55)"
+          : "0 0 0 0 rgba(168,85,247,0)",
+        transition: "box-shadow 400ms ease",
+      }}
+    >
+      <div
+        className="rounded-full"
+        style={{
+          width: size * 0.42,
+          height: size * 0.42,
+          background:
+            "conic-gradient(from 90deg, #ede9fe, #c084fc, #6d28d9, #ede9fe)",
+          animation: pulse ? "iris-spin 900ms linear" : "none",
+        }}
+      />
+      <style>{`
+        @keyframes iris-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
 }
-</script>
-</body>
-</html>
+
+/* ---------------------------------------------------------------------------
+   Componente: banner de aviso (fixo, contexto de estudo)
+--------------------------------------------------------------------------- */
+
+function StudyBanner() {
+  return (
+    <div className="flex items-start gap-2 rounded-xl border border-violet-800/60 bg-violet-950/60 px-4 py-3 text-xs text-violet-200">
+      <Info size={16} className="mt-0.5 shrink-0 text-violet-400" />
+      <p>
+        Ambiente de simulação para fins de estudo. Vendas, saldos e clientes
+        são dados fictícios gerados neste navegador — nenhuma transação real
+        acontece e nada é enviado à central de notificações do sistema.
+      </p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Componente: Toast de venda (aparece dentro da página)
+--------------------------------------------------------------------------- */
+
+function SaleToast({ toast, onDismiss }) {
+  useEffect(() => {
+    const timer = setTimeout(() => onDismiss(toast.id), 5200);
+    return () => clearTimeout(timer);
+  }, [toast.id, onDismiss]);
+
+  const isApproved = toast.kind === "approved";
+
+  return (
+    <div
+      className="pointer-events-auto w-80 max-w-[90vw] overflow-hidden rounded-2xl border border-violet-800/50 bg-zinc-950/95 shadow-2xl shadow-violet-950/60 backdrop-blur"
+      style={{ animation: "iris-toast-in 320ms cubic-bezier(0.16,1,0.3,1)" }}
+    >
+      <div className="flex items-start gap-3 p-3.5">
+        <div
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+          style={{
+            background: isApproved
+              ? "linear-gradient(135deg,#22c55e,#15803d)"
+              : "linear-gradient(135deg,#a855f7,#6d28d9)",
+          }}
+        >
+          {isApproved ? <Check size={17} className="text-white" /> : <QrCode size={16} className="text-white" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-zinc-50">
+            {isApproved ? "Venda aprovada · simulada" : "Pix gerado · simulado"}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-zinc-400">{toast.productName}</p>
+          <p className="mt-1 text-sm font-medium text-violet-300">
+            Comissão: {formatCurrency(toast.commission)}
+          </p>
+        </div>
+        <button
+          onClick={() => onDismiss(toast.id)}
+          className="rounded-full p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
+          aria-label="Dispensar notificação"
+        >
+          <X size={14} />
+        </button>
+      </div>
+      <div className="h-0.5 w-full bg-zinc-800">
+        <div
+          className="h-full bg-violet-500"
+          style={{ animation: "iris-toast-bar 5.2s linear forwards" }}
+        />
+      </div>
+      <style>{`
+        @keyframes iris-toast-in {
+          from { opacity: 0; transform: translateX(24px) scale(0.97); }
+          to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes iris-toast-bar {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function ToastStack({ toasts, onDismiss }) {
+  return (
+    <div className="pointer-events-none fixed right-3 top-16 z-[60] flex flex-col gap-2.5 sm:right-6 sm:top-6">
+      {toasts.map((toast) => (
+        <SaleToast key={toast.id} toast={toast} onDismiss={onDismiss} />
+      ))}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Componente: Central de notificações (dropdown do sino)
+--------------------------------------------------------------------------- */
+
+function NotificationCenter({ open, onClose, notifications, onClearAll }) {
+  if (!open) return null;
+  return (
+    <div className="absolute right-0 top-12 z-50 w-80 max-w-[88vw] overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60">
+      <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
+        <p className="text-sm font-semibold text-zinc-100">Notificações</p>
+        <button
+          onClick={onClearAll}
+          className="text-xs font-medium text-violet-400 transition hover:text-violet-300"
+        >
+          Limpar tudo
+        </button>
+      </div>
+      <div className="max-h-96 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+            <Bell size={22} className="text-zinc-700" />
+            <p className="text-xs text-zinc-500">
+              Nenhuma notificação por aqui ainda.
+            </p>
+          </div>
+        ) : (
+          notifications.map((n) => (
+            <div
+              key={n.id}
+              className="flex gap-3 border-b border-zinc-900 px-4 py-3 last:border-0 hover:bg-zinc-900/60"
+            >
+              <div
+                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                style={{
+                  background:
+                    n.kind === "approved"
+                      ? "linear-gradient(135deg,#22c55e,#15803d)"
+                      : "linear-gradient(135deg,#a855f7,#6d28d9)",
+                }}
+              >
+                {n.kind === "approved" ? (
+                  <Check size={14} className="text-white" />
+                ) : (
+                  <QrCode size={13} className="text-white" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-zinc-100">
+                  {n.kind === "approved" ? "Venda aprovada!" : "Pix gerado!"}
+                </p>
+                <p className="truncate text-[11px] text-zinc-500">{n.productName}</p>
+                <p className="text-[11px] text-violet-400">
+                  Comissão: {formatCurrency(n.commission)}
+                </p>
+              </div>
+              <span className="shrink-0 text-[10px] text-zinc-600">
+                {formatTime(n.createdAt)}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Componente: campo editável em linha (deixa "tudo modificável")
+--------------------------------------------------------------------------- */
+
+function EditableValue({ value, onChange, prefix = "", suffix = "", asCurrency = false }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = () => {
+    const parsed = parseFloat(draft.replace(",", "."));
+    if (!Number.isNaN(parsed) && parsed >= 0) {
+      onChange(parsed);
+    }
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="text-zinc-500">{prefix}</span>
+        <input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && commit()}
+          onBlur={commit}
+          className="w-28 rounded-lg border border-violet-600 bg-zinc-900 px-2 py-1 text-lg font-bold text-zinc-50 outline-none"
+        />
+        <span className="text-zinc-500">{suffix}</span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="group flex items-center gap-2 text-left"
+      title="Clique para editar"
+    >
+      <span className="text-2xl font-bold tracking-tight text-zinc-50">
+        {asCurrency ? formatCurrency(value) : `${prefix}${value}${suffix}`}
+      </span>
+      <Pencil
+        size={13}
+        className="text-zinc-600 opacity-0 transition group-hover:opacity-100"
+      />
+    </button>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Componente: cartão de estatística
+--------------------------------------------------------------------------- */
+
+function StatCard({ label, value, icon: Icon, accent, actionLabel, onAction, hidden, sub }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-zinc-500">{label}</p>
+        {Icon && (
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-lg"
+            style={{ background: `${accent}22` }}
+          >
+            <Icon size={14} style={{ color: accent }} />
+          </div>
+        )}
+      </div>
+      <p className="mt-2 text-2xl font-bold text-zinc-50">
+        {hidden ? "••••••" : value}
+      </p>
+      {sub && <p className="mt-1 text-[11px] text-zinc-500">{sub}</p>}
+      {actionLabel && (
+        <button
+          onClick={onAction}
+          className="mt-3 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-500"
+        >
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Componente: barra de progresso da meta de faturamento
+--------------------------------------------------------------------------- */
+
+function GoalProgress({ revenue, goal, onEditGoal }) {
+  const pct = clamp((revenue / goal) * 100, 0, 100);
+  return (
+    <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-zinc-950 to-zinc-950 p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🏆</span>
+          <p className="text-sm font-medium text-zinc-300">Faturamento</p>
+        </div>
+        <button
+          onClick={onEditGoal}
+          className="text-[11px] font-medium text-amber-400 hover:text-amber-300"
+        >
+          editar meta
+        </button>
+      </div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="text-xl font-bold text-zinc-50">
+          {formatCurrency(revenue)}
+        </span>
+        <span className="text-sm text-zinc-500">/ {formatCurrency(goal)}</span>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300 transition-all duration-700"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="mt-1.5 text-right text-[11px] text-zinc-500">
+        {pct.toFixed(1)}%
+      </p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Componente: acesso rápido
+--------------------------------------------------------------------------- */
+
+function QuickAccessGrid({ onNavigate }) {
+  const items = [
+    { id: "relatorios", label: "Relatórios\nAvançados", icon: BarChart3 },
+    { id: "produtos", label: "Gerenciar\nProdutos", icon: ShoppingBag },
+    { id: "seguranca", label: "iToken de\nSegurança", icon: ShieldCheck },
+    { id: "suporte", label: "Suporte\nSuper Rápido", icon: LifeBuoy },
+  ];
+  return (
+    <div>
+      <p className="mb-2 text-sm font-semibold text-zinc-200">Acesso rápido</p>
+      <div className="grid grid-cols-2 gap-3">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3.5 text-left transition hover:border-violet-700 hover:bg-zinc-900"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400">
+              <item.icon size={17} />
+            </div>
+            <span className="whitespace-pre-line text-xs font-medium leading-tight text-zinc-300">
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Conta (dashboard principal)
+--------------------------------------------------------------------------- */
+
+function AccountPage({
+  state,
+  setState,
+  hideValues,
+  onNavigate,
+  sales,
+  now,
+}) {
+  const hourly = useMemo(() => buildHourlySeries(sales), [sales]);
+  const productShare = useMemo(
+    () => buildProductShare(sales, state.products),
+    [sales, state.products]
+  );
+
+  const todaySales = sales.filter(
+    (s) => s.status === "approved" && s.approvedAt && isSameDay(s.approvedAt, now)
+  );
+  const todayTotal = todaySales.reduce((sum, s) => sum + s.amount, 0);
+  const todayCount = todaySales.length;
+  const avgTicket = todayCount ? todayTotal / todayCount : 0;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <StudyBanner />
+
+      <div className="overflow-hidden rounded-2xl border border-violet-800/40 bg-gradient-to-br from-violet-700/30 via-zinc-950 to-zinc-950 p-5">
+        <p className="text-xs font-medium uppercase tracking-wider text-violet-400">
+          Simule enquanto estuda
+        </p>
+        <p className="mt-1 text-lg font-semibold text-zinc-50">
+          Lucre com o motor de simulação de vendas
+        </p>
+        <p className="mt-1 max-w-md text-sm text-zinc-400">
+          Configure a frequência e o valor das vendas em Ajustes e acompanhe
+          o painel reagir em tempo real.
+        </p>
+        <button
+          onClick={() => onNavigate("ajustes")}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-violet-500"
+        >
+          Configurar simulação <ChevronRight size={14} />
+        </button>
+      </div>
+
+      <GoalProgress
+        revenue={state.revenue}
+        goal={state.goal}
+        onEditGoal={() => {
+          const next = window.prompt("Nova meta de faturamento (R$):", state.goal);
+          const parsed = parseFloat(next);
+          if (!Number.isNaN(parsed) && parsed > 0) {
+            setState((s) => ({ ...s, goal: parsed }));
+          }
+        }}
+      />
+
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard
+          label="Saldo"
+          value={formatCurrency(state.balance)}
+          icon={Wallet}
+          accent="#22c55e"
+          hidden={hideValues}
+          actionLabel="Sacar"
+          onAction={() => onNavigate("saque")}
+        />
+        <StatCard
+          label="Saldo pendente"
+          value={formatCurrency(state.pendingBalance)}
+          icon={Clock}
+          accent="#a855f7"
+          hidden={hideValues}
+          actionLabel="Receitas"
+          onAction={() => onNavigate("vendas")}
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Vendas hoje" value={String(todayCount)} icon={Receipt} accent="#c084fc" />
+        <StatCard
+          label="Faturado hoje"
+          value={formatCurrency(todayTotal)}
+          icon={TrendingUp}
+          accent="#22c55e"
+        />
+        <StatCard
+          label="Ticket médio"
+          value={formatCurrency(avgTicket)}
+          icon={CircleDollarSign}
+          accent="#f59e0b"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-zinc-200">
+            Faturamento nas últimas 24h
+          </p>
+          <span className="text-[11px] text-zinc-500">simulado</span>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={hourly}>
+            <defs>
+              <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#a855f7" stopOpacity={0.55} />
+                <stop offset="100%" stopColor="#a855f7" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="label"
+              stroke="#71717a"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              interval={2}
+            />
+            <YAxis
+              stroke="#71717a"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(v) => `R$${formatCompactNumber(v)}`}
+              width={48}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "#18181b",
+                border: "1px solid #3f3f46",
+                borderRadius: 10,
+                fontSize: 12,
+              }}
+              formatter={(value) => [formatCurrency(value), "Faturamento"]}
+            />
+            <Area
+              type="monotone"
+              dataKey="total"
+              stroke="#a855f7"
+              strokeWidth={2}
+              fill="url(#revGradient)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {productShare.length > 0 && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+          <p className="mb-3 text-sm font-semibold text-zinc-200">
+            Receita por produto
+          </p>
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width="55%" height={180}>
+              <PieChart>
+                <Pie
+                  data={productShare}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={45}
+                  outerRadius={75}
+                  paddingAngle={3}
+                >
+                  {productShare.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.color} stroke="none" />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: "#18181b",
+                    border: "1px solid #3f3f46",
+                    borderRadius: 10,
+                    fontSize: 12,
+                  }}
+                  formatter={(value) => formatCurrency(value)}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex-1 space-y-1.5">
+              {productShare
+                .sort((a, b) => b.value - a.value)
+                .map((entry) => (
+                  <div key={entry.name} className="flex items-center gap-2 text-xs">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: entry.color }}
+                    />
+                    <span className="flex-1 truncate text-zinc-400">{entry.name}</span>
+                    <span className="font-medium text-zinc-200">
+                      {formatCurrency(entry.value)}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <QuickAccessGrid onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+function isSameDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Vendas
+--------------------------------------------------------------------------- */
+
+function SalesPage({ sales, now }) {
+  const [filter, setFilter] = useState("all");
+
+  const filtered = sales.filter((s) => {
+    if (filter === "all") return true;
+    return s.status === filter;
+  });
+
+  const statusMeta = {
+    pending: { label: "Pix gerado", color: "#c084fc" },
+    approved: { label: "Aprovada", color: "#22c55e" },
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-lg font-semibold text-zinc-50">Vendas</p>
+        <span className="text-xs text-zinc-500">{filtered.length} registros</span>
+      </div>
+
+      <div className="flex gap-2">
+        {[
+          { id: "all", label: "Todas" },
+          { id: "pending", label: "Pix gerado" },
+          { id: "approved", label: "Aprovadas" },
+        ].map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+              filter === f.id
+                ? "bg-violet-600 text-white"
+                : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-zinc-800">
+        <div className="max-h-[560px] divide-y divide-zinc-900 overflow-y-auto">
+          {filtered.length === 0 && (
+            <div className="p-8 text-center text-sm text-zinc-500">
+              Nenhuma venda simulada ainda. Ative a simulação em Ajustes.
+            </div>
+          )}
+          {filtered.map((sale) => (
+            <div
+              key={sale.id}
+              className="flex items-center gap-3 bg-zinc-950 px-4 py-3 hover:bg-zinc-900/60"
+            >
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white"
+                style={{ background: sale.productColor }}
+              >
+                {sale.productName.slice(0, 1)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-zinc-100">
+                  {sale.productName}
+                </p>
+                <p className="truncate text-[11px] text-zinc-500">
+                  {maskBuyer(sale.buyer)} · Pix
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-zinc-100">
+                  {formatCurrency(sale.amount)}
+                </p>
+                <p className="text-[11px]" style={{ color: statusMeta[sale.status].color }}>
+                  {statusMeta[sale.status].label}
+                </p>
+              </div>
+              <span className="w-14 shrink-0 text-right text-[11px] text-zinc-600">
+                {formatRelative(sale.createdAt, now)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Relatórios avançados
+--------------------------------------------------------------------------- */
+
+function ReportsPage({ sales, state }) {
+  const hourly = useMemo(() => buildHourlySeries(sales), [sales]);
+  const productShare = useMemo(
+    () => buildProductShare(sales, state.products),
+    [sales, state.products]
+  );
+
+  const approved = sales.filter((s) => s.status === "approved");
+  const totalRevenue = approved.reduce((sum, s) => sum + s.amount, 0);
+  const totalCommission = approved.reduce((sum, s) => sum + s.commission, 0);
+  const conversionBase = sales.length || 1;
+  const conversionRate = (approved.length / conversionBase) * 100;
+
+  const byProductBar = state.products
+    .map((p) => ({
+      name: p.name.length > 14 ? p.name.slice(0, 13) + "…" : p.name,
+      vendas: approved.filter((s) => s.productId === p.id).length,
+      color: p.color,
+    }))
+    .sort((a, b) => b.vendas - a.vendas);
+
+  return (
+    <div className="flex flex-col gap-5">
+      <p className="text-lg font-semibold text-zinc-50">Relatórios avançados</p>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="Receita total" value={formatCurrency(totalRevenue)} icon={TrendingUp} accent="#22c55e" />
+        <StatCard label="Comissão total" value={formatCurrency(totalCommission)} icon={CircleDollarSign} accent="#a855f7" />
+        <StatCard label="Vendas aprovadas" value={String(approved.length)} icon={Check} accent="#c084fc" />
+        <StatCard label="Taxa de aprovação" value={`${conversionRate.toFixed(1)}%`} icon={Zap} accent="#f59e0b" />
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <p className="mb-3 text-sm font-semibold text-zinc-200">
+          Vendas por hora (últimas 24h)
+        </p>
+        <ResponsiveContainer width="100%" height={230}>
+          <BarChart data={hourly}>
+            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="label" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} interval={2} />
+            <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} width={30} allowDecimals={false} />
+            <Tooltip
+              contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 10, fontSize: 12 }}
+            />
+            <Bar dataKey="vendas" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <p className="mb-3 text-sm font-semibold text-zinc-200">
+          Vendas aprovadas por produto
+        </p>
+        <ResponsiveContainer width="100%" height={230}>
+          <BarChart data={byProductBar} layout="vertical" margin={{ left: 10 }}>
+            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" horizontal={false} />
+            <XAxis type="number" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
+            <YAxis
+              type="category"
+              dataKey="name"
+              stroke="#a1a1aa"
+              fontSize={11}
+              tickLine={false}
+              axisLine={false}
+              width={110}
+            />
+            <Tooltip contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 10, fontSize: 12 }} />
+            <Bar dataKey="vendas" radius={[0, 4, 4, 0]}>
+              {byProductBar.map((entry, idx) => (
+                <Cell key={idx} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {productShare.length > 0 && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+          <p className="mb-3 text-sm font-semibold text-zinc-200">Distribuição de receita</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie data={productShare} dataKey="value" nameKey="name" outerRadius={95} label>
+                {productShare.map((entry, idx) => (
+                  <Cell key={idx} fill={entry.color} stroke="#09090b" />
+                ))}
+              </Pie>
+              <Legend
+                formatter={(value) => <span className="text-xs text-zinc-400">{value}</span>}
+              />
+              <Tooltip
+                contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 10, fontSize: 12 }}
+                formatter={(value) => formatCurrency(value)}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Saque
+--------------------------------------------------------------------------- */
+
+function WithdrawPage({ state, setState }) {
+  const [amount, setAmount] = useState("");
+  const [withdrawals, setWithdrawals] = useState([
+    { id: uid(), amount: 340.12, date: new Date(Date.now() - 86400000 * 3), status: "Concluído" },
+    { id: uid(), amount: 128.5, date: new Date(Date.now() - 86400000 * 8), status: "Concluído" },
+  ]);
+
+  const handleWithdraw = () => {
+    const parsed = parseFloat(amount.replace(",", "."));
+    if (Number.isNaN(parsed) || parsed <= 0) return;
+    if (parsed > state.balance) {
+      window.alert("Saldo simulado insuficiente para este saque.");
+      return;
+    }
+    setState((s) => ({ ...s, balance: s.balance - parsed }));
+    setWithdrawals((w) => [
+      { id: uid(), amount: parsed, date: new Date(), status: "Processando" },
+      ...w,
+    ]);
+    setAmount("");
+  };
+
+  return (
+    <div className="flex flex-col gap-5">
+      <p className="text-lg font-semibold text-zinc-50">Saque</p>
+
+      <div className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-violet-700/20 to-zinc-950 p-5">
+        <p className="text-xs text-zinc-500">Saldo disponível para saque</p>
+        <p className="mt-1 text-3xl font-bold text-zinc-50">
+          {formatCurrency(state.balance)}
+        </p>
+        <p className="mt-1 text-xs text-zinc-500">
+          Saldo pendente (em liberação): {formatCurrency(state.pendingBalance)}
+        </p>
+
+        <div className="mt-4 flex gap-2">
+          <div className="flex flex-1 items-center rounded-xl border border-zinc-700 bg-zinc-900 px-3">
+            <span className="text-sm text-zinc-500">R$</span>
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0,00"
+              className="w-full bg-transparent px-2 py-2.5 text-sm text-zinc-100 outline-none"
+            />
+          </div>
+          <button
+            onClick={handleWithdraw}
+            className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500"
+          >
+            Sacar
+          </button>
+        </div>
+        <button
+          onClick={() => setAmount(String(state.balance.toFixed(2)))}
+          className="mt-2 text-[11px] font-medium text-violet-400 hover:text-violet-300"
+        >
+          usar saldo total
+        </button>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold text-zinc-200">Histórico de saques</p>
+        <div className="divide-y divide-zinc-900 overflow-hidden rounded-2xl border border-zinc-800">
+          {withdrawals.map((w) => (
+            <div key={w.id} className="flex items-center gap-3 bg-zinc-950 px-4 py-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400">
+                <ArrowUpRight size={16} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-zinc-100">
+                  {formatCurrency(w.amount)}
+                </p>
+                <p className="text-[11px] text-zinc-500">
+                  {w.date.toLocaleDateString("pt-BR")}
+                </p>
+              </div>
+              <span
+                className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                  w.status === "Concluído"
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "bg-amber-500/15 text-amber-400"
+                }`}
+              >
+                {w.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Gerenciar produtos
+--------------------------------------------------------------------------- */
+
+function ProductsPage({ products, setProducts }) {
+  const [editingId, setEditingId] = useState(null);
+  const [draft, setDraft] = useState({ name: "", basePrice: "", category: "" });
+
+  const startEdit = (product) => {
+    setEditingId(product.id);
+    setDraft({ name: product.name, basePrice: String(product.basePrice), category: product.category });
+  };
+
+  const saveEdit = (id) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              name: draft.name || p.name,
+              category: draft.category || p.category,
+              basePrice: parseFloat(draft.basePrice) || p.basePrice,
+            }
+          : p
+      )
+    );
+    setEditingId(null);
+  };
+
+  const toggleActive = (id) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
+  };
+
+  const removeProduct = (id) => {
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const addProduct = () => {
+    const palette = ["#a78bfa", "#c084fc", "#8b5cf6", "#7c3aed", "#d8b4fe", "#a855f7"];
+    setProducts((prev) => [
+      ...prev,
+      {
+        id: uid(),
+        name: "Novo produto",
+        category: "Categoria",
+        basePrice: 47,
+        color: palette[randomInt(0, palette.length - 1)],
+        weight: 5,
+        active: true,
+      },
+    ]);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-lg font-semibold text-zinc-50">Gerenciar produtos</p>
+        <button
+          onClick={addProduct}
+          className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500"
+        >
+          <Plus size={14} /> Novo produto
+        </button>
+      </div>
+      <p className="text-xs text-zinc-500">
+        Produtos ativos entram no sorteio de vendas simuladas. O peso relativo
+        (definido em Ajustes → distribuição) controla a frequência de cada um.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
+          >
+            {editingId === product.id ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  value={draft.name}
+                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-600"
+                  placeholder="Nome do produto"
+                />
+                <input
+                  value={draft.category}
+                  onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-600"
+                  placeholder="Categoria"
+                />
+                <input
+                  value={draft.basePrice}
+                  onChange={(e) => setDraft((d) => ({ ...d, basePrice: e.target.value }))}
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-600"
+                  placeholder="Preço base"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => saveEdit(product.id)}
+                    className="flex-1 rounded-lg bg-violet-600 py-1.5 text-xs font-semibold text-white hover:bg-violet-500"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="flex-1 rounded-lg bg-zinc-800 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-700"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-white"
+                      style={{ background: product.color }}
+                    >
+                      {product.name.slice(0, 1)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-100">{product.name}</p>
+                      <p className="text-[11px] text-zinc-500">{product.category}</p>
+                    </div>
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      product.active
+                        ? "bg-emerald-500/15 text-emerald-400"
+                        : "bg-zinc-800 text-zinc-500"
+                    }`}
+                  >
+                    {product.active ? "Ativo" : "Pausado"}
+                  </span>
+                </div>
+                <p className="mt-3 text-lg font-bold text-zinc-50">
+                  {formatCurrency(product.basePrice)}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => startEdit(product)}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-zinc-900 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
+                  >
+                    <Pencil size={12} /> Editar
+                  </button>
+                  <button
+                    onClick={() => toggleActive(product.id)}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-zinc-900 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
+                  >
+                    {product.active ? <Pause size={12} /> : <Play size={12} />}
+                    {product.active ? "Pausar" : "Ativar"}
+                  </button>
+                  <button
+                    onClick={() => removeProduct(product.id)}
+                    className="flex items-center justify-center rounded-lg bg-zinc-900 px-2.5 py-1.5 text-red-400 hover:bg-red-500/10"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Ajustes (motor de simulação — coração do pedido do usuário)
+--------------------------------------------------------------------------- */
+
+function Slider({ label, value, min, max, step, onChange, formatValue }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <label className="text-xs font-medium text-zinc-400">{label}</label>
+        <span className="text-xs font-semibold text-violet-400">
+          {formatValue ? formatValue(value) : value}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="iris-slider w-full"
+      />
+      <style>{`
+        .iris-slider {
+          -webkit-appearance: none;
+          height: 6px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #7c3aed, #3f3f46);
+          outline: none;
+        }
+        .iris-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 999px;
+          background: #c084fc;
+          border: 2px solid #f5f3ff;
+          cursor: pointer;
+          margin-top: -5px;
+        }
+        .iris-slider::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 999px;
+          background: #c084fc;
+          border: 2px solid #f5f3ff;
+          cursor: pointer;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function ToggleSwitch({ checked, onChange }) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+        checked ? "bg-violet-600" : "bg-zinc-700"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+          checked ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
+function SettingsPage({ settings, setSettings, state, setState, onResetAll }) {
+  return (
+    <div className="flex flex-col gap-5">
+      <p className="text-lg font-semibold text-zinc-50">Ajustes</p>
+      <StudyBanner />
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-zinc-100">Motor de simulação</p>
+            <p className="text-[11px] text-zinc-500">
+              Liga/desliga a geração automática de vendas fictícias.
+            </p>
+          </div>
+          <ToggleSwitch
+            checked={settings.simulationActive}
+            onChange={(v) => setSettings((s) => ({ ...s, simulationActive: v }))}
+          />
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <Slider
+            label="Vendas geradas por minuto"
+            value={settings.salesPerMinute}
+            min={0.5}
+            max={20}
+            step={0.5}
+            onChange={(v) => setSettings((s) => ({ ...s, salesPerMinute: v }))}
+            formatValue={(v) => `${v} / min`}
+          />
+
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-zinc-400">
+              Faixa de valor por venda
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 items-center rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5">
+                <span className="text-xs text-zinc-500">min R$</span>
+                <input
+                  type="number"
+                  value={settings.minValue}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      minValue: clamp(parseFloat(e.target.value) || 0, 1, s.maxValue),
+                    }))
+                  }
+                  className="w-full bg-transparent px-1.5 py-0.5 text-sm text-zinc-100 outline-none"
+                />
+              </div>
+              <span className="text-zinc-600">—</span>
+              <div className="flex flex-1 items-center rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5">
+                <span className="text-xs text-zinc-500">máx R$</span>
+                <input
+                  type="number"
+                  value={settings.maxValue}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      maxValue: Math.max(parseFloat(e.target.value) || 0, s.minValue),
+                    }))
+                  }
+                  className="w-full bg-transparent px-1.5 py-0.5 text-sm text-zinc-100 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <Slider
+            label="Taxa de comissão sobre a venda"
+            value={settings.commissionRate * 100}
+            min={10}
+            max={100}
+            step={5}
+            onChange={(v) => setSettings((s) => ({ ...s, commissionRate: v / 100 }))}
+            formatValue={(v) => `${v}%`}
+          />
+
+          <Slider
+            label="Tempo até aprovação do Pix"
+            value={settings.approvalDelaySeconds}
+            min={2}
+            max={60}
+            step={1}
+            onChange={(v) => setSettings((s) => ({ ...s, approvalDelaySeconds: v }))}
+            formatValue={(v) => `${v}s`}
+          />
+
+          <Slider
+            label="Chance de aprovação"
+            value={settings.approvalRate * 100}
+            min={30}
+            max={100}
+            step={5}
+            onChange={(v) => setSettings((s) => ({ ...s, approvalRate: v / 100 }))}
+            formatValue={(v) => `${v}%`}
+          />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <p className="mb-1 text-sm font-semibold text-zinc-100">Notificações</p>
+        <p className="mb-3 text-[11px] text-zinc-500">
+          As notificações aparecem como cartões dentro do painel (canto da
+          tela) e ficam salvas na central do sino — não usam o sistema de
+          notificações do celular.
+        </p>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs text-zinc-400">Mostrar toasts na tela</span>
+          <ToggleSwitch
+            checked={settings.showToasts}
+            onChange={(v) => setSettings((s) => ({ ...s, showToasts: v }))}
+          />
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs text-zinc-400">Notificar Pix gerado</span>
+          <ToggleSwitch
+            checked={settings.notifyPending}
+            onChange={(v) => setSettings((s) => ({ ...s, notifyPending: v }))}
+          />
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs text-zinc-400">Notificar venda aprovada</span>
+          <ToggleSwitch
+            checked={settings.notifyApproved}
+            onChange={(v) => setSettings((s) => ({ ...s, notifyApproved: v }))}
+          />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <p className="mb-3 text-sm font-semibold text-zinc-100">Valores da conta</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="mb-1 text-xs text-zinc-500">Saldo disponível</p>
+            <EditableValue
+              value={state.balance}
+              onChange={(v) => setState((s) => ({ ...s, balance: v }))}
+              asCurrency
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-zinc-500">Saldo pendente</p>
+            <EditableValue
+              value={state.pendingBalance}
+              onChange={(v) => setState((s) => ({ ...s, pendingBalance: v }))}
+              asCurrency
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-zinc-500">Faturamento acumulado</p>
+            <EditableValue
+              value={state.revenue}
+              onChange={(v) => setState((s) => ({ ...s, revenue: v }))}
+              asCurrency
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-zinc-500">Meta de faturamento</p>
+            <EditableValue
+              value={state.goal}
+              onChange={(v) => setState((s) => ({ ...s, goal: v }))}
+              asCurrency
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4">
+        <p className="text-sm font-semibold text-red-300">Zona de risco</p>
+        <p className="mt-1 text-[11px] text-red-300/70">
+          Reinicia todos os valores simulados (saldo, vendas, notificações)
+          para o estado inicial.
+        </p>
+        <button
+          onClick={onResetAll}
+          className="mt-3 rounded-lg bg-red-600/80 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-red-600"
+        >
+          Reiniciar simulação
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Página: Suporte (placeholder simples)
+--------------------------------------------------------------------------- */
+
+function SupportPage() {
+  const faqs = [
+    {
+      q: "As vendas geradas aqui são reais?",
+      a: "Não. Todo o painel roda localmente no seu navegador para fins de estudo de front-end e dashboards — nenhum pagamento é processado.",
+    },
+    {
+      q: "Posso mudar a frequência das vendas simuladas?",
+      a: "Sim, em Ajustes → Motor de simulação você controla vendas por minuto, faixa de valor e taxa de aprovação.",
+    },
+    {
+      q: "As notificações aparecem fora do site?",
+      a: "Não. Elas ficam confinadas à interface (toasts e central de notificações), sem usar a API de notificações do sistema operacional.",
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-lg font-semibold text-zinc-50">Suporte</p>
+      <div className="divide-y divide-zinc-900 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
+        {faqs.map((f, idx) => (
+          <div key={idx} className="p-4">
+            <p className="text-sm font-medium text-zinc-100">{f.q}</p>
+            <p className="mt-1 text-xs text-zinc-500">{f.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Layout: Sidebar (desktop)
+--------------------------------------------------------------------------- */
+
+function Sidebar({ page, onNavigate }) {
+  return (
+    <aside className="hidden w-60 shrink-0 flex-col border-r border-zinc-900 bg-zinc-950/60 p-4 lg:flex">
+      <div className="mb-6 flex items-center gap-2.5 px-1">
+        <IrisMark size={34} />
+        <div>
+          <p className="text-sm font-bold tracking-tight text-zinc-50">ÍRIS</p>
+          <p className="text-[10px] text-zinc-500">painel simulado</p>
+        </div>
+      </div>
+      <nav className="flex flex-1 flex-col gap-1">
+        {SIDEBAR_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              page === item.id
+                ? "bg-violet-600/20 text-violet-300"
+                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+            }`}
+          >
+            <item.icon size={16} />
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
+        <p className="text-[11px] font-medium text-zinc-300">Modo estudo</p>
+        <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">
+          Dados fictícios, gerados no navegador.
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Layout: Bottom navigation (mobile)
+--------------------------------------------------------------------------- */
+
+function BottomNav({ page, onNavigate }) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-900 bg-zinc-950/95 backdrop-blur lg:hidden">
+      <div className="mx-auto flex max-w-md items-center justify-between px-4 py-2">
+        {NAV_ITEMS.map((item) =>
+          item.isCenter ? (
+            <button
+              key={item.id}
+              onClick={() => onNavigate("conta")}
+              className="-mt-6 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg shadow-violet-900/50"
+              style={{ background: "linear-gradient(135deg,#a855f7,#6d28d9)" }}
+            >
+              <Sparkles size={22} className="text-white" />
+            </button>
+          ) : (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className="flex flex-col items-center gap-1 px-2 py-1"
+            >
+              <item.icon
+                size={19}
+                className={page === item.id ? "text-violet-400" : "text-zinc-500"}
+              />
+              <span
+                className={`text-[10px] font-medium ${
+                  page === item.id ? "text-violet-400" : "text-zinc-500"
+                }`}
+              >
+                {item.label}
+              </span>
+            </button>
+          )
+        )}
+      </div>
+    </nav>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Layout: Top bar
+--------------------------------------------------------------------------- */
+
+function TopBar({
+  hideValues,
+  onToggleHide,
+  notifOpen,
+  setNotifOpen,
+  notifications,
+  onClearAll,
+  onOpenSidebarMobile,
+}) {
+  const unread = notifications.length > 0;
+  return (
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-zinc-900 bg-zinc-950/90 px-4 py-3 backdrop-blur lg:px-6">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onOpenSidebarMobile}
+          className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-900 lg:hidden"
+        >
+          <Menu size={18} />
+        </button>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-700 text-sm font-bold text-white">
+          B
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-zinc-100">Olá, Bernardo</p>
+          <p className="text-[10px] text-zinc-500">Painel simulado · Íris</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleHide}
+          className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+          title={hideValues ? "Mostrar valores" : "Ocultar valores"}
+        >
+          {hideValues ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => setNotifOpen((v) => !v)}
+            className="relative rounded-lg p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+          >
+            <Bell size={18} />
+            {unread && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                {notifications.length > 9 ? "9+" : notifications.length}
+              </span>
+            )}
+          </button>
+          <NotificationCenter
+            open={notifOpen}
+            onClose={() => setNotifOpen(false)}
+            notifications={notifications}
+            onClearAll={onClearAll}
+          />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   App raiz
+--------------------------------------------------------------------------- */
+
+const INITIAL_STATE = {
+  balance: 15.03,
+  pendingBalance: 125.72,
+  revenue: 726,
+  goal: 10000,
+  products: PRODUCT_SEED,
+};
+
+const INITIAL_SETTINGS = {
+  simulationActive: true,
+  salesPerMinute: 4,
+  minValue: 15,
+  maxValue: 60,
+  commissionRate: 1,
+  approvalDelaySeconds: 8,
+  approvalRate: 0.85,
+  showToasts: true,
+  notifyPending: true,
+  notifyApproved: true,
+};
+
+export default function App() {
+  const [page, setPage] = useState("conta");
+  const [state, setState] = useState(INITIAL_STATE);
+  const [settings, setSettings] = useState(INITIAL_SETTINGS);
+  const [sales, setSales] = useState([]);
+  const [toasts, setToasts] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [hideValues, setHideValues] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [now, setNow] = useState(new Date());
+  const [pulse, setPulse] = useState(false);
+
+  const pendingTimersRef = useRef({});
+
+  // Clock tick, used for "relative time" labels around the app.
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const pushToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, toast]);
+    setPulse(true);
+    setTimeout(() => setPulse(false), 900);
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const pushNotification = useCallback((notif) => {
+    setNotifications((prev) => [notif, ...prev].slice(0, 40));
+  }, []);
+
+  const generateSale = useCallback(() => {
+    const activeProducts = state.products.filter((p) => p.active);
+    if (activeProducts.length === 0) return;
+    const product = pickWeighted(activeProducts);
+    const priceVariance = randomBetween(0.85, 1.15);
+    const rawAmount = clamp(
+      product.basePrice * priceVariance,
+      settings.minValue,
+      settings.maxValue
+    );
+    const amount = Math.round(rawAmount * 100) / 100;
+    const commission = Math.round(amount * settings.commissionRate * 100) / 100;
+    const id = uid();
+    const buyer = randomBuyerName();
+    const createdAt = new Date();
+
+    const sale = {
+      id,
+      productId: product.id,
+      productName: product.name,
+      productColor: product.color,
+      amount,
+      commission,
+      buyer,
+      status: "pending",
+      createdAt,
+      approvedAt: null,
+    };
+
+    setSales((prev) => [sale, ...prev].slice(0, 400));
+    setState((s) => ({ ...s, pendingBalance: s.pendingBalance + commission }));
+
+    if (settings.notifyPending) {
+      const toast = { id: uid(), kind: "pending", productName: product.name, commission };
+      if (settings.showToasts) pushToast(toast);
+      pushNotification({ ...toast, createdAt });
+    } else {
+      pushToast({});
+    }
+
+    const approvalDelay = settings.approvalDelaySeconds * 1000;
+    const timer = setTimeout(() => {
+      const approved = Math.random() < settings.approvalRate;
+      setSales((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? { ...s, status: approved ? "approved" : "pending", approvedAt: approved ? new Date() : null }
+            : s
+        )
+      );
+      if (approved) {
+        setState((s) => ({
+          ...s,
+          pendingBalance: Math.max(s.pendingBalance - commission, 0),
+          balance: s.balance + commission,
+          revenue: s.revenue + amount,
+        }));
+        if (settings.notifyApproved) {
+          const toast = { id: uid(), kind: "approved", productName: product.name, commission };
+          if (settings.showToasts) pushToast(toast);
+          pushNotification({ ...toast, createdAt: new Date() });
+        }
+      }
+      delete pendingTimersRef.current[id];
+    }, approvalDelay);
+
+    pendingTimersRef.current[id] = timer;
+  }, [state.products, settings, pushToast, pushNotification]);
+
+  // Simulation engine — interval derived from "vendas por minuto".
+  useEffect(() => {
+    if (!settings.simulationActive) return;
+    const intervalMs = clamp(60000 / settings.salesPerMinute, 400, 120000);
+    const t = setInterval(() => {
+      generateSale();
+    }, intervalMs);
+    return () => clearInterval(t);
+  }, [settings.simulationActive, settings.salesPerMinute, generateSale]);
+
+  // Cleanup any pending approval timers on unmount.
+  useEffect(() => {
+    return () => {
+      Object.values(pendingTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
+  const handleClearNotifications = () => setNotifications([]);
+
+  const handleResetAll = () => {
+    if (!window.confirm("Reiniciar toda a simulação para os valores iniciais?")) return;
+    Object.values(pendingTimersRef.current).forEach(clearTimeout);
+    pendingTimersRef.current = {};
+    setState(INITIAL_STATE);
+    setSales([]);
+    setToasts([]);
+    setNotifications([]);
+  };
+
+  const setProducts = (updater) => {
+    setState((s) => ({
+      ...s,
+      products: typeof updater === "function" ? updater(s.products) : updater,
+    }));
+  };
+
+  const navigate = (target) => {
+    setPage(target);
+    setMobileSidebarOpen(false);
+    setNotifOpen(false);
+  };
+
+  return (
+    <div
+      className="flex h-screen w-full overflow-hidden bg-zinc-950 text-zinc-100"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
+        * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+        *::-webkit-scrollbar { width: 6px; height: 6px; }
+        *::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
+        .font-display { font-family: 'Sora', 'Inter', system-ui, sans-serif; }
+      `}</style>
+
+      {/* Mobile sidebar drawer */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="relative flex h-full w-64 flex-col bg-zinc-950 p-4">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <IrisMark size={32} />
+                <p className="font-display text-sm font-bold text-zinc-50">ÍRIS</p>
+              </div>
+              <button onClick={() => setMobileSidebarOpen(false)}>
+                <X size={18} className="text-zinc-400" />
+              </button>
+            </div>
+            <nav className="flex flex-col gap-1">
+              {SIDEBAR_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.id)}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
+                    page === item.id
+                      ? "bg-violet-600/20 text-violet-300"
+                      : "text-zinc-400 hover:bg-zinc-900"
+                  }`}
+                >
+                  <item.icon size={16} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      <Sidebar page={page} onNavigate={navigate} />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopBar
+          hideValues={hideValues}
+          onToggleHide={() => setHideValues((v) => !v)}
+          notifOpen={notifOpen}
+          setNotifOpen={setNotifOpen}
+          notifications={notifications}
+          onClearAll={handleClearNotifications}
+          onOpenSidebarMobile={() => setMobileSidebarOpen(true)}
+        />
+
+        <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4 lg:px-8 lg:pb-8">
+          <div className="mx-auto w-full max-w-3xl">
+            {page === "conta" && (
+              <AccountPage
+                state={state}
+                setState={setState}
+                hideValues={hideValues}
+                onNavigate={navigate}
+                sales={sales}
+                now={now}
+              />
+            )}
+            {page === "vendas" && <SalesPage sales={sales} now={now} />}
+            {page === "relatorios" && <ReportsPage sales={sales} state={state} />}
+            {page === "produtos" && (
+              <ProductsPage products={state.products} setProducts={setProducts} />
+            )}
+            {page === "saque" && <WithdrawPage state={state} setState={setState} />}
+            {page === "ajustes" && (
+              <SettingsPage
+                settings={settings}
+                setSettings={setSettings}
+                state={state}
+                setState={setState}
+                onResetAll={handleResetAll}
+              />
+            )}
+            {page === "suporte" && <SupportPage />}
+          </div>
+        </main>
+      </div>
+
+      <BottomNav page={page} onNavigate={navigate} />
+
+      {settings.showToasts && <ToastStack toasts={toasts} onDismiss={dismissToast} />}
+
+      {/* Floating simulation status pill */}
+      <div className="pointer-events-none fixed bottom-20 left-1/2 z-30 -translate-x-1/2 lg:bottom-6">
+        <div
+          className={`pointer-events-auto flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-medium shadow-lg backdrop-blur transition ${
+            settings.simulationActive
+              ? "border-violet-700/50 bg-zinc-950/90 text-violet-300"
+              : "border-zinc-800 bg-zinc-950/90 text-zinc-500"
+          }`}
+        >
+          <IrisMark size={16} pulse={pulse} />
+          {settings.simulationActive
+            ? `Simulando ~${settings.salesPerMinute}/min`
+            : "Simulação pausada"}
+          <button
+            onClick={() => setSettings((s) => ({ ...s, simulationActive: !s.simulationActive }))}
+            className="ml-1 rounded-full bg-zinc-900 p-1 hover:bg-zinc-800"
+          >
+            {settings.simulationActive ? <Pause size={11} /> : <Play size={11} />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
