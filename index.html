@@ -121,6 +121,7 @@ h1,h2,h3,h4{
   padding: 96px 0;
   position: relative;
   border-top: 1px solid var(--line);
+  scroll-margin-top: 96px;
 }
 .section-head{
   max-width: 640px;
@@ -148,18 +149,23 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
    1. NAV
    ========================================================================== */
 .nav{
-  position: sticky; top:0; z-index: 100;
-  background: rgba(6,4,12,0.75);
+  position: sticky; top:0; z-index: 1000;
+  isolation: isolate;
+  background: rgba(6,4,12,0.94);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .nav{ background: rgba(6,4,12,0.75); }
 }
 .nav-inner{
   display:flex; align-items:center; justify-content:space-between;
   padding: 14px 24px;
   max-width: 1180px;
   margin: 0 auto;
+  gap: 16px;
 }
-.brand{ display:flex; align-items:center; gap:10px; }
+.brand{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
 .brand-mark{
   width: 34px; height: 34px;
   border-radius: 50%;
@@ -179,10 +185,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .brand-name{ font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.01em; }
 .brand-sub{ font-size: 10px; color: var(--text-low); font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; margin-top:-2px; }
 
-.nav-links{ display:flex; gap: 28px; align-items:center; }
+.nav-links{ display:flex; gap: 20px; align-items:center; flex-wrap: nowrap; }
 .nav-links a{
-  font-size: 14px; font-weight: 600; color: var(--text-mid);
+  font-size: 13.5px; font-weight: 600; color: var(--text-mid);
   transition: color 200ms var(--ease);
+  white-space: nowrap;
 }
 .nav-links a:hover{ color: var(--text-hi); }
 .nav-cta{
@@ -192,11 +199,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   font-size: 13px; font-weight: 700;
   box-shadow: 0 4px 20px -6px rgba(168,85,247,0.6);
 }
-.nav-toggle{ display:none; background:none; border:none; color: var(--text-hi); }
+.nav-toggle{ display:none; background:none; border:none; color: var(--text-hi); font-size: 20px; z-index: 1; }
 
-@media (max-width: 880px){
+@media (max-width: 1080px){
   .nav-links{
-    position: fixed; inset: 60px 0 0 0;
+    position: fixed; inset: 61px 0 0 0;
     background: var(--void);
     flex-direction: column;
     padding: 32px 24px;
@@ -205,6 +212,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     transform: translateY(-110%);
     transition: transform 320ms var(--ease);
     border-bottom: 1px solid var(--line);
+    z-index: 999;
+    overflow-y: auto;
+    height: calc(100vh - 61px);
   }
   .nav-links.open{ transform: translateY(0); }
   .nav-toggle{ display:block; }
@@ -524,6 +534,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   position: sticky;
   top: 90px;
   height: fit-content;
+  z-index: 1;
 }
 .progress-ring{ width: 140px; height: 140px; margin: 0 auto 14px; position:relative; }
 .progress-ring svg{ transform: rotate(-90deg); }
@@ -650,6 +661,100 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 }
 .mom-band .grid-2{ margin-top: 26px; }
 .mom-band .card{ background: rgba(6,4,12,0.5); }
+
+/* ==========================================================================
+   12. SONS / FREQUÊNCIAS
+   ========================================================================== */
+.sound-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+@media (max-width: 880px){ .sound-grid{ grid-template-columns: 1fr; } }
+.sound-card{
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  padding: 24px;
+  display:flex; flex-direction:column; gap: 14px;
+  transition: border-color 220ms var(--ease);
+}
+.sound-card.playing{ border-color: var(--violet-500); box-shadow: 0 0 0 1px rgba(168,85,247,0.35), 0 0 40px -12px rgba(168,85,247,0.5); }
+.sound-head{ display:flex; align-items:flex-start; gap: 14px; }
+.sound-head .icon-badge{ margin-bottom:0; flex-shrink:0; }
+.sound-head h3{ font-size: 16.5px; margin-bottom: 4px; }
+.sound-head p{ color: var(--text-mid); font-size: 13.5px; }
+.sound-visualizer{
+  height: 44px;
+  display:flex; align-items:center; justify-content:center; gap:3px;
+  border-radius: var(--radius-sm);
+  background: rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+.sound-visualizer span{
+  width: 4px; min-height: 4px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--violet-300), var(--violet-600));
+  opacity: 0.35;
+  transition: height 120ms ease, opacity 200ms ease;
+}
+.sound-card.playing .sound-visualizer span{ opacity: 1; animation: soundbar 900ms ease-in-out infinite; }
+.sound-card.playing .sound-visualizer span:nth-child(odd){ animation-duration: 700ms; }
+.sound-card.playing .sound-visualizer span:nth-child(3n){ animation-duration: 1100ms; }
+@keyframes soundbar{
+  0%, 100%{ height: 6px; }
+  50%{ height: 32px; }
+}
+.sound-controls{ display:flex; align-items:center; gap: 14px; }
+.sound-play{
+  width: 46px; height: 46px; border-radius: 50%;
+  border: none; flex-shrink:0;
+  background: linear-gradient(135deg, var(--violet-500), var(--violet-700));
+  color: white; font-size: 16px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 6px 22px -6px rgba(168,85,247,0.7);
+  transition: transform 180ms var(--ease);
+}
+.sound-play:hover{ transform: scale(1.06); }
+.sound-vol{ flex:1; display:flex; align-items:center; gap:8px; }
+.sound-vol span{ font-size: 11px; color: var(--text-low); }
+.sound-vol input[type=range]{ flex:1; accent-color: var(--violet-500); }
+.sound-status{ font-family: var(--font-mono); font-size: 11px; color: var(--text-low); text-transform: uppercase; letter-spacing: 0.06em; }
+.sound-card.playing .sound-status{ color: var(--sage); }
+.sound-stopall{ margin-top: 4px; }
+
+/* ==========================================================================
+   12b. INSTALAR APP
+   ========================================================================== */
+.install-card{
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(168,85,247,0.3);
+  background: linear-gradient(135deg, rgba(168,85,247,0.10), rgba(240,168,208,0.08));
+  padding: 34px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: center;
+}
+@media (max-width: 880px){ .install-card{ grid-template-columns: 1fr; } }
+.install-steps{ display:flex; flex-direction:column; gap: 12px; }
+.install-step{ display:flex; gap: 12px; align-items:flex-start; font-size: 13.8px; color: var(--text-mid); }
+.install-step b{
+  flex-shrink:0; width: 24px; height:24px; border-radius:50%;
+  background: rgba(168,85,247,0.2); color: var(--violet-300);
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-size: 12px;
+}
+.install-panel{ display:none; }
+.install-panel.active{ display:flex; flex-direction:column; gap:14px; }
+.install-tabs{ display:flex; gap:8px; margin-bottom: 6px; }
+.install-tab{
+  padding: 8px 14px; border-radius: var(--radius-full);
+  border: 1px solid var(--panel-border); background: transparent;
+  color: var(--text-mid); font-size: 12.5px; font-weight:700;
+}
+.install-tab.active{ background: linear-gradient(135deg, var(--violet-500), var(--violet-700)); color:#fff; border-color:transparent; }
+.install-badge{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--sage);
+  text-transform: uppercase; letter-spacing:0.06em;
+}
+.install-badge .dot{ width:6px; height:6px; border-radius:50%; background: var(--sage); }
 
 /* ==========================================================================
    13. FOOTER
@@ -789,10 +894,12 @@ footer{
     <div class="nav-links" id="navLinks">
       <a href="#simulador">Simulador de colo</a>
       <a href="#metodo-5s">Método 5 S's</a>
+      <a href="#sons">Sons calmantes</a>
       <a href="#sono-seguro">Sono seguro</a>
       <a href="#choro">Entender o choro</a>
       <a href="#alerta">Sinais de alerta</a>
       <a href="#mae">Cuidando de você</a>
+      <a href="#instalar">Instalar app</a>
       <a href="#faq" class="nav-cta">Tirar dúvidas</a>
       <!-- diario e glossário acessíveis por rolagem, entre alerta e mãe -->
 
@@ -963,7 +1070,7 @@ footer{
         <div class="s-letter">S3</div>
         <div>
           <h4>Shush — Chiado</h4>
-          <p>Um som "shhh" constante e razoavelmente alto perto do ouvido do bebê imita o som do sangue circulando no útero (que é mais alto do que se imagina). Um ruído branco constante — chuveiro, ventilador, aplicativo de white noise — tem o mesmo efeito.</p>
+          <p>Um som "shhh" constante e razoavelmente alto perto do ouvido do bebê imita o som do sangue circulando no útero (que é mais alto do que se imagina). Um ruído branco constante — chuveiro, ventilador, aplicativo de white noise — tem o mesmo efeito. Experimente na seção "Sons calmantes" abaixo.</p>
         </div>
       </div>
       <div class="s-item">
@@ -979,6 +1086,35 @@ footer{
           <h4>Suck — Sucção</h4>
           <p>Sugar (seio, dedo limpo ou chupeta) ativa um reflexo natural de relaxamento. A Sociedade Brasileira de Pediatria também associa o uso de chupeta durante o sono a uma possível redução do risco de morte súbita do lactente.</p>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SONS CALMANTES -->
+<section class="section" id="sons">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Toque e deixe rodando</span>
+      <h2>Sons calmantes — toque direto no site</h2>
+      <p>
+        Sons contínuos gerados na hora, direto no navegador (não precisa baixar nada
+        nem sair do site). São ruídos constantes do tipo usado em maternidades e
+        recomendados por pediatras para ajudar a acalmar — não são uma "frequência
+        médica" nem substituem colo, alimentação ou avaliação profissional quando o
+        choro persiste.
+      </p>
+    </div>
+
+    <div class="sound-grid" id="soundGrid">
+      <!-- injected by JS -->
+    </div>
+
+    <div class="callout info" style="margin-top:20px;">
+      <span class="icon">🔊</span>
+      <div>
+        <h4>Como usar</h4>
+        <p>Toque em ▶ para tocar, ajuste o volume mantendo baixo (perto do som de um chuveiro à distância) e posicione o celular longe do ouvido do bebê, nunca dentro do berço. Volumes muito altos ou muito próximos podem prejudicar a audição.</p>
       </div>
     </div>
   </div>
@@ -1151,7 +1287,7 @@ footer{
       <div class="card">
         <div class="icon-badge">🚿</div>
         <h3>Ruído branco constante</h3>
-        <p>Som contínuo (chuveiro, exaustor, aplicativo de white noise em volume moderado) reduz a estimulação e ajuda o sistema nervoso imaturo do bebê a regular.</p>
+        <p>Som contínuo (chuveiro, exaustor, aplicativo de white noise em volume moderado) reduz a estimulação e ajuda o sistema nervoso imaturo do bebê a regular. Toque direto na seção "Sons calmantes".</p>
       </div>
       <div class="card">
         <div class="icon-badge">🔄</div>
@@ -1360,6 +1496,48 @@ footer{
   </div>
 </section>
 
+<!-- ============================================================ INSTALAR APP -->
+<section class="section" id="instalar">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Acesso rápido</span>
+      <h2>Adicione o Luar na tela inicial do celular</h2>
+      <p>
+        Assim o site abre como um app, direto da tela inicial, sem precisar
+        digitar o endereço de novo — útil para os acessos rápidos de madrugada.
+      </p>
+    </div>
+    <div class="install-card">
+      <div>
+        <span class="install-badge" id="installBadge"><span class="dot"></span> Verificando seu dispositivo…</span>
+        <div class="install-tabs" id="installTabs">
+          <button class="install-tab active" data-os="ios">iPhone</button>
+          <button class="install-tab" data-os="android">Android</button>
+        </div>
+        <button class="btn btn-primary" id="installBtn" style="display:none; margin-top:14px;">📲 Instalar agora</button>
+      </div>
+      <div>
+        <div class="install-panel active" id="panel-ios">
+          <div class="install-steps">
+            <div class="install-step"><b>1</b><span>Abra este site no <b>Safari</b> (o botão automático de instalar não funciona no Chrome do iPhone).</span></div>
+            <div class="install-step"><b>2</b><span>Toque no ícone de <b>Compartilhar</b> (o quadrado com uma seta para cima), na barra inferior.</span></div>
+            <div class="install-step"><b>3</b><span>Role a lista de opções e toque em <b>"Adicionar à Tela de Início"</b>.</span></div>
+            <div class="install-step"><b>4</b><span>Toque em <b>"Adicionar"</b> no canto superior direito. Pronto — o ícone do Luar aparece na tela inicial.</span></div>
+          </div>
+        </div>
+        <div class="install-panel" id="panel-android">
+          <div class="install-steps">
+            <div class="install-step"><b>1</b><span>Toque no botão <b>"📲 Instalar agora"</b> ao lado, se ele aparecer — seu navegador vai perguntar para confirmar.</span></div>
+            <div class="install-step"><b>2</b><span>Se o botão não aparecer, toque nos <b>três pontinhos</b> (⋮) no canto superior direito do navegador.</span></div>
+            <div class="install-step"><b>3</b><span>Toque em <b>"Instalar app"</b> ou <b>"Adicionar à tela inicial"</b>.</span></div>
+            <div class="install-step"><b>4</b><span>Confirme. O ícone do Luar aparece na tela inicial, como um aplicativo normal.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============================================================ FAQ -->
 <section class="section" id="faq">
   <div class="wrap">
@@ -1389,6 +1567,7 @@ footer{
         <h5>Explorar</h5>
         <a href="#simulador">Simulador de colo</a>
         <a href="#metodo-5s">Método 5 S's</a>
+        <a href="#sons">Sons calmantes</a>
         <a href="#rotina">Rotina de sono</a>
         <a href="#sono-seguro">Sono seguro</a>
       </div>
@@ -1397,6 +1576,7 @@ footer{
         <a href="#choro">Entender o choro</a>
         <a href="#alerta">Sinais de alerta</a>
         <a href="#mae">Cuidando de você</a>
+        <a href="#instalar">Instalar app</a>
         <a href="#faq">Dúvidas frequentes</a>
       </div>
       <div>
@@ -1548,6 +1728,13 @@ const FAQS = [
   ["Chupeta atrapalha a amamentação?", "Se introduzida após a amamentação estar bem estabelecida (geralmente após 3–4 semanas), a chupeta não costuma atrapalhar e ainda está associada a um possível efeito protetor contra morte súbita do lactente."],
   ["Enrolar (swaddle) é seguro?", "Sim, quando feito corretamente: bracinhos enrolados, mas quadris e pernas livres para se mexer, e sempre com o bebê de costas. Pare de enrolar assim que ele começar a tentar virar de bruços sozinho, geralmente por volta de 2–4 meses."],
   ["Por que meu bebê troca o dia pela noite?", "É comum nas primeiras semanas, já que o ritmo circadiano ainda não amadureceu. Exponha o bebê à luz natural durante o dia e mantenha as noites escuras e silenciosas — isso ajuda o relógio biológico a se ajustar em algumas semanas."],
+];
+
+const SOUNDS = [
+  { id: "dormir", icon: "😴", title: "Ruído para dormir", desc: "Ruído rosa constante e suave, o tipo mais indicado para embalar o sono.", kind: "pink" },
+  { id: "choro", icon: "🤍", title: "Som para acalmar o choro", desc: "Ruído branco mais encorpado, parecido com o som do útero — o clássico 'shhh' contínuo.", kind: "white" },
+  { id: "mamada", icon: "🍼", title: "Som calmo para a mamada", desc: "Ruído marrom, mais grave e suave, para um ambiente tranquilo na hora de comer.", kind: "brown" },
+  { id: "utero", icon: "💜", title: "Batimento + ruído do útero", desc: "Ruído filtrado com um pulso grave e ritmado, lembrando os sons ouvidos dentro da barriga.", kind: "womb" },
 ];
 
 /* ==========================================================================
@@ -1753,6 +1940,310 @@ document.getElementById("navToggle").addEventListener("click", ()=>{
 document.querySelectorAll(".nav-links a").forEach(a=>{
   a.addEventListener("click", ()=> document.getElementById("navLinks").classList.remove("open"));
 });
+
+/* ==========================================================================
+   INIT: SONS CALMANTES (Web Audio API — gerado no navegador, sem arquivos externos)
+   ========================================================================== */
+(function(){
+  const soundGrid = document.getElementById("soundGrid");
+  soundGrid.innerHTML = SOUNDS.map(s => `
+    <div class="sound-card" data-id="${s.id}">
+      <div class="sound-head">
+        <div class="icon-badge">${s.icon}</div>
+        <div>
+          <h3>${s.title}</h3>
+          <p>${s.desc}</p>
+        </div>
+      </div>
+      <div class="sound-visualizer">${Array.from({length:24}).map(()=>'<span></span>').join("")}</div>
+      <div class="sound-controls">
+        <button class="sound-play" data-id="${s.id}" aria-label="Tocar">▶</button>
+        <div class="sound-vol">
+          <span>🔈</span>
+          <input type="range" min="0" max="100" value="35" data-vol="${s.id}" aria-label="Volume" />
+        </div>
+      </div>
+      <span class="sound-status" data-status="${s.id}">Pausado</span>
+    </div>
+  `).join("");
+
+  let audioCtx = null;
+  let current = null; // { id, nodes: [...], gain }
+
+  function ensureCtx(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function makeNoiseBuffer(ctx, seconds){
+    const bufferSize = ctx.sampleRate * seconds;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<bufferSize;i++){
+      const white = Math.random()*2-1;
+      // pink-ish filtering (Paul Kellet's refined method)
+      b0 = 0.99886*b0 + white*0.0555179;
+      b1 = 0.99332*b1 + white*0.0750759;
+      b2 = 0.96900*b2 + white*0.1538520;
+      b3 = 0.86650*b3 + white*0.3104856;
+      b4 = 0.55000*b4 + white*0.5329522;
+      b5 = -0.7616*b5 - white*0.0168980;
+      const pink = b0+b1+b2+b3+b4+b5+b6+white*0.5362;
+      b6 = white*0.115926;
+      data[i] = pink * 0.11;
+    }
+    return buffer;
+  }
+
+  function stopCurrent(){
+    if(!current) return;
+    const { id, gain, nodes } = current;
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.35);
+    setTimeout(()=>{ nodes.forEach(n=>{ try{ n.stop && n.stop(); n.disconnect && n.disconnect(); }catch(e){} }); }, 400);
+    document.querySelectorAll(".sound-card").forEach(c=>c.classList.remove("playing"));
+    document.querySelectorAll("[data-status]").forEach(s=> s.textContent = "Pausado");
+    document.querySelectorAll(".sound-play").forEach(b=> b.textContent = "▶");
+    current = null;
+  }
+
+  function playSound(sound, vol){
+    const ctx = ensureCtx();
+    stopCurrent();
+
+    const noiseBuffer = makeNoiseBuffer(ctx, 4);
+    const noiseSrc = ctx.createBufferSource();
+    noiseSrc.buffer = noiseBuffer;
+    noiseSrc.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    const masterGain = ctx.createGain();
+    masterGain.gain.value = 0;
+
+    const nodes = [noiseSrc];
+
+    if(sound.kind === "pink"){
+      filter.type = "lowpass";
+      filter.frequency.value = 1800;
+    } else if(sound.kind === "white"){
+      filter.type = "lowpass";
+      filter.frequency.value = 4200;
+    } else if(sound.kind === "brown"){
+      filter.type = "lowpass";
+      filter.frequency.value = 500;
+    } else if(sound.kind === "womb"){
+      filter.type = "lowpass";
+      filter.frequency.value = 900;
+    }
+
+    noiseSrc.connect(filter);
+    filter.connect(masterGain);
+
+    if(sound.kind === "womb"){
+      // heartbeat-like low pulse layered underneath
+      const beatGain = ctx.createGain();
+      beatGain.gain.value = 0;
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = 55;
+      osc.connect(beatGain);
+      beatGain.connect(masterGain);
+      osc.start();
+      nodes.push(osc);
+
+      const bpm = 72;
+      const interval = 60 / bpm;
+      let beatTimer = setInterval(()=>{
+        if(!audioCtx) return;
+        const t = audioCtx.currentTime;
+        beatGain.gain.cancelScheduledValues(t);
+        beatGain.gain.setValueAtTime(0.0001, t);
+        beatGain.gain.exponentialRampToValueAtTime(0.9, t + 0.06);
+        beatGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      }, interval*1000);
+      nodes.push({ stop: ()=> clearInterval(beatTimer), disconnect: ()=>{} });
+    }
+
+    masterGain.connect(ctx.destination);
+    noiseSrc.start();
+
+    const now = ctx.currentTime;
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(vol, now + 0.5);
+
+    current = { id: sound.id, gain: masterGain, nodes: [...nodes, filter] };
+
+    document.querySelectorAll(".sound-card").forEach(c=>{
+      c.classList.toggle("playing", c.dataset.id === sound.id);
+    });
+    document.querySelectorAll("[data-status]").forEach(s=>{
+      s.textContent = s.dataset.status === sound.id ? "Tocando" : "Pausado";
+    });
+    document.querySelectorAll(".sound-play").forEach(b=>{
+      b.textContent = b.dataset.id === sound.id ? "❚❚" : "▶";
+    });
+  }
+
+  soundGrid.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".sound-play");
+    if(!btn) return;
+    const id = btn.dataset.id;
+    const sound = SOUNDS.find(s=>s.id===id);
+    if(current && current.id === id){
+      stopCurrent();
+      return;
+    }
+    const volInput = soundGrid.querySelector(`[data-vol="${id}"]`);
+    const vol = (parseInt(volInput.value,10)/100) * 0.5;
+    playSound(sound, vol);
+  });
+
+  soundGrid.addEventListener("input", (e)=>{
+    const input = e.target.closest("[data-vol]");
+    if(!input) return;
+    const id = input.dataset.vol;
+    if(current && current.id === id){
+      const vol = (parseInt(input.value,10)/100) * 0.5;
+      const now = audioCtx.currentTime;
+      current.gain.gain.cancelScheduledValues(now);
+      current.gain.gain.linearRampToValueAtTime(vol, now + 0.1);
+    }
+  });
+
+  // stop audio if the tab is hidden for a long time, to save battery
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden && current){
+      // leave playing on hidden (common use case: phone screen off while playing) — no action
+    }
+  });
+})();
+
+/* ==========================================================================
+   INIT: INSTALAR NA TELA INICIAL (PWA-ish, com fallback manual)
+   ========================================================================== */
+(function(){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+  const badge = document.getElementById("installBadge");
+  const tabs = document.querySelectorAll(".install-tab");
+  const panels = { ios: document.getElementById("panel-ios"), android: document.getElementById("panel-android") };
+  const installBtn = document.getElementById("installBtn");
+  let deferredPrompt = null;
+
+  function setTab(os){
+    tabs.forEach(t=> t.classList.toggle("active", t.dataset.os === os));
+    Object.entries(panels).forEach(([key, el])=> el.classList.toggle("active", key === os));
+    installBtn.style.display = (os === "android" && deferredPrompt) ? "inline-flex" : "none";
+  }
+
+  tabs.forEach(t=> t.addEventListener("click", ()=> setTab(t.dataset.os)));
+
+  if(isStandalone){
+    badge.innerHTML = '<span class="dot"></span> Já instalado neste dispositivo';
+  } else if(isIOS){
+    badge.innerHTML = '<span class="dot"></span> iPhone detectado — siga os passos ao lado';
+    setTab("ios");
+  } else if(isAndroid){
+    badge.innerHTML = '<span class="dot"></span> Android detectado — use o botão de instalar';
+    setTab("android");
+  } else {
+    badge.innerHTML = '<span class="dot"></span> Abra pelo celular para instalar';
+    setTab("ios");
+  }
+
+  window.addEventListener("beforeinstallprompt", (e)=>{
+    e.preventDefault();
+    deferredPrompt = e;
+    if(!isIOS){
+      setTab("android");
+      installBtn.style.display = "inline-flex";
+    }
+  });
+
+  installBtn.addEventListener("click", async ()=>{
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = "none";
+  });
+
+  window.addEventListener("appinstalled", ()=>{
+    badge.innerHTML = '<span class="dot"></span> Instalado com sucesso!';
+    installBtn.style.display = "none";
+  });
+
+  // generate a simple app icon + manifest at runtime so "Add to Home Screen" has a nice icon
+  try{
+    const canvas = document.createElement("canvas");
+    canvas.width = 180; canvas.height = 180;
+    const ctx = canvas.getContext("2d");
+    const grad = ctx.createRadialGradient(60,54,10,90,90,140);
+    grad.addColorStop(0,"#d8b4fe");
+    grad.addColorStop(0.6,"#7c3aed");
+    grad.addColorStop(1,"#23103f");
+    ctx.fillStyle = "#06040c";
+    ctx.fillRect(0,0,180,180);
+    ctx.beginPath();
+    ctx.arc(90,90,78,0,Math.PI*2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(66,64,16,0,Math.PI*2);
+    ctx.fillStyle = "rgba(6,4,12,0.55)";
+    ctx.fill();
+    const iconUrl = canvas.toDataURL("image/png");
+
+    let touchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+    if(!touchIcon){
+      touchIcon = document.createElement("link");
+      touchIcon.rel = "apple-touch-icon";
+      document.head.appendChild(touchIcon);
+    }
+    touchIcon.href = iconUrl;
+
+    let favicon = document.querySelector('link[rel="icon"]');
+    if(!favicon){
+      favicon = document.createElement("link");
+      favicon.rel = "icon";
+      document.head.appendChild(favicon);
+    }
+    favicon.href = iconUrl;
+
+    const manifest = {
+      name: "Luar — colo & sono",
+      short_name: "Luar",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#06040c",
+      theme_color: "#0f0a1e",
+      icons: [{ src: iconUrl, sizes: "180x180", type: "image/png" }]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+    const manifestUrl = URL.createObjectURL(blob);
+    let manifestLink = document.getElementById("pwaManifest");
+    if(!manifestLink){
+      manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.id = "pwaManifest";
+      document.head.appendChild(manifestLink);
+    }
+    manifestLink.href = manifestUrl;
+  }catch(err){
+    // icon/manifest generation is a nice-to-have; ignore failures silently
+  }
+})();
 
 </script>
 </body>
